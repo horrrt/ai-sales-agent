@@ -1,0 +1,20 @@
+[
+  {
+    "lead_id": "L-001",
+    "customer_id": "C-demo",
+    "person": {"name": "Anna Jensen", "title": "CEO", "email": "anna@sandbox.test", "linkedin_url": ""},
+    "company": {"name": "Acme ApS", "domain": "acme.example", "country": "SE", "employees": 24, "industry": "B2B SaaS"},
+    "stage": "new",
+    "status": "active",
+    "loss_reason": null
+  },
+  {
+    "lead_id": "L-002",
+    "customer_id": "C-demo",
+    "person": {"name": "Lars Nielsen", "title": "Head of Sales", "email": "lars@sandbox.test", "linkedin_url": ""},
+    "company": {"name": "Nordlys AB", "domain": "nordlys.example", "country": "SE", "employees": 41, "industry": "IT services"},
+    "stage": "new",
+    "status": "active",
+    "loss_reason": null
+  }
+]

@@ -1,0 +1,153 @@
+{
+  "tools": [
+    {
+      "name": "get_customer_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get customer brief"
+    },
+    {
+      "name": "get_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get lead"
+    },
+    {
+      "name": "update_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Update lead"
+    },
+    {
+      "name": "log_interaction",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Log interaction"
+    },
+    {
+      "name": "tag_loss_reason",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Tag loss reason"
+    },
+    {
+      "name": "get_funnel_metrics",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get funnel metrics"
+    },
+    {
+      "name": "get_targets_from_clay",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get targets from Clay"
+    },
+    {
+      "name": "research_target",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Research target"
+    },
+    {
+      "name": "save_positioning",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save positioning angle"
+    },
+    {
+      "name": "save_draft",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save email draft"
+    },
+    {
+      "name": "send_email",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Send email (sandbox, needs approval)"
+    },
+    {
+      "name": "get_replies",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get replies"
+    },
+    {
+      "name": "save_reply_label",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save reply label"
+    },
+    {
+      "name": "get_rep_capacity",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get rep capacity (traffic light)"
+    },
+    {
+      "name": "set_rep_status",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Set rep status"
+    },
+    {
+      "name": "find_free_slots",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Find free slots"
+    },
+    {
+      "name": "book_meeting",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Book meeting (needs approval)"
+    },
+    {
+      "name": "save_call_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save call brief"
+    },
+    {
+      "name": "slack_send_channel_message",
+      "mcp_server_url": "https://tools.langchain.com",
+      "mcp_server_name": "Fleet",
+      "display_name": "slack_send_channel_message"
+    },
+    {
+      "name": "slack_reply_to_message",
+      "mcp_server_url": "https://tools.langchain.com",
+      "mcp_server_name": "Fleet",
+      "display_name": "slack_reply_to_message"
+    },
+    {
+      "name": "slack_read_thread_messages",
+      "mcp_server_url": "https://tools.langchain.com",
+      "mcp_server_name": "Fleet",
+      "display_name": "slack_read_thread_messages"
+    }
+  ],
+  "interrupt_config": {
+    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::update_lead::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::tag_loss_reason::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_funnel_metrics::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_targets_from_clay::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::research_target::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::save_positioning::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::save_draft::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::send_email::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_replies::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::save_reply_label::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::set_rep_status::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::find_free_slots::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::book_meeting::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::save_call_brief::Sales tools (sandbox)": false,
+    "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
+    "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
+    "https://tools.langchain.com::slack_read_thread_messages::Fleet": false
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lead",
+  "description": "One prospect moving through the pipeline. Every stage reads and writes this. Owner: Ayaan. Change it only by PR with everyone's OK.",
+  "type": "object",
+  "required": ["lead_id", "customer_id", "person", "company", "stage", "status"],
+  "properties": {
+    "lead_id": {"type": "string"},
+    "customer_id": {"type": "string", "description": "Which customer's brief this lead belongs to"},
+    "person": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "title": {"type": "string"},
+        "email": {"type": "string"},
+        "linkedin_url": {"type": "string"}
+      }
+    },
+    "company": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "domain": {"type": "string"},
+        "country": {"type": "string", "description": "ISO 3166-1 alpha-2, decides channel rules"},
+        "employees": {"type": "integer"},
+        "industry": {"type": "string"}
+      }
+    },
+    "research": {
+      "type": "object",
+      "description": "Stream 1 (Kyriakos)",
+      "properties": {
+        "summary": {"type": "string"},
+        "facts": {"type": "array", "items": {"type": "object", "properties": {"fact": {"type": "string"}, "source_url": {"type": "string"}}}},
+        "enough_to_personalize": {"type": "boolean"}
+      }
+    },
+    "positioning": {
+      "type": "object",
+      "description": "Stream 1 positioning (Gyula)",
+      "properties": {
+        "angle": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "outreach": {
+      "type": "object",
+      "description": "Stream 2 (JD)",
+      "properties": {
+        "draft_subject": {"type": "string"},
+        "draft_body": {"type": "string"},
+        "sent_at": {"type": "string", "format": "date-time"},
+        "reply_label": {"enum": ["positive", "negative", "not_now", "wrong_person", "out_of_office", "unsubscribe", null]}
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "description": "Stream 3 (Slava)",
+      "properties": {
+        "rep_id": {"type": "string"},
+        "meeting_start": {"type": "string", "format": "date-time"},
+        "call_brief": {"type": "string"}
+      }
+    },
+    "stage": {"enum": ["new", "researched", "positioned", "drafted", "sent", "replied", "handed_off", "closed"]},
+    "status": {"enum": ["active", "won", "lost", "insufficient_data"]},
+    "loss_reason": {"type": ["string", "null"], "description": "One value from loss_reasons.json"}
+  }
+}

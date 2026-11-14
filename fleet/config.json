@@ -1,0 +1,24 @@
+{
+  "name": "Sales Assistant",
+  "description": "Finds and researches prospects, sends outreach and hands interested leads to you with a booked slot and a call brief.",
+  "config": {
+    "configurable": {
+      "llm_model_config": {
+        "modelId": "langchain:fast"
+      },
+      "skip_memory_write_protection": false,
+      "triggers_paused": true
+    }
+  },
+  "metadata": {
+    "course": "38113 Applied AI for Entrepreneurs",
+    "assignment": "Group project, weeks 10-13",
+    "timezone": "Europe/Copenhagen",
+    "slack_channel": "#sales-desk",
+    "schedules_local": [
+      "TODO: e.g. weekdays 08:00 run outreach batch",
+      "TODO: e.g. Friday 15:00 weekly review"
+    ]
+  },
+  "cron_schedules": []
+}

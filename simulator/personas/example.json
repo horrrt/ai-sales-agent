@@ -1,0 +1,12 @@
+{
+  "persona_id": "P-001",
+  "lead_id": "L-001",
+  "name": "Anna Jensen",
+  "title": "CEO",
+  "company": "Acme ApS",
+  "situation": "Founder still runs sales, two AEs hired last quarter, no SDR",
+  "priorities": ["predictable pipeline", "not spending evenings on LinkedIn"],
+  "objections": ["tried Lemlist, got low-quality leads"],
+  "intended_reply": "positive",
+  "reply_style": "short, direct, Danish-English"
+}

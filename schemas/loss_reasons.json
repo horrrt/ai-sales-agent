@@ -1,0 +1,14 @@
+{
+  "description": "Fixed list so loss reasons can be counted. Exactly one per lost lead. Owner: Ayaan.",
+  "reasons": [
+    {"id": "wrong_person", "stage": "reply", "meaning": "Right company, wrong contact"},
+    {"id": "wrong_company_fit", "stage": "positioning", "meaning": "Company doesn't match the ICP or no angle fits"},
+    {"id": "bad_timing", "stage": "reply", "meaning": "Interested in principle, not now"},
+    {"id": "has_competitor", "stage": "reply", "meaning": "Already uses an alternative"},
+    {"id": "price", "stage": "reply", "meaning": "Too expensive"},
+    {"id": "no_reply", "stage": "outreach", "meaning": "No reply after all follow-ups"},
+    {"id": "negative", "stage": "reply", "meaning": "Not interested or unsubscribed"},
+    {"id": "insufficient_data", "stage": "research", "meaning": "Not enough data to personalize"},
+    {"id": "bounced", "stage": "outreach", "meaning": "Email bounced"}
+  ]
+}

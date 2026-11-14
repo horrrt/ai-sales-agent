@@ -1,0 +1,69 @@
+{
+  "tools": [
+    {
+      "name": "get_customer_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get customer brief"
+    },
+    {
+      "name": "get_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get lead"
+    },
+    {
+      "name": "update_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Update lead"
+    },
+    {
+      "name": "log_interaction",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Log interaction"
+    },
+    {
+      "name": "save_draft",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save email draft"
+    },
+    {
+      "name": "send_email",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Send email (sandbox, needs approval)"
+    },
+    {
+      "name": "get_replies",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get replies"
+    },
+    {
+      "name": "save_reply_label",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Save reply label"
+    },
+    {
+      "name": "tag_loss_reason",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Tag loss reason"
+    }
+  ],
+  "interrupt_config": {
+    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::update_lead::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::save_draft::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::send_email::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_replies::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::save_reply_label::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::tag_loss_reason::Sales tools (sandbox)": false
+  }
+}

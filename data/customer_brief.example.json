@@ -1,0 +1,15 @@
+{
+  "customer_id": "C-demo",
+  "offer": "TODO: what the customer sells, price and deal terms",
+  "icp": {
+    "countries": ["SE", "FI", "NO"],
+    "employees_min": 10,
+    "employees_max": 50,
+    "industries": ["B2B SaaS", "IT services"],
+    "titles": ["CEO", "Founder", "Head of Sales"]
+  },
+  "product_info": "TODO: product or service description, proof points, case studies",
+  "won_deals": ["TODO: 3-5 past won deals and why they were won"],
+  "exclusions": ["TODO: current customers, competitors, partners"],
+  "tone": "TODO: approved tone and claims"
+}

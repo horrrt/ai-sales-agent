@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Interaction",
+  "description": "One log entry per stage per lead. Stream 4 (Ayaan) builds metrics and the learning loop on this.",
+  "type": "object",
+  "required": ["timestamp", "lead_id", "stage", "outcome"],
+  "properties": {
+    "timestamp": {"type": "string", "format": "date-time"},
+    "lead_id": {"type": "string"},
+    "stage": {"enum": ["research", "positioning", "outreach", "reply", "handoff", "close"]},
+    "channel": {"enum": ["email", "slack", "calendar", "internal"]},
+    "message": {"type": "string"},
+    "outcome": {"enum": ["success", "failure", "skipped"]},
+    "loss_reason": {"type": ["string", "null"]},
+    "trace_id": {"type": ["string", "null"], "description": "LangSmith trace ID"}
+  }
+}
