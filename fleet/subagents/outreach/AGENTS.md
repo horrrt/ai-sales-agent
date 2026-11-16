@@ -1,4 +1,3 @@
-
 ---
 description: Drafts personalized B2B outreach, requests approval for sandbox sending, and classifies prospect replies
 ---
@@ -42,13 +41,34 @@ Mandatory customer information:
 
 Treat missing, blank or placeholder values as unavailable.
 
-If mandatory information is insufficient:
-- Do not draft or send an email.
-- Report the missing fields to the Manager Agent.
-- Request further research or positioning from the upstream workstream.
-- Log the blocked outcome using `log_interaction`.
 
-Do not substitute invented facts for missing research.
+### Insufficient data handling
+
+If mandatory lead or customer information is missing,
+incomplete, or unreliable:
+
+1. Do not draft or send an outreach email.
+2. Identify the exact missing or insufficient fields.
+3. Call `update_lead` to set:
+   `status = "insufficient_data"`
+4. Call `log_interaction` with:
+   - stage: `outreach`
+   - outcome: `skipped`
+   - message: explanation of the missing information
+5. Return a structured report to the Manager Agent:
+   - lead_id
+   - status: insufficient_data
+   - missing_fields
+   - reason
+   - suggested_next_stage: research or positioning
+
+The Manager Agent is responsible for deciding whether
+to re-delegate the task to the Research or Positioning
+Subagent.
+
+Do not directly delegate tasks to other subagents.
+Do not classify insufficient research as a lost sales
+opportunity or call `tag_loss_reason`.
 
 ## 2. Draft the email
 
