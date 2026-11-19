@@ -1,0 +1,56 @@
+{
+  "persona_id": "P-003",
+  "lead_id": "L-003",
+  "lead": {
+    "lead_id": "L-003",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Aino Virtanen",
+      "title": "CTO",
+      "email": "aino@polarstack.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Polarstack Oy",
+      "domain": "polarstack.example",
+      "country": "FI",
+      "employees": 35,
+      "industry": "IT services"
+    },
+    "research": {
+      "summary": "Managed cloud and DevOps services for mid-size Finnish companies.",
+      "facts": [
+        {
+          "fact": "Client logos on website include two Finnish insurers",
+          "source_url": "https://polarstack.example/customers"
+        },
+        {
+          "fact": "Holds ISO 9001 quality certification",
+          "source_url": "https://polarstack.example/about/quality"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "The insurers send long security questionnaires every quarter. Aino answers them herself in the evenings.",
+    "pains": [
+      "Quarterly insurer security questionnaires",
+      "Aino's evenings",
+      "Insurers hinted ISO 27001 would 'simplify things'"
+    ],
+    "current_tools": "A shared folder of previous answers",
+    "timing": "Interested but not urgent",
+    "budget": "Needs CEO sign-off above EUR 5k a year",
+    "objections": [
+      "We already have ISO 9001, is that not enough?",
+      "Needs to convince the CEO"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Matter-of-fact Finnish-English, few words"
+  },
+  "design_note": "Medium fit. Questionnaire pain is guessable from insurer clients. Likely positive only if the email addresses questionnaires."
+}

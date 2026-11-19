@@ -1,0 +1,56 @@
+{
+  "persona_id": "P-009",
+  "lead_id": "L-009",
+  "lead": {
+    "lead_id": "L-009",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Lars Myhre",
+      "title": "CTO",
+      "email": "lars@tidewater.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Tidewater Logistics Software AS",
+      "domain": "tidewater.example",
+      "country": "NO",
+      "employees": 47,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Voyage planning software for shipping companies.",
+      "facts": [
+        {
+          "fact": "Customer logos include two large Norwegian shipping groups",
+          "source_url": "https://tidewater.example/customers"
+        },
+        {
+          "fact": "Job post for a DevSecOps engineer, October 2026",
+          "source_url": "https://tidewater.example/careers/devsecops"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "The largest customer asked for a SOC 2 report as part of the renewal due in four months. Lars is planning to do it with spreadsheets and the new DevSecOps hire.",
+    "pains": [
+      "Renewal requires SOC 2 in four months",
+      "Evidence collection by hand",
+      "New hire not started yet"
+    ],
+    "current_tools": "Plans to do it in-house with spreadsheets",
+    "timing": "Now",
+    "budget": "CTO can approve up to EUR 10k a year",
+    "objections": [
+      "We can probably do this ourselves",
+      "How much engineering time does the integration take?"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Engineer, skeptical of sales emails, wants specifics"
+  },
+  "design_note": "Good fit but skeptical. Needs a specific angle on evidence automation and time to be positive."
+}

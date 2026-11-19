@@ -1,0 +1,45 @@
+{
+  "persona_id": "P-006",
+  "lead_id": "L-006",
+  "lead": {
+    "lead_id": "L-006",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Silje Hansen",
+      "title": "Head of Sales",
+      "email": "silje@kollektiv-it.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Kollektiv IT AS",
+      "domain": "kollektiv-it.example",
+      "country": "NO",
+      "employees": 28,
+      "industry": "IT services"
+    },
+    "research": {
+      "summary": "IT operations and support for Norwegian SMEs.",
+      "facts": [
+        {
+          "fact": "Partner of Microsoft and Google Workspace",
+          "source_url": "https://kollektiv-it.example/partners"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Compliance and security is owned by the CTO, Kristian.",
+    "pains": [],
+    "current_tools": "Unknown to Silje",
+    "timing": "n/a",
+    "budget": "n/a",
+    "objections": [],
+    "fixed_reply": "wrong_person",
+    "reply_style": "Helpful, short, Norwegian-English"
+  },
+  "design_note": "Fixed outcome: wrong_person, refers to the CTO."
+}

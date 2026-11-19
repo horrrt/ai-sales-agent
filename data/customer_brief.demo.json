@@ -1,0 +1,28 @@
+{
+  "customer_id": "C-demo",
+  "_note": "Fictional demo customer for sandbox runs. Copy to data/customer_brief.json (git-ignored) to make the MCP server use it. Company, product and numbers are invented.",
+  "company_name": "Kvitto ApS",
+  "offer": "Kvitto gets small B2B SaaS companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks. Price: EUR 650 per month on a 12-month plan (about EUR 7,800 a year), auditor fees not included. Setup is free if the customer signs before their first audit window. Monthly plan available at EUR 790 per month.",
+  "icp": {
+    "countries": ["SE", "FI", "NO"],
+    "employees_min": 10,
+    "employees_max": 50,
+    "industries": ["B2B SaaS", "IT services"],
+    "titles": ["CEO", "Founder", "CTO", "Head of Sales"],
+    "triggers": [
+      "Selling to larger or regulated customers (banks, insurers, public sector, enterprise) that send security questionnaires",
+      "Lost or stalled a deal over missing SOC 2 or ISO 27001",
+      "Recently raised a round and moving upmarket",
+      "Hiring a first security, compliance or IT-ops person",
+      "Expanding into the UK, DACH or US where certification is expected"
+    ]
+  },
+  "product_info": "Kvitto connects to the customer's cloud (AWS, GCP, Azure), Google Workspace or Microsoft 365, GitHub and HR system, collects evidence automatically, and generates the policies an auditor expects. A named Danish compliance lead answers security questionnaires with the customer for the first three months. Proof points: 31 Nordic SaaS customers; median 9 weeks from kickoff to audit-ready; customers report security questionnaires going from 1-2 days of founder time to under 2 hours. Case study: Fjordline Analytics (14 people, Oslo) passed SOC 2 Type I in 10 weeks and closed its first bank customer two months later.",
+  "won_deals": [
+    "Fjordline Analytics (NO, 14 people): a bank prospect required SOC 2 before signing. Won because we could promise audit-ready before the bank's next procurement round.",
+    "Tallbacka Systems (SE, 27 people): spent founder evenings on security questionnaires for enterprise prospects. Won on the questionnaire help, not the certificate.",
+    "Merikivi Data (FI, 38 people): raised a Series A and needed ISO 27001 to sell into German manufacturers. Won because we support ISO 27001 and SOC 2 from the same evidence."
+  ],
+  "exclusions": ["Vanta", "Drata", "Secureframe", "existing customers: Fjordline Analytics, Tallbacka Systems, Merikivi Data"],
+  "tone": "Plain, short and specific. No hype words, no 'revolutionary', no exclamation marks. Write like a founder writing to another founder. Never claim the customer will pass an audit; we make them audit-ready. Never invent customer names or numbers beyond the proof points above. Max 120 words for a first email, one clear ask."
+}

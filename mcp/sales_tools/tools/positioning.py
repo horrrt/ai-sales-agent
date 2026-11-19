@@ -1,16 +1,23 @@
 """Stream 1 positioning. Owner: Gyula.
 
-The positioner subagent writes the angle itself (it's an LLM job). This tool only stores it.
+The positioner subagent writes the angle itself (it's an LLM job). This tool checks it and stores it.
+The checks match what the outreach readiness check (JD) expects downstream: a real angle, evidence that
+comes from research.facts, and a confidence in [0, 1].
 """
 from ..app import mcp
 from ..store import LEADS
+from .positioning_checks import check_positioning
 
 
 @mcp.tool()
 def save_positioning(lead_id: str, angle: str, evidence: list[str], confidence: float) -> dict:
-    """Save the positioning angle for a lead, with the evidence from the research profile."""
-    if lead_id not in LEADS:
-        return {"error": f"unknown lead {lead_id}"}
-    LEADS[lead_id]["positioning"] = {"angle": angle, "evidence": evidence, "confidence": confidence}
-    LEADS[lead_id]["stage"] = "positioned"
-    return {"ok": True}
+    """Save the positioning angle for a lead. evidence must be fact strings copied from the lead's research.facts."""
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"ok": False, "error": f"unknown lead {lead_id}"}
+    problems = check_positioning(lead, angle, evidence, confidence)
+    if problems:
+        return {"ok": False, "error": "invalid_positioning", "problems": problems}
+    lead["positioning"] = {"angle": angle.strip(), "evidence": [e.strip() for e in evidence], "confidence": float(confidence)}
+    lead["stage"] = "positioned"
+    return {"ok": True, "lead_id": lead_id, "low_confidence": confidence < 0.4}

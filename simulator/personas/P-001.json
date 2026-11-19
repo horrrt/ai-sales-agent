@@ -1,0 +1,55 @@
+{
+  "persona_id": "P-001",
+  "lead_id": "L-001",
+  "lead": {
+    "lead_id": "L-001",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Ingrid Solberg",
+      "title": "CEO",
+      "email": "ingrid@nordvik-health.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Nordvik Health Data AS",
+      "domain": "nordvik-health.example",
+      "country": "NO",
+      "employees": 22,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Health-data analytics platform for hospitals and clinics in Norway.",
+      "facts": [
+        {
+          "fact": "Announced a pilot with a regional hospital trust in Oslo in September 2026",
+          "source_url": "https://nordvik-health.example/news/hospital-pilot"
+        },
+        {
+          "fact": "Job post for an Information Security Officer, first hire in that role",
+          "source_url": "https://nordvik-health.example/careers/information-security-officer"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "The hospital trust's procurement team told Ingrid the pilot can only become a contract if Nordvik is ISO 27001 certified within about six months.",
+    "pains": [
+      "ISO 27001 deadline from the hospital trust",
+      "Each hospital security questionnaire takes Ingrid two full days",
+      "The security officer hire is taking too long"
+    ],
+    "current_tools": "Spreadsheets and a consultant quote of NOK 400k for ISO 27001 help",
+    "timing": "Urgent, needs a plan this quarter",
+    "budget": "Has budget, decides alone",
+    "objections": [
+      "Will this work for health data rules in Norway?"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Polite, concise, slightly formal Norwegian-English"
+  },
+  "design_note": "Strong fit. Research shows the trigger (hospital pilot + security hire); the deadline itself is hidden."
+}

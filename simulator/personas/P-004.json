@@ -1,0 +1,53 @@
+{
+  "persona_id": "P-004",
+  "lead_id": "L-004",
+  "lead": {
+    "lead_id": "L-004",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Johan Berg",
+      "title": "Head of Sales",
+      "email": "johan@brightwork.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Brightwork Analytics AB",
+      "domain": "brightwork.example",
+      "country": "SE",
+      "employees": 42,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Workforce analytics for retail chains, recently funded.",
+      "facts": [
+        {
+          "fact": "Raised a EUR 6M Series A in August 2026",
+          "source_url": "https://brightwork.example/news/series-a"
+        },
+        {
+          "fact": "Opened a London office to sell to UK retailers",
+          "source_url": "https://brightwork.example/news/london-office"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Already ran a Vanta demo last month and the CTO is leaning towards it.",
+    "pains": [
+      "UK enterprise retailers ask for SOC 2"
+    ],
+    "current_tools": "Evaluating Vanta",
+    "timing": "Decision within a few weeks, already has a favourite",
+    "budget": "CTO owns the decision, not Johan",
+    "objections": [
+      "Already talking to Vanta"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Friendly sales-person tone, Swedish-English"
+  },
+  "design_note": "Has a competitor. Correct outcome is a polite no (negative), whatever the email says."
+}

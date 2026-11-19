@@ -1,0 +1,47 @@
+{
+  "persona_id": "P-010",
+  "lead_id": "L-010",
+  "lead": {
+    "lead_id": "L-010",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Hanna Koskinen",
+      "title": "Founder",
+      "email": "hanna@kustannus.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Kustannus Cloud Oy",
+      "domain": "kustannus.example",
+      "country": "FI",
+      "employees": 24,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Editorial workflow software for small Finnish publishers.",
+      "facts": [
+        {
+          "fact": "Product page describes editorial workflow features for publishers",
+          "source_url": "https://kustannus.example/product"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Customers are small publishers who never ask about security certification.",
+    "pains": [],
+    "current_tools": "",
+    "timing": "",
+    "budget": "",
+    "objections": [
+      "Not relevant for our customers"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Polite, brief, Finnish-English"
+  },
+  "design_note": "In the ICP on paper but no trigger in research. Positioner should give low confidence. Likely negative."
+}
