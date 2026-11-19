@@ -1,9 +1,9 @@
 # Architecture
 
 ```
-Customer brief (offer, ICP, product info)
-        │
-        ▼
+Customer brief (offer, ICP, product info)     Lead source (Salesforce in the build, Clay in the pitch)
+        │                                               │ get_targets
+        ▼                                               ▼
 @researcher ──► @positioner ──► @outreach ──► sandbox inbox ──► simulated prospect
  (Kyriakos)      (Gyula)          (JD)                              (Gyula)
                                     │  reply label
@@ -13,6 +13,8 @@ Customer brief (offer, ICP, product info)
         every stage ──► log_interaction / tag_loss_reason ──► @coach ──► weekly proposals
                                                                (Ayaan)
 ```
+
+The System of Record (Sales DB, LangSmith, git, and what Slack and Fleet memory are not) and the trace-based hill-climbing loop are in `docs/fleet-prompts-v2.md` §2 and §3.
 
 ## Where things live
 
