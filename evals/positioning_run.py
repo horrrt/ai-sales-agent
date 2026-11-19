@@ -41,20 +41,35 @@ def main() -> None:
     brief = common.load_brief()
     personas = [p for p in common.simulate.all_personas() if not a.leads or p["lead_id"] in a.leads]
     labels = human_labels()
-    rows = []
-    for p in personas:
-        lead = p["lead"]
-        pos = common.run_positioner(lead, brief)
-        verdict = judge(lead, brief, pos)
-        rows.append({"lead_id": lead["lead_id"], "company": lead["company"]["name"], "positioning": pos,
-                     "judge": verdict, "human_label": labels.get(lead["lead_id"]),
-                     "models": {"positioner": common.llm.POSITIONER_MODEL, "judge": common.llm.JUDGE_MODEL}})
-        stop = f"STOP ({pos['loss_reason']})" if pos["no_fit"] else f"conf {pos['confidence']:.2f}"
-        flag = " INVALID" if pos["validation_problems"] else ""
-        print(f"{lead['lead_id']} {lead['company']['name'][:28]:28} {stop:28} judge={verdict['overall']}{flag}")
-
     out = common.RESULTS / f"positioning-{common.stamp()}.jsonl"
-    common.write_jsonl(out, rows)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    with out.open("w") as jf:
+        for p in personas:
+            lead = p["lead"]
+            row = {"lead_id": lead["lead_id"], "company": lead["company"]["name"], "positioning": None, "judge": None,
+                   "error": None, "human_label": labels.get(lead["lead_id"]),
+                   "models": {"positioner": common.llm.POSITIONER_MODEL, "judge": common.llm.JUDGE_MODEL}}
+            try:
+                row["positioning"] = common.run_positioner(lead, brief)
+                row["judge"] = judge(lead, brief, row["positioning"])
+            except Exception as e:  # noqa: BLE001  (recorded, run continues)
+                row["error"] = f"{type(e).__name__}: {e}"
+            rows.append(row)
+            jf.write(json.dumps(row, ensure_ascii=False) + "\n")
+            jf.flush()
+            pos, verdict = row["positioning"], row["judge"]
+            if row["error"]:
+                print(f"{lead['lead_id']} {lead['company']['name'][:28]:28} ERROR {row['error'][:80]}")
+                continue
+            stop = f"STOP ({pos['loss_reason']})" if pos["no_fit"] else f"conf {pos['confidence']:.2f}"
+            flag = " INVALID" if pos["validation_problems"] else ""
+            print(f"{lead['lead_id']} {lead['company']['name'][:28]:28} {stop:28} judge={verdict['overall']}{flag}")
+
+    errored = [r for r in rows if r["error"]]
+    rows = [r for r in rows if not r["error"]]
+    if errored:
+        print(f"\n{len(errored)} leads errored and are left out below")
     print(f"\njudge overall: {dict(Counter(r['judge']['overall'] for r in rows))}  (n={len(rows)})")
     print(f"failed save_positioning checks: {sum(bool(r['positioning']['validation_problems']) for r in rows)} of {len(rows)}")
     labelled = [r for r in rows if r["human_label"]]

@@ -68,7 +68,7 @@ class Refused(RuntimeError):
     pass
 
 
-def structured(model: str, system: str, user: str, schema: type[T], effort: str = "low", max_tokens: int = 4000) -> T:
+def structured(model: str, system: str, user: str, schema: type[T], effort: str = "low", max_tokens: int = 16000) -> T:
     """One call, parsed into a pydantic model. Raises Refused if the model declined."""
     response = client().messages.parse(
         model=model,

@@ -22,7 +22,11 @@ Fairness
 The drafter here is a local stand-in for the outreach subagent (JD) so the A/B can run before the
 pipeline is integrated. Swap it for JD's drafting once that exists, and rerun.
 
-Outputs: evals/results/ab-<timestamp>.jsonl (every email and reply) and
+Headline metric: positive replies per lead attempt. A lead the research arm stops (no fit, or an angle
+save_positioning would reject) counts as an attempt with no positive reply, so stopping weak fits can't
+inflate the research arm. Positive per email sent is shown as a secondary number.
+
+Outputs: evals/results/ab-<timestamp>.jsonl (every email and reply, written as each one completes) and
 simulator/out/replies-<timestamp>.csv in the replies.csv format (lead_id, reply_body, expected_label, notes)
 for JD's reply-classification eval.
 """
@@ -85,6 +89,14 @@ def research_email(lead: dict, brief: dict, pos: dict) -> dict:
     return llm.structured(llm.DRAFTER_MODEL, DRAFTER_SYSTEM, user, Email, effort="low").model_dump()
 
 
+def _call(fn, *args, **kw):
+    """Run one model step; return (result, error string). Errors are recorded, not fatal."""
+    try:
+        return fn(*args, **kw), None
+    except Exception as e:  # noqa: BLE001  (refusals, truncation, API errors all end up in the row)
+        return None, f"{type(e).__name__}: {e}"
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", type=int, default=3, help="emails per persona per arm")
@@ -97,46 +109,69 @@ def main() -> None:
 
     brief = common.load_brief()
     personas = [p for p in simulate.all_personas() if not a.leads or p["lead_id"] in a.leads]
-    rows: list[dict] = []
-    for p in personas:
-        lead = p["lead"]
-        fixed = bool(p["private"].get("fixed_reply"))
-        pos = None
-        if not offline:
-            pos = common.run_positioner(lead, brief)
-        for i in range(a.samples):
-            for arm in ("research", "template"):
-                if arm == "template":
-                    email = template_email(lead)
-                elif offline:
-                    email = {"subject": "STUB", "body": "STUB research email"}
-                elif pos["no_fit"]:
-                    rows.append({"lead_id": lead["lead_id"], "arm": arm, "sample": i, "fixed": fixed, "sent": False,
-                                 "positioning": pos, "email": None, "reply": None})
-                    continue
-                else:
-                    email = research_email(lead, brief, pos)
-                r = simulate.reply(p, email["subject"], email["body"], offline=offline)
-                rows.append({"lead_id": lead["lead_id"], "arm": arm, "sample": i, "fixed": fixed, "sent": True,
-                             "positioning": pos if arm == "research" else None, "email": email, "reply": r,
-                             "models": {"positioner": llm.POSITIONER_MODEL, "drafter": llm.DRAFTER_MODEL, "persona": llm.PERSONA_MODEL}})
-            if fixed:
-                break  # fixed outcomes don't depend on the email; one sample is enough
-        print(f"{lead['lead_id']} done")
-
-    stamp = common.stamp()
-    out = common.RESULTS / f"ab-{stamp}{'-OFFLINE' if offline else ''}.jsonl"
-    common.write_jsonl(out, rows)
-
-    replies_out = common.ROOT / "simulator" / "out" / f"replies-{stamp}{'-OFFLINE' if offline else ''}.csv"
+    stamp = common.stamp() + ("-OFFLINE" if offline else "")
+    out = common.RESULTS / f"ab-{stamp}.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    replies_out = common.ROOT / "simulator" / "out" / f"replies-{stamp}.csv"
     replies_out.parent.mkdir(parents=True, exist_ok=True)
-    with replies_out.open("w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(["lead_id", "reply_body", "expected_label", "notes"])
-        for r in rows:
-            if r["reply"]:
-                w.writerow([r["lead_id"], r["reply"]["body"], r["reply"]["intended_label"],
-                            f"simulated ({r['reply']['source']}), arm={r['arm']}, sample={r['sample']}"])
+    models = {"positioner": llm.POSITIONER_MODEL, "drafter": llm.DRAFTER_MODEL, "persona": llm.PERSONA_MODEL}
+
+    rows: list[dict] = []
+    with out.open("w") as jf, replies_out.open("w", newline="") as cf:
+        cw = csv.writer(cf)
+        cw.writerow(["lead_id", "reply_body", "expected_label", "notes"])
+
+        def emit(row: dict) -> None:
+            row["models"] = models
+            rows.append(row)
+            jf.write(json.dumps(row, ensure_ascii=False) + "\n")
+            jf.flush()
+            r = row.get("reply")
+            if r and r["intended_label"] != "no_reply":
+                cw.writerow([row["lead_id"], r["body"], r["intended_label"],
+                             f"simulated ({r['source']}), arm={row['arm']}, sample={row['sample']}"])
+                cf.flush()
+
+        for p in personas:
+            lead = p["lead"]
+            fixed = bool(p["private"].get("fixed_reply"))
+            pos, pos_err = (None, None) if offline else _call(common.run_positioner, lead, brief)
+            for i in range(1 if fixed else a.samples):  # fixed outcomes don't depend on the email
+                for arm in ("research", "template"):
+                    row = {"lead_id": lead["lead_id"], "arm": arm, "sample": i, "fixed": fixed, "sent": False,
+                           "not_sent_reason": None, "error": None, "positioning": pos if arm == "research" else None,
+                           "email": None, "reply": None}
+                    if arm == "template":
+                        email = template_email(lead)
+                    elif offline:
+                        email = {"subject": "STUB", "body": "STUB research email"}
+                    elif pos_err:
+                        row["error"] = f"positioner: {pos_err}"
+                        emit(row)
+                        continue
+                    elif pos["no_fit"]:
+                        row["not_sent_reason"] = f"positioner stopped the lead ({pos['loss_reason']})"
+                        emit(row)
+                        continue
+                    elif pos["validation_problems"]:
+                        # save_positioning would reject this angle, so outreach would never draft it.
+                        row["not_sent_reason"] = "save_positioning would reject: " + "; ".join(pos["validation_problems"])
+                        emit(row)
+                        continue
+                    else:
+                        email, err = _call(research_email, lead, brief, pos)
+                        if err:
+                            row["error"] = f"drafter: {err}"
+                            emit(row)
+                            continue
+                    row["email"] = email
+                    r, err = _call(simulate.reply, p, email["subject"], email["body"], offline=offline)
+                    if err:
+                        row["error"] = f"persona: {err}"
+                    else:
+                        row["sent"], row["reply"] = True, r
+                    emit(row)
+            print(f"{lead['lead_id']} done")
 
     report(rows)
     print(f"\nwrote {out.relative_to(common.ROOT)} and {replies_out.relative_to(common.ROOT)}")
@@ -145,32 +180,38 @@ def main() -> None:
 
 
 def report(rows: list[dict]) -> None:
-    compared = [r for r in rows if not r["fixed"]]
-    print("\nPer lead (positive replies / emails sent; '-' = stopped, nothing sent)")
+    errored = [r for r in rows if r["error"]]
+    compared = [r for r in rows if not r["fixed"] and not r["error"]]
+    print("\nPer lead: positive replies / attempts (s = stopped before sending)")
     by_lead: dict[str, dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
     for r in compared:
         c = by_lead[r["lead_id"]][r["arm"]]
-        c["leads_x_samples"] += 1
+        c["attempts"] += 1
+        c["stopped"] += not r["sent"]
         if r["sent"]:
-            c["sent"] += 1
             c[r["reply"]["intended_label"]] += 1
     for lid, arms in sorted(by_lead.items()):
         cells = []
         for arm in ("research", "template"):
             c = arms[arm]
-            cells.append(f"{arm} {c['positive']}/{c['sent']}" if c["sent"] else f"{arm} -")
+            cells.append(f"{arm} {c['positive']}/{c['attempts']}" + (f" ({c['stopped']}s)" if c["stopped"] else ""))
         print(f"  {lid}: " + "   ".join(cells))
 
-    print("\nTotals (excluding fixed-outcome personas)")
+    print("\nTotals (fixed-outcome personas and errored rows left out)")
+    print("Headline: positive replies per lead attempt. Stopping a lead counts as no positive reply.")
     for arm in ("research", "template"):
         rs = [r for r in compared if r["arm"] == arm]
         sent = [r for r in rs if r["sent"]]
         labels = Counter(r["reply"]["intended_label"] for r in sent)
         pos = labels["positive"]
-        rate = f"{pos / len(sent):.0%}" if sent else "n/a"
-        print(f"  {arm:9} positive {pos} of {len(sent)} sent ({rate}); attempts {len(rs)}, stopped before sending {len(rs) - len(sent)}")
-        print(f"            all labels: {dict(labels)}")
-    print("\nNegative + unsubscribe also matter: they are the brand-damage cost of each arm.")
+        per_attempt = f"{pos / len(rs):.0%}" if rs else "n/a"
+        per_sent = f"{pos / len(sent):.0%}" if sent else "n/a"
+        print(f"  {arm:9} positive {pos} of {len(rs)} attempts ({per_attempt}); of {len(sent)} sent ({per_sent}); "
+              f"stopped {len(rs) - len(sent)}")
+        print(f"            outcomes: {dict(labels)}")
+    print("\nNegative + unsubscribe are the brand-damage cost of each arm; stopped leads cost nothing.")
+    if errored:
+        print(f"\n{len(errored)} rows errored and are not counted above, e.g. {errored[0]['error'][:160]}")
 
 
 if __name__ == "__main__":
