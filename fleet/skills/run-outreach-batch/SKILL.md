@@ -12,12 +12,10 @@ description: Use when a salesperson asks for a new outreach batch or the morning
 - Batch size (default 10)
 
 ## Steps
-1. @researcher: get targets and research each one
-2. @positioner: one positioning angle per researched lead
-3. @outreach: draft, then send after approval
-4. Log every stage with log_interaction
+1. @researcher with customer_id and batch size. Continue only with leads where enough_to_personalize is true.
+2. @positioner per lead. While the A/B test runs (week 2), alternate variant=research and variant=template per lead; afterwards research only.
+3. @outreach mode A per positioned lead. Approvals come one by one; draft the next lead while waiting.
+4. @outreach mode B for leads due a follow-up today.
 
 ## Output
-One summary message in #sales-desk: leads researched, angles found, emails sent, leads stopped and why.
-
-TODO: fill in details as each stage stops being a stub.
+One summary message in #sales-desk with prompt_version: researched, skipped (by reason), positioned (by variant), drafted, sent, waiting approval, follow-ups sent.

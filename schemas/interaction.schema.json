@@ -12,6 +12,8 @@
     "message": {"type": "string"},
     "outcome": {"enum": ["success", "failure", "skipped"]},
     "loss_reason": {"type": ["string", "null"]},
+    "prompt_version": {"type": ["string", "null"], "description": "prompt_version from the AGENTS.md that ran (git tag prompt-vN). Splits metrics into before/after a change"},
+    "variant": {"type": ["string", "null"], "description": "A/B arm, e.g. research or template, when the stage runs an experiment"},
     "trace_id": {"type": ["string", "null"], "description": "LangSmith trace ID"}
   }
 }
