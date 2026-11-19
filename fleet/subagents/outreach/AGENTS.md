@@ -128,28 +128,69 @@ Never send real outreach emails.
 
 ## 5. Retrieve and classify replies
 
-When asked to process incoming replies:
+When asked to process prospect replies:
 
-1. Call `get_replies`.
-2. Identify the reply associated with the correct `lead_id`.
-3. Classify the reply using one of these labels:
-   - `positive`: Expresses interest or requests a conversation.
-   - `negative`: Clearly declines the offer.
-   - `not_now`: Interested potentially, but asks to be contacted later.
-   - `wrong_person`: Indicates another contact is responsible.
-   - `out_of_office`: Automatic absence notification.
-   - `unsubscribe`: Requests no further outreach.
-4. Save the classification using `save_reply_label`.
-5. Log the classification using `log_interaction` with stage `reply`.
-6. Return the `lead_id`, classification and relevant reply context to the Manager Agent.
+1. Call `get_replies` when the tool is available.
+2. Match each reply to its correct `lead_id`.
+3. Classify the reply using exactly ONE of these labels:
 
-Positive replies should be passed to the Manager Agent for Slava's handoff workflow.
+- `positive`: Clear interest or a request for a meeting.
+- `negative`: Explicit rejection without a request to stop contact.
+- `not_now`: Clear request to postpone or reconnect later.
+- `wrong_person`: Prospect identifies themselves as the wrong contact.
+- `out_of_office`: Automatic absence notification.
+- `unsubscribe`: Explicit request to stop further outreach.
 
-Do not classify `not_now` or `out_of_office` as permanent losses.
+### Classification rules
 
-For confirmed lost opportunities, use `tag_loss_reason` with an appropriate allowed reason. Stop further outreach after an unsubscribe request.
+- Return only the exact label strings above.
+- Never invent labels, synonyms, combined labels or subcategories.
+- If multiple categories apply, prioritize explicit
+  `unsubscribe` requests over other classifications.
+- Distinguish confirmed postponement (`not_now`)
+  from uncertain or noncommittal interest.
+- If the meaning is ambiguous, do not guess.
+  Return `review_required` as a workflow decision,
+  not as a stored reply label.
+- For ambiguous replies, explain the uncertainty
+  and request human review through the Manager Agent.
 
-If a reply is ambiguous, request human review rather than inventing an interpretation.
+### Actions after classification
+
+- `positive`: Return to Manager for Handoff.
+- `negative`: Record rejection; no automatic follow-up.
+- `not_now`: Return postponement context to Manager;
+  do not claim a follow-up was scheduled.
+- `wrong_person`: Return referral information to
+  Manager for further research or confirmation.
+- `out_of_office`: Report temporary absence;
+  do not classify as a permanent loss.
+- `unsubscribe`: Stop all further outreach and
+  report the suppression requirement to Manager.
+
+### Persistence and logging
+
+For an unambiguous reply:
+
+1. Call `save_reply_label(lead_id, label)`.
+2. Confirm the tool returned success.
+3. Call `log_interaction` with stage `reply`.
+4. Return the lead ID, exact label, evidence from
+   the reply and recommended next action.
+
+For ambiguous replies:
+
+- Do not call `save_reply_label`.
+- Return `review_required` to the Manager Agent.
+- Request human classification.
+- Do not trigger automatic follow-up or handoff.
+
+Never claim labels were stored or actions completed
+unless the corresponding tool confirms success.
+Never classify an opportunity as lost solely because
+the prospect is unavailable or wants to reconnect later.
+Use `tag_loss_reason` only when a confirmed loss
+matches an allowed loss reason.
 
 ## 6. Operating boundaries
 
