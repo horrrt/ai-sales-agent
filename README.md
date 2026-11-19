@@ -49,6 +49,15 @@ uv run python -m sales_tools.server
 
 It serves MCP over streamable HTTP at `http://localhost:8000/mcp`. Fleet needs a public URL: use a tunnel (e.g. `cloudflared tunnel --url http://localhost:8000`) while testing, then deploy once and keep the URL fixed.
 
+Deploy once to Cloud Run, then point every `tools.json` at it (one PR):
+
+```bash
+scripts/deploy_mcp.sh            # prints https://sales-tools-....run.app/mcp
+scripts/set_mcp_url.sh <that url>
+```
+
+The deployed server runs on the demo customer (`data/customer_brief.demo.json`) with an in-memory store, so data resets when the instance restarts.
+
 ## Import the agent into Fleet
 
 ```bash
