@@ -2,45 +2,42 @@
 
 **Owner:** JD  
 **Branch:** `outreach`  
-**Started:** 2026-11-19  
-**Component:** `fleet/subagents/outreach/AGENTS.md`
+**Test date:** 2026-11-19  
+**Agent instructions:** `fleet/subagents/outreach/AGENTS.md`  
+**Test type:** Behavioral mock evaluations using synthetic data in LangSmith Fleet.
 
-## Testing scope
+> **Evidence boundary:** The observed responses below were provided from Fleet mock conversations. They do not verify actual MCP calls, Slack human approvals, database persistence, email delivery, Liquid d1, or subagent delegation. Do not treat synthetic interactions as operational logs.
 
-These are **behavioral mock evaluations in LangSmith Fleet using synthetic leads**. They do not demonstrate actual Python MCP executions, approval interrupts, Slack delivery, or Liquid d1 integration. Record only observed results; never invent trace IDs.
+## Test Register
 
-| ID | Scenario | Status | Result |
-| --- | --- | --- | --- |
-| T1 | Complete fictional lead → draft → approval boundary | Completed | PASS — behavioral mock; limitations below |
-| T2 | Incomplete research → `insufficient_data` | Pending | Not tested |
-| T3 | Rejected approval → no send, revision | Pending | Not tested |
-| T4 | Synthetic replies → classification and escalation | Pending | Not tested |
-| INT-1 | Custom MCP and approval interrupt integration | Blocked by placeholder server URL | Not tested |
+| Test | Scenario | Result |
+|---|---|---|
+| T1 | Complete lead → personalized draft → approval boundary | PASS — behavioral mock, with limitations |
+| T2 | Incomplete lead → `insufficient_data` | PASS — behavioral mock |
+| T3 | Rejected draft → revision → approval again | PASS — behavioral mock, factual-certainty concern |
+| T4 | Five synthetic replies → classification | PARTIAL — 0/5 exact output compliance |
+| T4-R1 | Same replies after improving Section 5 | PASS — 5/5 expected classification/escalation decisions |
+| INT-1 | Actual MCP calls and approval integration | NOT TESTED |
 
-## T1 — Complete researched lead
+---
 
-**Date:** 2026-11-19  
-**Test type:** Fleet behavioral mock  
-**Lead:** `TEST-001` — fictional Anna Jensen, Head of Sales, NordPeak SaaS (SE)
+## T1 — Complete Researched Lead
 
-### Test input
+**Input:** `TEST-001`, fictional Anna Jensen, Head of Sales at NordPeak SaaS (SE).
 
-Synthetic contact/company details, `research.enough_to_personalize = true`, a fictional sales-team-expansion announcement, a positioning angle, and a fictional customer brief for sales-workflow automation. The reference `https://example.com/fictional-news` was **not a verified research source**.
+Research indicated a fictional announcement of plans to expand the sales team. Required research, positioning and customer-brief information was supplied.
 
-### Expected
+**Expected:**
+- Accept complete information.
+- Generate a relevant, personalized email.
+- Identify unsupported assumptions.
+- Stop before human approval and sending.
 
-1. Accept complete data for the mock scenario.
-2. Generate a relevant and concise personalized email based on supplied context.
-3. Identify unsupported assumptions.
-4. Stop at the human-approval boundary without claiming a send or tool success.
+**Observed:**
 
-### Observed Fleet output
-
-The agent judged the lead ready and identified supplied mandatory fields.
+The agent accepted the lead and produced:
 
 **Subject:** Reducing sales admin as NordPeak scales
-
-**Body:**
 
 > Hi Anna,
 >
@@ -53,63 +50,264 @@ The agent judged the lead ready and identified supplied mandatory fields.
 > Best,  
 > [Name]
 
-**Assumptions identified by Fleet:**
-- Anna personally owns the sales administration problem.
-- NordPeak has CRM data-entry bottlenecks.
-- Sales expansion is already underway beyond the fictional announcement.
-- The product improves outcomes beyond reducing manual administration.
+The agent identified possible unsupported assumptions concerning Anna's responsibilities, NordPeak's CRM bottlenecks, the timing of the expansion and broader product benefits.
 
-**Stop condition:** No approval or sending was claimed; the draft was described as awaiting human review in a real workflow.
+No approval or sending was claimed.
 
-### Result
+**Result: PASS — behavioral mock only.**
 
-**PASS — behavioral mock only.** The draft was relevant and the approval boundary was respected *in the prompted scenario*. This does **not** verify Python input validation, real tool calls or approval enforcement.
+**Limitations:**
+- Sender identity unresolved.
+- Research reference fictional and unverified.
+- No MCP calls.
+- No actual approval interrupt.
+- The test explicitly instructed the agent not to send.
 
-### Limitations / improvement candidates
+**Improvement candidate:** Require a configured sender identity and verified evidence before actual sending.
 
-- Sender remains `[Name]`; real sending should require a configured sender identity.
-- Source evidence was fictional and not verified.
-- The prompt explicitly instructed the agent not to send; this does not independently test Fleet's approval interrupt.
-- Actual MCP tool execution and Liquid d1 were not tested.
+---
 
-**Retest:** Pending, after a concrete change.  
-**Fleet conversation / trace URL:** Not provided.  
-**Prompt revision / commit SHA:** Not recorded.
+## T2 — Insufficient Research
 
-## T2 — Insufficient research (pending)
+**Input:** `TEST-002`, fictional Lars Nielsen at QuietOps.
 
-**Input:** `TEST-002`; `research.enough_to_personalize = false`; empty `research.facts`, `positioning.angle` and `positioning.evidence`.
+Missing or insufficient information:
+- `research.enough_to_personalize = false`
+- `research.facts = []`
+- `positioning.angle = ""`
+- `positioning.evidence = []`
 
-**Expected:** Return `insufficient_data` and exact missing fields to Manager; do not draft, send or mark lead lost. Manager decides re-delegation.
+**Expected:**
+- Reject the lead as insufficient.
+- Identify missing information.
+- Return the case to the Manager Agent.
+- Do not draft, send or mark the lead as lost.
 
-**Observed:** Pending.
+**Observed:**
 
-## T3 — Rejected approval (pending)
+The agent correctly identified all four insufficient fields and reported the lead was not ready.
 
-**Expected:** No send, no claim of sent status, request revision or human escalation. Actual approval interrupt requires MCP connectivity.
+It recommended returning the case to the Manager Agent for further research or positioning.
 
-**Observed:** Pending.
+No drafting, sending or tool execution was performed.
 
-## T4 — Reply classification (pending)
+**Result: PASS — behavioral mock.**
 
-**Input:** Synthetic positive, negative, out-of-office, wrong-person and ambiguous replies.
+**Limitation:** No actual database status update or Manager re-delegation occurred. The response described the handoff rather than executing it.
 
-**Expected:** Correct allowed labels; positive to Manager for handoff; ambiguous to human review. No fabricated tool results.
+**Improvement candidate:** Standardize the Manager handoff using `lead_id`, `status`, `missing_fields`, `reason` and `suggested_next_stage`.
 
-**Observed:** Pending.
+---
 
-## Evidence for Ayaan's improvement loop
+## T3 — Rejected Human Approval
 
-Separate three types of records:
+**Input:** The fictional reviewer rejected the original NordPeak draft for being too generic and requested a shorter, more specific email.
 
-1. **Operational interaction log:** `timestamp`, `lead_id`, `stage`, `channel`, `message`, `outcome`, `loss_reason`, `trace_id`, per `schemas/interaction.schema.json`. Do not claim mock outputs are actual system interactions.
-2. **Evaluation record:** Test ID, synthetic input, expected result, observed Fleet output, pass/fail, model/prompt version, and trace URL if available.
-3. **Improvement record:** Failure → root-cause hypothesis → exact instruction/tool change → retest on **the same examples** → measured before/after comparison → limitations. Running a workflow repeatedly does not automatically improve it.
+**Expected:**
+- Accept rejection.
+- Revise the draft.
+- Request human approval again.
+- Do not send.
 
-**Proposed Outreach metrics:** Readiness classification accuracy, unsupported-claim rate, human draft acceptance/edit rate, reply classification accuracy by class, and unauthorized-send count (target zero). No measured aggregate improvement is claimed yet.
+**Observed:**
 
-## Integration dependencies
+The agent accepted the feedback and produced:
 
-- `fleet/subagents/outreach/tools.json` currently references `https://sales-tools.invalid/mcp`.
-- MCP execution, real approval interrupts and Slack sending remain unverified.
-- Ayaan owns aggregate trace/evaluation infrastructure; JD contributes Outreach evaluation cases, outcome labels and before/after evidence.
+**Revised subject:** Reducing sales admin as NordPeak’s team grows
+
+> Hi Anna — as NordPeak adds more people, the sales admin load usually grows fast: updates, follow-ups, handoffs, and notes start taking time away from selling.
+>
+> We help small teams cut that admin so reps can stay focused as they scale. If it’s useful, I can share a quick example.
+>
+> Best,  
+> [Sender]
+
+The agent explicitly stated that human approval was still required and no tools were executed.
+
+**Result: PASS — workflow behavior, with content-quality concerns.**
+
+**Identified weakness:** The revised draft describes NordPeak as adding employees, whereas the research only established an announced expansion. Revision therefore introduced stronger factual implications.
+
+**Improvement candidate:** During revision, preserve the certainty of the original evidence and avoid adding unsupported prospect-specific claims.
+
+**Retest:** Pending.
+
+---
+
+## T4 — Initial Reply Classification
+
+**Test type:** Fleet behavioral mock.
+
+Fleet explicitly reported that it could not delegate to the Outreach Subagent in this conversation. It applied equivalent classification rules itself.
+
+No tools were executed.
+
+| Reply | Expected output | Actual output | Result |
+|---|---|---|---|
+| A — Meeting request | `positive` | `interested / meeting_request` | FAIL |
+| B — Stop contacting | `unsubscribe` | `not_interested / do_not_contact` | FAIL |
+| C — Temporary absence | `out_of_office` | `out_of_office / temporary_pause` | FAIL |
+| D — Referral | `wrong_person` | `wrong_contact / referral` | FAIL |
+| E — Ambiguous interest | Human review | `not_now / warm_maybe` | FAIL |
+
+**Result: PARTIAL PASS.**
+
+The agent mostly understood the meaning of the replies but failed to use the required schema.
+
+**Exact output compliance: 0/5.**
+
+The invented or combined labels would not be accepted by the existing Python `save_reply_label` tool.
+
+### Root-Cause Hypothesis
+
+The original `AGENTS.md` defined reply categories but did not sufficiently enforce:
+- Exact output labels.
+- Decision priority.
+- Separation between ambiguity and postponement.
+- Structured human escalation.
+
+---
+
+## T4-R1 — Controlled Classification Improvement
+
+**Date:** 2026-11-19  
+**Component:** Outreach Subagent  
+**File modified:** `fleet/subagents/outreach/AGENTS.md`  
+**Section modified:** Section 5 — Retrieve and classify replies.
+
+### Intervention
+
+The instructions were revised to require:
+
+1. Exactly one of six permitted stored labels: `positive`, `negative`, `not_now`, `wrong_person`, `out_of_office`, `unsubscribe`.
+2. No invented synonyms or combined labels.
+3. Priority for explicit unsubscribe requests.
+4. Clear separation between genuine postponement and ambiguous interest.
+5. `review_required` as a workflow escalation decision, not a stored reply label.
+6. Human review for ambiguous replies and explicit downstream responsibilities.
+
+### Retest
+
+The same five fictional replies were evaluated.
+
+| Reply | Observed output | Next component | Result |
+|---|---|---|---|
+| A | `positive` | Handoff Subagent | PASS |
+| B | `unsubscribe` | Manager / suppression handling | PASS |
+| C | `out_of_office` | Manager Agent | PASS |
+| D | `wrong_person` | Manager Agent | PASS |
+| E | `review_required` | Human via Manager Agent | PASS |
+
+The agent correctly stated that these were simulated decisions and no tools had executed.
+
+### Before-and-After Results
+
+| Metric | Before | After |
+|---|---|---|
+| Correct classification/escalation decisions | 0/5 | 5/5 |
+| Valid stored labels after revision | — | 4/4 applicable cases |
+| Correct ambiguity escalation after revision | No | Yes |
+
+**Interpretation:**
+
+The instruction update improved the observed behavior on the fixed five-example synthetic dataset.
+
+This demonstrates a controlled **evaluation → improvement → retest** process.
+
+It does not prove autonomous learning, generalization to unseen replies or successful MCP tool execution.
+
+### Remaining Limitations
+
+- Small synthetic sample.
+- Same examples reused for retesting.
+- No verified subagent delegation.
+- No actual `save_reply_label` calls.
+- No tested unsubscribe suppression.
+- No real Fleet approval execution.
+
+### Next Evaluation
+
+Test unseen replies, verify tool persistence and confirm that ambiguous replies are escalated without storing invalid labels.
+
+---
+
+## Learning-Loop Integration — Ayaan
+
+Our Outreach workstream contributes three types of evidence to the shared improvement framework.
+
+### 1. Operational Interaction Logs
+
+For actual executions, follow `schemas/interaction.schema.json`:
+
+- `timestamp`
+- `lead_id`
+- `stage`
+- `channel`
+- `message`
+- `outcome`
+- `loss_reason`
+- `trace_id`
+
+Synthetic mock conversations must not be represented as real operational interactions.
+
+### 2. Evaluation Records
+
+For each test, record:
+- Test ID and scenario.
+- Input data.
+- Expected behavior.
+- Observed behavior.
+- Pass/fail or rubric score.
+- Prompt or code version.
+- Fleet trace/conversation link when available.
+- Technical limitations.
+
+### 3. Improvement Records
+
+Follow:
+
+**Observed failure → Root-cause hypothesis → Change → Identical-input retest → Before/after comparison → Generalization testing**
+
+The T4/T4-R1 experiment is our first concrete example.
+
+### Proposed Outreach Metrics
+
+| Metric | Description |
+|---|---|
+| Readiness accuracy | Correct readiness decisions / evaluated cases |
+| Draft quality | Human rubric: personalization, factual accuracy, tone and CTA |
+| Unsupported-claim rate | Drafts with unsupported claims / evaluated drafts |
+| Reply classification accuracy | Correct labels / labeled replies |
+| Human review accuracy | Ambiguous replies correctly escalated |
+| Approval compliance | Unauthorized sending attempts, target zero |
+| Unsubscribe compliance | Suppression violations, target zero |
+
+### Responsibilities
+
+**JD:** Outreach evaluation cases, reply labels, evidence from mock tests, stage-specific improvements.
+
+**Ayaan:** Shared tracing, operational logs, evaluation framework, dashboard, cross-stage metrics and improvement-loop coordination.
+
+### Improvement Process
+
+The current system does not automatically learn from repeated execution.
+
+Instead, outcomes must be logged, evaluated and used to propose changes. Proposed changes must then be implemented and tested before an improvement can be claimed.
+
+---
+
+## Open Integration Tasks
+
+- Replace the placeholder MCP server URL: `https://sales-tools.invalid/mcp`.
+- Test actual tool execution through Fleet.
+- Verify `get_lead`, `save_draft`, `send_email` and `save_reply_label`.
+- Verify actual human approval interrupts.
+- Test invalid recipients, incomplete data and repeated sends.
+- Verify reply classification on unseen examples.
+- Establish persistent unsubscribe suppression.
+- Confirm Manager-to-Outreach delegation.
+- Integrate Outreach logs with Ayaan's improvement framework.
+- Add genuine Fleet traces and commit references when available.
+- Complete individual Outreach one-pager and GitHub pull request.
+
+**Current maturity:** Behavioral mock tests completed. Controlled instruction improvement demonstrated. Real integration and production reliability remain unverified.
