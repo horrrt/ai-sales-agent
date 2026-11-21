@@ -1,0 +1,41 @@
+{
+  "tools": [
+    {
+      "name": "get_customer_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get customer brief"
+    },
+    {
+      "name": "get_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get lead"
+    },
+    {
+      "name": "log_interaction",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Log interaction"
+    },
+    {
+      "name": "find_leads",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Find leads"
+    },
+    {
+      "name": "add_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Add lead"
+    }
+  ],
+  "interrupt_config": {
+    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::find_leads::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::add_lead::Sales tools (sandbox)": false
+  }
+}

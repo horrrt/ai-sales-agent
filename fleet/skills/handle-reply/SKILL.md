@@ -1,15 +1,15 @@
 ---
 name: handle-reply
-description: Use when a prospect replies to outreach. Labels the reply, hands positive replies to a salesperson with a booked slot and a call brief, and tags a loss reason for the rest.
+description: Use when prospects reply to outreach. Reads each reply, applies its exit (stop, follow up, or lost with a reason), and takes positive replies to auto-close or to a free rep with a booked slot and a call brief.
 ---
 
-<!-- Owner: Slava, with JD for labelling. -->
+<!-- Owner: Slava, with JD for reading replies. Stage 5 of the pipeline diagram. -->
 
-# Handle a reply
+# Handle replies
 
 ## Steps
-1. @outreach: label the reply
-2. Positive: @handoff routes it by rep capacity, books a slot and posts the call brief
-3. Anything else: tag one loss reason, and schedule a follow-up only for "not_now"
-
-TODO: fill in details as each stage stops being a stub.
+1. @outreach: get_replies, then read_reply for each. Other replies are handled by read_reply itself (follow up later, or lost with a reason).
+2. Positive, and read_reply says next is check_small_deal (auto-close is on): @closer. If it closes, done. If it hands back, go to step 3.
+3. Positive otherwise: @handoff. assign_rep picks a green rep, then yellow. All red: the lead waits in the queue; say so in #sales-desk.
+4. @handoff books a slot (the rep approves it), saves the call brief and tells the rep in Slack.
+5. One Slack line per reply: company, label, what happens next.
