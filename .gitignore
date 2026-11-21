@@ -6,3 +6,4 @@ __pycache__/
 dist/
 data/clay/
 data/customer_brief.json
+simulator/out/

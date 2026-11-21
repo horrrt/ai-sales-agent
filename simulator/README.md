@@ -30,6 +30,18 @@ Models: the agent side (positioner, drafter) defaults to `claude-opus-5-5`, and 
 
 `ab_test.py` also writes `simulator/out/replies-<timestamp>.csv` in the `evals/datasets/replies.csv` format, for JD's reply classification eval.
 
+## In the pipeline
+
+The tool server can use the personas as its prospects, so the Fleet agent (or a local run of it) gets real simulated replies instead of the canned positive one:
+
+```bash
+cd mcp && SALES_LEADS=personas uv run --extra sim python -m sales_tools.server
+```
+
+With that set, the server loads the 12 persona leads instead of `data/sample_leads.json`, uses the demo brief (Kvitto) unless `data/customer_brief.json` exists, `research_target` returns each persona's research, and `get_replies` asks the persona for a reply to the email that was actually sent. A persona that ignores the email has no reply. The agent only ever sees the reply body. The label the persona intended goes to `simulator/out/pipeline-replies.csv` (git-ignored), in the `replies.csv` format, so JD's classifier can be scored against it afterwards.
+
+It's off by default, and the deployed server (Dockerfile) doesn't include it.
+
 ## Limitation to state in the pitch
 
 Simulated replies test the pipeline, not whether real people would reply. A positive rate from personas is an early signal that research and positioning work, not a reply-rate forecast.
