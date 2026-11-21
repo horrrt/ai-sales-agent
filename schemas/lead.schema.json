@@ -34,7 +34,8 @@
       "properties": {
         "summary": {"type": "string"},
         "facts": {"type": "array", "items": {"type": "object", "properties": {"fact": {"type": "string"}, "source_url": {"type": "string"}}}},
-        "enough_to_personalize": {"type": "boolean"}
+        "enough_to_personalize": {"type": "boolean"},
+        "attempts": {"type": "integer", "description": "How many times check_ready_to_write said no. After 2 the lead goes on_hold"}
       }
     },
     "positioning": {
@@ -54,7 +55,9 @@
         "draft_subject": {"type": "string"},
         "draft_body": {"type": "string"},
         "sent_at": {"type": "string", "format": "date-time"},
-        "reply_label": {"enum": ["positive", "negative", "not_now", "wrong_person", "out_of_office", "unsubscribe", null]}
+        "reply_label": {"enum": ["positive", "negative", "not_now", "wrong_person", "out_of_office", "unsubscribe", null]},
+        "approval": {"type": "object", "description": "Written by record_approval. send_email only sends the draft this approval covers (draft_hash)", "properties": {"decision": {"enum": ["approve", "edit", "reject"]}, "by": {"type": "string"}, "at": {"type": "string", "format": "date-time"}, "draft_hash": {"type": "string"}, "note": {"type": "string"}}},
+        "follow_up_due": {"type": ["string", "null"], "format": "date-time"}
       }
     },
     "handoff": {
@@ -66,8 +69,13 @@
         "call_brief": {"type": "string"}
       }
     },
-    "stage": {"enum": ["new", "researched", "positioned", "drafted", "sent", "replied", "handed_off", "closed"]},
-    "status": {"enum": ["active", "won", "lost", "insufficient_data"]},
+    "close": {
+      "type": "object",
+      "description": "Auto-close, only when the brief enables it",
+      "properties": {"small_deal": {"type": "boolean"}, "offer_link": {"type": "string"}, "paid": {"type": "boolean"}, "closed_at": {"type": "string", "format": "date-time"}}
+    },
+    "stage": {"enum": ["new", "researched", "positioned", "drafted", "approved", "sent", "replied", "offer_sent", "handed_off", "closed"]},
+    "status": {"enum": ["active", "won", "lost", "insufficient_data", "on_hold", "queued"], "description": "on_hold: research still thin after 2 retries. queued: positive reply waiting for a free rep. Neither is lost"},
     "loss_reason": {"type": ["string", "null"], "description": "One value from loss_reasons.json"}
   }
 }

@@ -3,11 +3,12 @@ name = "sales-tools"
 version = "0.1.0"
 description = "MCP server with the custom tools for the Sales Assistant Fleet agent. Stubs first, real versions per stream."
 requires-python = ">=3.11"
-dependencies = ["mcp[cli]>=1.9,<2"]
+dependencies = ["mcp[cli]>=1.9,<2", "anthropic>=0.80"]  # anthropic: Claude stand-in for d1 decisions
 
 [project.optional-dependencies]
 # Simulated prospects in get_replies (SALES_LEADS=personas). Not needed for the deployed stub server.
-sim = ["anthropic>=0.80", "langsmith>=0.4"]
+sim = ["langsmith>=0.4"]
+dev = ["pytest>=8"]
 
 [build-system]
 requires = ["hatchling"]

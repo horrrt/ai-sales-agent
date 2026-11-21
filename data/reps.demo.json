@@ -1,0 +1,35 @@
+{
+  "rep-1": {
+    "name": "Mette Holm",
+    "slack_user_id": "TODO-U-METTE",
+    "status": "green",
+    "active_leads": 2,
+    "max_leads": 8,
+    "timezone": "Europe/Copenhagen",
+    "countries": ["SE", "NO", "FI"],
+    "languages": ["en", "da", "sv"],
+    "calendar_id": "TODO"
+  },
+  "rep-2": {
+    "name": "Jonas Lind",
+    "slack_user_id": "TODO-U-JONAS",
+    "status": "yellow",
+    "active_leads": 6,
+    "max_leads": 8,
+    "timezone": "Europe/Stockholm",
+    "countries": ["SE"],
+    "languages": ["en", "sv"],
+    "calendar_id": "TODO"
+  },
+  "rep-3": {
+    "name": "Aino Virtanen",
+    "slack_user_id": "TODO-U-AINO",
+    "status": "red",
+    "active_leads": 8,
+    "max_leads": 8,
+    "timezone": "Europe/Helsinki",
+    "countries": ["FI"],
+    "languages": ["en", "fi"],
+    "calendar_id": "TODO"
+  }
+}

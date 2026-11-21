@@ -7,7 +7,11 @@ No real emails are sent.
 
 from ..app import mcp
 from .. import sim
-from ..store import BRIEF, LEADS, now
+import hashlib
+from datetime import datetime, timedelta, timezone
+
+from ..decide import decide
+from ..store import BRIEF, LEADS, log_event, now
 
 SANDBOX_OUTBOX: list[dict] = []
 
@@ -96,18 +100,58 @@ def save_draft(lead_id: str, subject: str, body: str) -> dict:
     if not _has_text(subject) or not _has_text(body):
         return {"ok": False, "error": "empty_draft"}
 
-    lead["outreach"] = {
-        "draft_subject": subject,
-        "draft_body": body,
-    }
+    previous = lead.get("outreach") or {}
+    # A new draft replaces the old one and needs a new approval. Send history and follow-up count carry over.
+    lead["outreach"] = {k: v for k, v in previous.items() if k in ("sent_at", "follow_ups", "sent_count")}
+    lead["outreach"].update({"draft_subject": subject, "draft_body": body})
     lead["stage"] = "drafted"
+    log_event(lead_id, "outreach", "success", f"draft saved: {subject!r}")
 
-    return {"ok": True, "lead_id": lead_id}
+    return {"ok": True, "lead_id": lead_id, "next": "record_approval (the rep approves, edits or rejects)"}
+
+
+def _draft_hash(subject: str, body: str) -> str:
+    return hashlib.sha256(f"{subject}\n\n{body}".encode()).hexdigest()[:16]
+
+
+@mcp.tool()
+def record_approval(lead_id: str, subject: str, body: str, decision: str = "approve", note: str = "", by: str = "rep") -> dict:
+    """The human check: a rep approves, edits or rejects the saved draft. This tool always asks a person first.
+
+    Call it with the current draft's subject and body. The person sees the whole email and can accept it,
+    edit the subject or body before accepting, or reject it. An edited email is saved as the new draft and
+    counts as approved. The original and the edit are kept in the event log, so the weekly review can learn
+    from them. send_email only sends a draft that has an approval.
+    """
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"ok": False, "error": "unknown_lead"}
+    outreach = lead.get("outreach") or {}
+    if lead.get("stage") != "drafted" or not outreach.get("draft_body"):
+        return {"ok": False, "error": "no_draft_to_approve"}
+    if decision not in ("approve", "edit", "reject"):
+        return {"ok": False, "error": "decision must be approve, edit or reject"}
+    original = {"subject": outreach["draft_subject"], "body": outreach["draft_body"]}
+    if decision == "reject":
+        outreach["approval"] = {"decision": "reject", "by": by, "at": now(), "note": note,
+                                "draft_hash": _draft_hash(original["subject"], original["body"])}
+        log_event(lead_id, "approval", "failure", f"rejected: {note}", by=by, draft=original)
+        return {"ok": True, "decision": "reject", "next": "redraft with the rep's note, then save_draft and record_approval again"}
+    edited = (subject.strip(), body.strip()) != (original["subject"].strip(), original["body"].strip())
+    if edited:
+        outreach["draft_subject"], outreach["draft_body"] = subject, body
+        decision = "edit"
+    outreach["approval"] = {"decision": decision, "by": by, "at": now(), "note": note,
+                            "draft_hash": _draft_hash(outreach["draft_subject"], outreach["draft_body"])}
+    lead["stage"] = "approved"
+    log_event(lead_id, "approval", "success", "approved with edits" if edited else "approved", by=by,
+              draft=original, edited_to={"subject": subject, "body": body} if edited else None)
+    return {"ok": True, "decision": decision, "next": "send_email"}
 
 
 @mcp.tool()
 def send_email(lead_id: str) -> dict:
-    """Record a sandbox send. Fleet approval is also required."""
+    """Send the approved draft to the lead's sandbox inbox. Refuses a draft no person has approved."""
 
     lead = LEADS.get(lead_id)
     if lead is None:
@@ -123,12 +167,13 @@ def send_email(lead_id: str) -> dict:
 
     outreach = lead.get("outreach") or {}
 
-    if (
-        lead.get("stage") != "drafted"
-        or not _has_text(outreach.get("draft_subject"))
-        or not _has_text(outreach.get("draft_body"))
-    ):
+    if not _has_text(outreach.get("draft_subject")) or not _has_text(outreach.get("draft_body")):
         return {"ok": False, "error": "no_draft_ready"}
+
+    approval = outreach.get("approval") or {}
+    if (lead.get("stage") != "approved" or approval.get("decision") not in ("approve", "edit")
+            or approval.get("draft_hash") != _draft_hash(outreach["draft_subject"], outreach["draft_body"])):
+        return {"ok": False, "error": "not_approved", "next": "record_approval first: a person has to approve this exact draft"}
 
     recipient = lead["person"]["email"]
 
@@ -150,10 +195,16 @@ def send_email(lead_id: str) -> dict:
         "sent_at": sent_at,
     })
 
+    is_follow_up = bool(outreach.get("sent_at"))
+    outreach["follow_ups"] = outreach.get("follow_ups", 0) + int(is_follow_up)
+    outreach["sent_count"] = outreach.get("sent_count", 0) + 1
     outreach["sent_at"] = sent_at
+    outreach.pop("approval", None)  # an approval covers one send
+    outreach["follow_up_due"] = _in_days(FOLLOW_UP_DAYS[outreach["follow_ups"]]) if outreach["follow_ups"] < MAX_FOLLOW_UPS else None
     lead["stage"] = "sent"
+    log_event(lead_id, "outreach", "success", "follow-up sent" if is_follow_up else "sent", channel="email")
 
-    return {"ok": True, "sandbox": True, "sent_at": sent_at}
+    return {"ok": True, "sandbox": True, "sent_at": sent_at, "follow_up_due": outreach["follow_up_due"]}
 
 
 @mcp.tool()
@@ -192,5 +243,92 @@ def save_reply_label(lead_id: str, label: str) -> dict:
 
     LEADS[lead_id].setdefault("outreach", {})["reply_label"] = label
     LEADS[lead_id]["stage"] = "replied"
+    log_event(lead_id, "reply", "success", f"labelled {label}", channel="email")
 
     return {"ok": True, "lead_id": lead_id, "label": label}
+
+
+MAX_FOLLOW_UPS = 2
+FOLLOW_UP_DAYS = {0: 3, 1: 7}  # days after the first email, then after the first follow-up
+NO_REPLY_AFTER_DAYS = 5         # after the last follow-up
+
+
+def _in_days(days: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+
+
+REPLY_OPTIONS = {
+    "positive": "Interested: agrees to talk, asks for a meeting, or asks how to buy or start",
+    "negative": "Not interested, or declines (including because of price or an existing tool)",
+    "not_now": "Interested in principle but asks to come back later",
+    "wrong_person": "Says they are not the right contact or points to a colleague",
+    "out_of_office": "An automatic absence reply",
+    "unsubscribe": "Asks to stop emailing or to be removed",
+}
+WHY_NEGATIVE = {
+    "has_competitor": "They already use or are choosing another tool",
+    "price": "Too expensive or no budget",
+    "negative": "Not interested, for any other reason",
+}
+
+
+@mcp.tool()
+def read_reply(lead_id: str, reply_body: str) -> dict:
+    """d1 reads a reply: one label, then the exit for that label is applied and logged.
+
+    positive: continue (check_small_deal if auto-close is on, otherwise assign_rep).
+    not_now and out_of_office: stop for now, follow up later (not lost).
+    negative: lost, with the reason (has_competitor, price or negative).
+    wrong_person: lost (wrong_person); the referral is in the note for a person to follow up.
+    unsubscribe: lost (negative) and never contacted again.
+    """
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"ok": False, "error": "unknown_lead"}
+    d = decide("Which kind of reply is this, from the prospect to our sales email?", reply_body, REPLY_OPTIONS)
+    if d["answer"] is None:
+        return {"ok": True, "label": None, "decision": d, "next": "Ask a person to label this reply"}
+    label = d["answer"]
+    out = lead.setdefault("outreach", {})
+    out["reply_label"], out["reply_body"], out["follow_up_due"] = label, reply_body, None
+    lead["stage"] = "replied"
+    gate = {"question": "what kind of reply?", **d}
+    if label == "positive":
+        nxt = "check_small_deal" if (BRIEF.get("auto_close") or {}).get("enabled") else "assign_rep"
+        log_event(lead_id, "reply", "success", "positive reply", channel="email", decision=gate)
+        return {"ok": True, "label": label, "decision": d, "next": nxt}
+    if label in ("not_now", "out_of_office"):
+        out["follow_up_due"] = _in_days(90 if label == "not_now" else 7)
+        log_event(lead_id, "reply", "skipped", f"{label}: follow up on {out['follow_up_due'][:10]}", channel="email", decision=gate)
+        return {"ok": True, "label": label, "decision": d, "follow_up_due": out["follow_up_due"], "next": "stop for now"}
+    if label == "negative":
+        why = decide("Why does the prospect decline?", reply_body, WHY_NEGATIVE)
+        reason = why["answer"] or "negative"
+    else:
+        reason = {"wrong_person": "wrong_person", "unsubscribe": "negative"}[label]
+    lead.update(status="lost", loss_reason=reason)
+    if label == "unsubscribe":
+        lead["do_not_contact"] = True
+    log_event(lead_id, "reply", "failure", f"{label}: {reply_body[:200]}", channel="email", loss_reason=reason, decision=gate)
+    return {"ok": True, "label": label, "loss_reason": reason, "decision": d,
+            "next": "stop" + ("; a person may follow up the referral" if label == "wrong_person" else "")}
+
+
+@mcp.tool()
+def due_follow_ups() -> list[dict]:
+    """Leads whose follow-up is due now, and leads that just ran out of follow-ups (marked lost: no_reply)."""
+    now_dt = datetime.now(timezone.utc)
+    due = []
+    for lead in LEADS.values():
+        out = lead.get("outreach") or {}
+        if lead.get("status") != "active" or lead.get("do_not_contact") or not out.get("sent_at"):
+            continue
+        if out.get("follow_up_due") and datetime.fromisoformat(out["follow_up_due"]) <= now_dt:
+            due.append({"lead_id": lead["lead_id"], "follow_up": out.get("follow_ups", 0) + 1,
+                        "next": "write a short follow-up (save_draft), then record_approval and send_email"})
+        elif (out.get("follow_ups", 0) >= MAX_FOLLOW_UPS and not out.get("reply_label")
+              and datetime.fromisoformat(out["sent_at"]) + timedelta(days=NO_REPLY_AFTER_DAYS) <= now_dt):
+            lead.update(status="lost", loss_reason="no_reply")
+            log_event(lead["lead_id"], "outreach", "failure", "no reply after all follow-ups", loss_reason="no_reply")
+            due.append({"lead_id": lead["lead_id"], "status": "lost", "loss_reason": "no_reply"})
+    return due
