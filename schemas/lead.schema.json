@@ -7,6 +7,8 @@
   "properties": {
     "lead_id": {"type": "string"},
     "customer_id": {"type": "string", "description": "Which customer's brief this lead belongs to"},
+    "source": {"enum": ["salesforce", "clay", "referral", "manual"], "description": "Where the lead came from. The source is not the record; the Sales DB is (docs/fleet-prompts-v2.md §2)"},
+    "source_id": {"type": ["string", "null"], "description": "The lead's ID in the source system, e.g. the Salesforce Lead Id"},
     "person": {
       "type": "object",
       "properties": {
@@ -41,7 +43,8 @@
       "properties": {
         "angle": {"type": "string"},
         "evidence": {"type": "array", "items": {"type": "string"}},
-        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "variant": {"enum": ["research", "template"], "description": "Which arm of the research-vs-template A/B test this lead got"}
       }
     },
     "outreach": {

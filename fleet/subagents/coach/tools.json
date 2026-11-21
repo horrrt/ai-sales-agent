@@ -13,22 +13,10 @@
       "display_name": "Get lead"
     },
     {
-      "name": "update_lead",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Update lead"
-    },
-    {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
       "display_name": "Log interaction"
-    },
-    {
-      "name": "tag_loss_reason",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Tag loss reason"
     },
     {
       "name": "get_funnel_metrics",
@@ -46,9 +34,7 @@
   "interrupt_config": {
     "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::update_lead::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::tag_loss_reason::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_funnel_metrics::Sales tools (sandbox)": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false
   }
