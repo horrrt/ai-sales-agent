@@ -11,6 +11,7 @@ database (docs/fleet-prompts-v2.md §2).
 - INTERACTIONS: the event log, append-only.
 - REPS: the sales team and their traffic lights (data/reps.json, else data/reps.demo.json).
 - APPROVALS: one per draft, written by record_approval; send_email checks it.
+- OUTBOX: every email sent to a sandbox inbox, with the prospect's reply once there is one.
 - QUEUE: positive replies waiting for a rep when every rep is red.
 - PROPOSALS: rule changes the weekly review proposes, for a person to approve.
 """
@@ -49,12 +50,13 @@ LEADS: dict[str, dict] = {}
 INTERACTIONS: list[dict] = []
 REPS: dict[str, dict] = _load_json("reps.json", "reps.demo.json")
 APPROVALS: dict[str, dict] = {}
+OUTBOX: list[dict] = []
 QUEUE: list[dict] = []
 PROPOSALS: list[dict] = []
 
 STATE_FILE = os.environ.get("SALES_STATE")
 _STATE = {"leads": LEADS, "interactions": INTERACTIONS, "reps": REPS, "approvals": APPROVALS,
-          "queue": QUEUE, "proposals": PROPOSALS}
+          "outbox": OUTBOX, "queue": QUEUE, "proposals": PROPOSALS}
 
 
 def load() -> None:

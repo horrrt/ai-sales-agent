@@ -11,9 +11,9 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 
 from ..decide import decide
-from ..store import BRIEF, LEADS, log_event, now
+from ..store import BRIEF, LEADS, OUTBOX, log_event, now
 
-SANDBOX_OUTBOX: list[dict] = []
+SANDBOX_OUTBOX = OUTBOX  # kept in the store, so a restart doesn't lose sent emails
 
 
 def _has_text(value) -> bool:
@@ -209,9 +209,14 @@ def send_email(lead_id: str) -> dict:
 
 @mcp.tool()
 def get_replies(since: str | None = None) -> list[dict]:
-    """Get prospect replies from the sandbox inbox. A prospect who ignores the email has no reply here."""
+    """New prospect replies from the sandbox inbox (replies read_reply already handled are left out).
+
+    A prospect who ignores the email has no reply here.
+    """
     replies = []
     for m in SANDBOX_OUTBOX:
+        if m.get("handled") or (since and m.get("sent_at", "") < since):
+            continue
         if "reply" not in m:  # ask each prospect once per sent email
             if sim.ENABLED:
                 m["reply"] = sim.reply(m["lead_id"], m.get("draft_subject", ""), m.get("draft_body", ""))
@@ -285,10 +290,17 @@ def read_reply(lead_id: str, reply_body: str) -> dict:
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": "unknown_lead"}
+    if not (lead.get("outreach") or {}).get("sent_at"):
+        return {"ok": False, "error": "no email was sent to this lead"}
+    pending = [m for m in SANDBOX_OUTBOX if m["lead_id"] == lead_id and m.get("reply") and not m.get("handled")]
+    if lead.get("stage") == "replied" and not pending:
+        return {"ok": True, "label": (lead.get("outreach") or {}).get("reply_label"), "already_handled": True, "next": "stop"}
     d = decide("Which kind of reply is this, from the prospect to our sales email?", reply_body, REPLY_OPTIONS)
     if d["answer"] is None:
         return {"ok": True, "label": None, "decision": d, "next": "Ask a person to label this reply"}
     label = d["answer"]
+    for m in pending:  # this reply is handled; get_replies won't return it again
+        m["handled"] = True
     out = lead.setdefault("outreach", {})
     out["reply_label"], out["reply_body"], out["follow_up_due"] = label, reply_body, None
     lead["stage"] = "replied"

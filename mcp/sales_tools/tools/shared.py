@@ -27,10 +27,20 @@ def get_lead(lead_id: str) -> dict:
 
 @mcp.tool()
 def update_lead(lead_id: str, fields: dict) -> dict:
-    """Merge fields into a lead (see schemas/lead.schema.json)."""
+    """Set a lead's status to insufficient_data, or add a note. Everything else is written by the stage tools.
+
+    Stage, approval, outreach, hand-off, close and loss reason can only change through their own tools,
+    so no agent can mark its own draft as approved or a lead as handed off.
+    """
     if lead_id not in LEADS:
         return {"error": f"unknown lead {lead_id}"}
+    allowed = {"status": {"insufficient_data"}, "notes": None}
+    bad = [k for k, v in fields.items() if k not in allowed or (allowed[k] is not None and v not in allowed[k])]
+    if bad:
+        return {"ok": False, "error": "field_not_allowed", "fields": bad,
+                "allowed": "status=insufficient_data, notes. Use the stage tools for everything else."}
     LEADS[lead_id].update(fields)
+    log_event(lead_id, "outreach", "skipped" if fields.get("status") else "success", f"update_lead: {fields}", by="agent")
     return {"ok": True, "lead": LEADS[lead_id]}
 
 

@@ -50,6 +50,10 @@ def assign_rep(lead_id: str) -> dict:
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": f"unknown lead {lead_id}"}
+    if (lead.get("handoff") or {}).get("rep_id"):  # already assigned: don't count the lead twice
+        rep_id = lead["handoff"]["rep_id"]
+        return {"ok": True, "rep_id": rep_id, "rep": REPS.get(rep_id), "already_assigned": True,
+                "next": "find_free_slots, book_meeting, save_call_brief, then tell the rep in Slack"}
     rep_id = _pick(lead)
     if rep_id is None:
         if not any(q["lead_id"] == lead_id for q in QUEUE):

@@ -120,7 +120,7 @@ Human approval remains mandatory before sandbox sending.
 1. Call `save_draft(lead_id, subject, body)` and confirm it returned success.
 2. Call `record_approval(lead_id, subject, body)` with the draft you just saved. This is the human check: the rep sees the whole email and approves it, edits it, or rejects it. Don't ask for approval in chat as well; this tool is the only approval.
 3. Approved or edited: call `send_email(lead_id)`. It only sends a draft that has an approval, and only to sandbox addresses. Only report an email as sent after it returns success.
-4. Rejected: read the rep's note, redraft once with `save_draft`, and call `record_approval` again. Rejected twice: stop and report the notes to the Manager Agent.
+4. Rejected: call `log_interaction` with stage `approval`, outcome `failure` and the rep's note as the message (if the rep rejected through Fleet's approval, the tool never ran, so this is the only record). Then redraft once with `save_draft` and call `record_approval` again. Rejected twice: stop and report the notes to the Manager Agent.
 
 Never send real outreach emails.
 

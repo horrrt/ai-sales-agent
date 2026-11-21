@@ -30,7 +30,7 @@ class Script:
 def fresh(monkeypatch):
     for obj in (store.LEADS, store.APPROVALS, store.PROPOSALS):
         obj.clear()
-    for obj in (store.INTERACTIONS, store.QUEUE, outreach.SANDBOX_OUTBOX):
+    for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX):
         obj.clear()
     store.REPS.clear()
     store.REPS.update(json.loads((store.DATA / "reps.demo.json").read_text()))
@@ -297,3 +297,34 @@ def test_state_snapshot_round_trip(tmp_path, monkeypatch):
     store.LEADS.clear()
     store.load()
     assert "L-001" in store.LEADS
+
+
+# --- Guards added after review ---------------------------------------------------------------
+
+def test_update_lead_cannot_fake_an_approval():
+    lead_through_research()
+    outreach.save_draft("L-001", "Subject line", "Body of the email")
+    h = outreach._draft_hash("Subject line", "Body of the email")
+    r = shared.update_lead("L-001", {"stage": "approved", "outreach": {"approval": {"decision": "approve", "draft_hash": h}}})
+    assert r["ok"] is False
+    assert outreach.send_email("L-001")["error"] == "not_approved"
+    assert shared.update_lead("L-001", {"status": "insufficient_data"})["ok"]
+
+
+def test_a_reply_is_handled_once_and_a_rep_assigned_once():
+    sent_lead()
+    outreach.get_replies()  # the stub inbox gives every sent email a positive reply
+    assert len(outreach.get_replies()) == 1
+    stub("positive")
+    assert outreach.read_reply("L-001", "Sounds interesting")["label"] == "positive"
+    assert outreach.get_replies() == []
+    assert outreach.read_reply("L-001", "Sounds interesting")["already_handled"] is True
+    before = store.REPS["rep-1"]["active_leads"]
+    handoff.assign_rep("L-001")
+    assert handoff.assign_rep("L-001")["already_assigned"] is True
+    assert store.REPS["rep-1"]["active_leads"] == before + 1
+
+
+def test_read_reply_refuses_a_lead_that_was_never_emailed():
+    lead_through_research()
+    assert outreach.read_reply("L-001", "hi")["ok"] is False
