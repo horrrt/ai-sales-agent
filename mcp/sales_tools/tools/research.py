@@ -3,6 +3,7 @@
 STUB: returns fake data in the right shape. Replace with Clay and web research.
 """
 from ..app import mcp
+from .. import sim
 from ..store import LEADS
 
 
@@ -18,8 +19,12 @@ def research_target(lead_id: str) -> dict:
     lead = LEADS.get(lead_id)
     if not lead:
         return {"error": f"unknown lead {lead_id}"}
-    return {
+    profile = sim.research(lead_id) or {
         "summary": f"STUB: {lead['company']['name']} is a {lead['company']['industry']} company with {lead['company']['employees']} employees.",
         "facts": [{"fact": "STUB: recently hired two account executives", "source_url": "https://example.com"}],
         "enough_to_personalize": True,
     }
+    # Save it on the lead: positioning and outreach read research from get_lead, not from this return value.
+    lead["research"] = profile
+    lead["stage"] = "researched"
+    return profile

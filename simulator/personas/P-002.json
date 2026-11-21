@@ -1,0 +1,55 @@
+{
+  "persona_id": "P-002",
+  "lead_id": "L-102",
+  "lead": {
+    "lead_id": "L-102",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Erik Lund",
+      "title": "Founder",
+      "email": "erik@ledgerfox.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Ledgerfox AB",
+      "domain": "ledgerfox.example",
+      "country": "SE",
+      "employees": 18,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Reconciliation software for accounting firms, moving towards banks.",
+      "facts": [
+        {
+          "fact": "Blog post 'Why we are moving upmarket to banks' published October 2026",
+          "source_url": "https://ledgerfox.example/blog/moving-upmarket"
+        },
+        {
+          "fact": "Founder LinkedIn post: lost a deal to a bigger vendor 'who simply had the paperwork'",
+          "source_url": "https://ledgerfox.example/about/press"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Lost a Nordic bank deal in October because they had no SOC 2 report. Two more bank prospects are in the pipeline.",
+    "pains": [
+      "Lost a bank deal over missing SOC 2",
+      "Two bank prospects will ask the same",
+      "No one in-house knows compliance"
+    ],
+    "current_tools": "Nothing yet; looked at Vanta's website but found it US-focused and pricey",
+    "timing": "Now",
+    "budget": "Founder decides, price-aware but the lost deal was worth 10x the price",
+    "objections": [
+      "Is a SOC 2 Type I enough for banks or do they want Type II?"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Casual, direct, Swedish-English, short sentences"
+  },
+  "design_note": "Strong fit if the email connects to the lost bank deal; a generic email may get not_now."
+}

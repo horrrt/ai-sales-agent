@@ -5,6 +5,10 @@ description = "MCP server with the custom tools for the Sales Assistant Fleet ag
 requires-python = ">=3.11"
 dependencies = ["mcp[cli]>=1.9,<2"]
 
+[project.optional-dependencies]
+# Simulated prospects in get_replies (SALES_LEADS=personas). Not needed for the deployed stub server.
+sim = ["anthropic>=0.80", "langsmith>=0.4"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

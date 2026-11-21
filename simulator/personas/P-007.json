@@ -1,0 +1,45 @@
+{
+  "persona_id": "P-007",
+  "lead_id": "L-107",
+  "lead": {
+    "lead_id": "L-107",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Anders Ek",
+      "title": "CEO",
+      "email": "anders@granitsoftware.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Granit Software AB",
+      "domain": "granitsoftware.example",
+      "country": "SE",
+      "employees": 31,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Field-service scheduling software for property managers.",
+      "facts": [
+        {
+          "fact": "Customers include three large Swedish property groups",
+          "source_url": "https://granitsoftware.example/customers"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "On parental leave until January.",
+    "pains": [],
+    "current_tools": "",
+    "timing": "",
+    "budget": "",
+    "objections": [],
+    "fixed_reply": "out_of_office",
+    "reply_style": "Auto-reply"
+  },
+  "design_note": "Fixed outcome: out_of_office auto-reply."
+}

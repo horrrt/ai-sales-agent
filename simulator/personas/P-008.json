@@ -1,0 +1,51 @@
+{
+  "persona_id": "P-008",
+  "lead_id": "L-108",
+  "lead": {
+    "lead_id": "L-108",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Emilia Nieminen",
+      "title": "Founder",
+      "email": "emilia@mokkibooking.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Mokki Booking Oy",
+      "domain": "mokkibooking.example",
+      "country": "FI",
+      "employees": 12,
+      "industry": "Consumer travel app"
+    },
+    "research": {
+      "summary": "Booking app for Finnish summer cottages, sold to consumers.",
+      "facts": [
+        {
+          "fact": "App store listing: consumer app for booking cottages",
+          "source_url": "https://mokkibooking.example/app"
+        },
+        {
+          "fact": "No business customers listed on the website",
+          "source_url": "https://mokkibooking.example/about"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Sells only to consumers. Has never received a security questionnaire.",
+    "pains": [],
+    "current_tools": "",
+    "timing": "",
+    "budget": "",
+    "objections": [
+      "Why are you emailing me about this?"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Irritated by cold email, Finnish-English"
+  },
+  "design_note": "Outside the ICP (B2C). Positioner should mark wrong_company_fit. If emailed anyway: negative or unsubscribe."
+}

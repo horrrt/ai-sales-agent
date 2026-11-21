@@ -1,0 +1,54 @@
+{
+  "persona_id": "P-011",
+  "lead_id": "L-111",
+  "lead": {
+    "lead_id": "L-111",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Karin Holm",
+      "title": "CEO",
+      "email": "karin@stigen.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Stigen Consulting AB",
+      "domain": "stigen.example",
+      "country": "SE",
+      "employees": 19,
+      "industry": "IT services"
+    },
+    "research": {
+      "summary": "Data-engineering consultancy for Swedish mid-size companies.",
+      "facts": [
+        {
+          "fact": "CEO LinkedIn post: 'security questionnaires are eating my weekends'",
+          "source_url": "https://stigen.example/news/ceo-post"
+        },
+        {
+          "fact": "Clients include a Swedish pension fund",
+          "source_url": "https://stigen.example/customers"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "Pain is the questionnaires, not a certificate. Clients have not asked for SOC 2 or ISO yet.",
+    "pains": [
+      "Weekends lost to security questionnaires"
+    ],
+    "current_tools": "Copy-pastes old answers",
+    "timing": "Would try something now if cheap",
+    "budget": "Price-sensitive, EUR 650 a month feels high",
+    "objections": [
+      "Price",
+      "We don't need a certificate, just help with questionnaires"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Direct, a bit dry, Swedish-English"
+  },
+  "design_note": "Positive if the email leads with questionnaire help; price objection likely."
+}

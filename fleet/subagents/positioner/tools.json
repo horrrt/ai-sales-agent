@@ -29,6 +29,12 @@
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
       "display_name": "Save positioning angle"
+    },
+    {
+      "name": "tag_loss_reason",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Tag loss reason"
     }
   ],
   "interrupt_config": {
@@ -36,6 +42,7 @@
     "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::update_lead::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::save_positioning::Sales tools (sandbox)": false
+    "https://sales-tools.invalid/mcp::save_positioning::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::tag_loss_reason::Sales tools (sandbox)": false
   }
 }

@@ -7,13 +7,19 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import sim
+
 DATA = Path(__file__).resolve().parents[2] / "data"
 
-LEADS: dict[str, dict] = {l["lead_id"]: l for l in json.loads((DATA / "sample_leads.json").read_text())}
+# SALES_LEADS=personas swaps the sample leads for the simulated prospects (see sim.py).
+LEADS: dict[str, dict] = sim.leads() if sim.ENABLED else {
+    l["lead_id"]: l for l in json.loads((DATA / "sample_leads.json").read_text())}
 INTERACTIONS: list[dict] = []
 
 _brief_file = DATA / "customer_brief.json"
-BRIEF: dict = json.loads((_brief_file if _brief_file.exists() else DATA / "customer_brief.example.json").read_text())
+if not _brief_file.exists():  # personas are written for the demo customer; otherwise the TODO example
+    _brief_file = DATA / ("customer_brief.demo.json" if sim.ENABLED else "customer_brief.example.json")
+BRIEF: dict = json.loads(_brief_file.read_text())
 
 
 def now() -> str:

@@ -1,0 +1,49 @@
+{
+  "persona_id": "P-005",
+  "lead_id": "L-105",
+  "lead": {
+    "lead_id": "L-105",
+    "customer_id": "C-demo",
+    "person": {
+      "name": "Mikko Laine",
+      "title": "CEO",
+      "email": "mikko@sisulearning.sandbox.test",
+      "linkedin_url": ""
+    },
+    "company": {
+      "name": "Sisu Learning Oy",
+      "domain": "sisulearning.example",
+      "country": "FI",
+      "employees": 15,
+      "industry": "B2B SaaS"
+    },
+    "research": {
+      "summary": "Learning platform sold to Finnish municipalities.",
+      "facts": [
+        {
+          "fact": "Won a municipal tender in Tampere region, announced June 2026",
+          "source_url": "https://sisulearning.example/news/tampere-tender"
+        }
+      ],
+      "enough_to_personalize": true
+    },
+    "stage": "researched",
+    "status": "active",
+    "loss_reason": null
+  },
+  "private": {
+    "situation": "The next round of municipal tenders (autumn 2027) will require ISO 27001. Nothing needed before then.",
+    "pains": [
+      "ISO 27001 needed for the 2027 tenders"
+    ],
+    "current_tools": "None",
+    "timing": "Not before spring 2027",
+    "budget": "Fine when the time comes",
+    "objections": [
+      "Too early for us"
+    ],
+    "fixed_reply": null,
+    "reply_style": "Warm, brief, Finnish-English"
+  },
+  "design_note": "Bad timing. Correct outcome is not_now."
+}

@@ -3,6 +3,7 @@
 SANDBOX: send_email never sends real email. Replies come from the simulated prospects (simulator/, Gyula).
 """
 from ..app import mcp
+from .. import sim
 from ..store import LEADS, now
 
 SANDBOX_OUTBOX: list[dict] = []
@@ -32,8 +33,17 @@ def send_email(lead_id: str) -> dict:
 
 @mcp.tool()
 def get_replies(since: str | None = None) -> list[dict]:
-    """Get prospect replies. STUB: every sent email gets a canned positive reply. Will call simulator/ later."""
-    return [{"lead_id": m["lead_id"], "from": m["to"], "body": "STUB: Sounds interesting, can we talk next week?"} for m in SANDBOX_OUTBOX]
+    """Get prospect replies from the sandbox inbox. A prospect who ignores the email has no reply here."""
+    replies = []
+    for m in SANDBOX_OUTBOX:
+        if "reply" not in m:  # ask each prospect once per sent email
+            if sim.ENABLED:
+                m["reply"] = sim.reply(m["lead_id"], m.get("draft_subject", ""), m.get("draft_body", ""))
+            else:  # STUB without simulated prospects: every sent email gets a canned positive reply
+                m["reply"] = {"body": "STUB: Sounds interesting, can we talk next week?"}
+        if m["reply"]:
+            replies.append({"lead_id": m["lead_id"], "from": m["to"], "body": m["reply"]["body"]})
+    return replies
 
 
 @mcp.tool()
