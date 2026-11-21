@@ -1,1 +1,344 @@
 lead_id,reply_body,expected_label,notes
+L-101,"Hi Mette,
+
+Thank you for reaching out. We do have ISO 27001 and security questionnaire pressure at the moment, but our work is with Norwegian hospital data, so I would need to know how this fits with Norwegian health data rules and our hospital customers' requirements before I could consider it.
+
+We already have a consultant quote for ISO 27001 help, so any outline would need to show clearly what you do differently and what it would cost.
+
+Best regards,
+Ingrid",negative,"simulated (llm), arm=research, sample=0"
+L-101,"Hi Mette,
+
+Thanks for reaching out. We are not a SaaS company in the usual sense and our need is specifically ISO 27001 for a hospital trust, not SOC 2. Please confirm whether your process has been used for Norwegian health data requirements before I take a call.
+
+Best regards,
+Ingrid",negative,"simulated (llm), arm=template, sample=0"
+L-101,"Hi Mette,
+
+Thank you for reaching out. We are working on ISO 27001 now, with a deadline from the hospital trust, so the timing is relevant. However, our work is in health data for Norwegian hospitals, and I would need to know how you handle Norwegian health data rules and whether you have worked with healthcare clients before. Please send a short outline with that addressed and I will review it.
+
+Best regards,
+Ingrid",negative,"simulated (llm), arm=research, sample=1"
+L-101,"Hi Mette,
+
+Thank you for reaching out. We are working on ISO 27001 at the moment, but for a health data platform in Norway, so I would need to know how Kvitto handles Norwegian health data rules and whether you have done ISO 27001 for a company like ours specifically. If you can answer that in writing, I can decide whether a call is worth it.
+
+Best regards,
+Ingrid",negative,"simulated (llm), arm=template, sample=1"
+L-101,"Hei Mette,
+
+Thanks for reaching out. Questionnaires are indeed a pain point for us right now, and ISO 27001 is a hard requirement from our pilot partner.
+
+Before we consider a call, could you confirm whether your work covers Norwegian health data rules (Helseregisterloven, Personopplysningsloven), and whether your ISO 27001 timeline includes the certification audit itself? We're already comparing a consultant quote, so I'd need to see clear scope and pricing first.
+
+Best regards,
+Ingrid",not_now,"simulated (llm), arm=research, sample=2"
+L-101,"Hi Mette,
+
+Thank you for reaching out. We need ISO 27001 specifically, and our hospital customer requires it within about six months. SOC 2 does not solve that for us. I also need to be sure the solution works under Norwegian health data rules, which this email does not address.
+
+We are already reviewing an external consultant for ISO 27001, so I will pass for now.
+
+Best regards,
+Ingrid",negative,"simulated (llm), arm=template, sample=2"
+L-102,"Hi Mette,
+
+Yeah, that's exactly our problem right now. Lost a bank deal in October over no SOC 2, and two more banks are asking the same.
+
+Quick question before we talk: are banks okay with Type I or do they usually want Type II? That changes the timeline a lot for us.
+
+If you can do next week, send a time that works and I'll be there.
+
+Erik",positive,"simulated (llm), arm=research, sample=0"
+L-102,"Hi Mette,
+
+Yes, this is exactly our problem right now. We lost a Nordic bank deal in October because we had no SOC 2 report, and two more bank prospects are coming.
+
+Before a call: do banks in the Nordics actually accept SOC 2 Type I, or do they want Type II? That decides the timeline for us. If you can answer that, next week works. Tuesday or Wednesday afternoon?
+
+Erik
+Ledgerfox",positive,"simulated (llm), arm=template, sample=0"
+L-102,"Hi Mette,
+
+Yes, this is exactly what we're stuck on right now. We lost a Nordic bank deal in October over no SOC 2 report, and two more bank prospects are coming.
+
+Before we talk, one question: for banks, is Type I enough or do they usually want Type II? That changes the timeline a lot for us.
+
+Next week works. Tuesday or Wednesday afternoon CET?
+
+Erik",positive,"simulated (llm), arm=research, sample=1"
+L-102,"Hi Mette,
+
+Yes, this is exactly what we're dealing with. We lost a Nordic bank deal in October because we had no SOC 2 report, and two more banks are in the pipeline.
+
+Quick question before a call: do banks in practice want Type II, or is Type I enough to get them past procurement? Our timeline is now.
+
+Tuesday or Wednesday next week works for me.
+
+Erik",positive,"simulated (llm), arm=template, sample=1"
+L-102,"Hi Mette,
+
+Yeah, this is exactly our problem right now. We lost a Nordic bank deal in October over no SOC 2 report and two more bank prospects are in the pipeline.
+
+Before we talk, quick question: is Type I enough for banks or do they usually want Type II? That changes what we'd need to do.
+
+Next week works. Send me a few times.
+
+Erik",positive,"simulated (llm), arm=research, sample=2"
+L-102,"Hi Mette,
+
+This is actually relevant. We lost a Nordic bank deal in October because we had no SOC 2 report, and two more bank prospects are in the pipeline.
+
+Quick question before a call: do banks usually accept Type I, or do they push for Type II? That changes the timeline a lot for us.
+
+Also, what does it cost roughly? We looked at Vanta and it was too pricey, so I need a ballpark.
+
+I can do a call Tuesday or Wednesday next week.
+
+Erik",positive,"simulated (llm), arm=template, sample=2"
+L-103,"Hi Mette,
+
+Thanks. Our insurers have hinted at ISO 27001 too, so it's on our radar. Not urgent right now though. Send the overview and I'll look at it with our CEO, anything above 5k EUR/year needs his sign-off.
+
+Aino",not_now,"simulated (llm), arm=research, sample=0"
+L-103,"Hi Mette,
+
+Questionnaires are a real pain for us, but not urgent this quarter. We'd need CEO sign-off above 5k EUR/yr anyway. Can you send pricing in writing and what the ISO 27001 path looks like for a 35-person firm? Maybe revisit in Q3.
+
+Aino",not_now,"simulated (llm), arm=template, sample=0"
+L-103,"Hi Mette,
+
+Questionnaires do eat my evenings, so yes, send the outline. We're interested but not urgent. Anything above EUR 5k/yr needs our CEO's sign-off, so put the cost in it. Also tell me whether our existing ISO 9001 counts toward anything, or if we start from zero.
+
+I'll look at it after the next quarterly questionnaire, around end of Q3.
+
+Aino",not_now,"simulated (llm), arm=research, sample=1"
+L-103,"Hi Mette,
+
+Questionnaires are a real pain for us, yes. But not urgent right now. Maybe revisit in Q3. Is ISO 9001 not enough for insurers? If you have pricing for ~EUR 5k range, send it in writing and I can take it to our CEO.
+
+Aino",not_now,"simulated (llm), arm=template, sample=1"
+L-103,"Hi Mette,
+
+Yes, send the outline. The questionnaires are a real pain for us. Not urgent this quarter though, and anything above 5k/yr goes to our CEO, so keep it short and concrete.
+
+Aino",not_now,"simulated (llm), arm=research, sample=2"
+L-103,"Hi Mette,
+
+Questionnaires are a real pain for us, yes. But not urgent right now, and we'd need CEO sign-off above 5k a year anyway. Check back in Q3. Meanwhile, send pricing and what the ISO 27001 path looks like for a company our size, and how it differs from our ISO 9001.
+
+Aino",not_now,"simulated (llm), arm=template, sample=2"
+L-104,"Hi Mette,
+
+Thanks for reaching out and the kind words on the funding. We're already evaluating Vanta for SOC 2 and are fairly far along, so we won't be looking at other options for this. Best of luck with Kvitto.
+
+Best,
+Johan",negative,"simulated (llm), arm=research, sample=0"
+L-104,"Hi Mette,
+
+Thanks for reaching out. We're actually already looking at SOC 2 with Vanta and are a few weeks from a decision, so I don't think a call would make sense right now.
+
+Best,
+Johan",negative,"simulated (llm), arm=template, sample=0"
+L-104,"Hi Mette,
+
+Thanks for reaching out, and congrats on the Kvitto work. We're actually already in an evaluation with Vanta for SOC 2, so we're not looking at other options right now. Our CTO owns that decision, so I'd keep it there.
+
+Best,
+Johan",negative,"simulated (llm), arm=research, sample=1"
+L-104,"Hi Mette,
+
+Thanks for reaching out. We're already quite far along with Vanta for SOC 2, so we're not looking at other options right now.
+
+Best,
+Johan",negative,"simulated (llm), arm=template, sample=1"
+L-104,"Hi Mette,
+
+Thanks for reaching out, and congrats to you too on your growth. The SOC 2 question is real for us, but we're already evaluating Vanta and our CTO is leaning that way, so we're not looking at other options right now.
+
+Best,
+Johan",negative,"simulated (llm), arm=research, sample=2"
+L-104,"Hi Mette,
+
+Thanks for reaching out. We're already looking at Vanta for SOC 2 and have a demo done, so we're not in the market for another option right now.
+
+Best,
+Johan",negative,"simulated (llm), arm=template, sample=2"
+L-105,"Hi Mette,
+
+Thanks, and congrats on your own work with the Danish team. ISO 27001 is on our list, but the next municipal round where it's needed is autumn 2027, so we're not looking at this before spring 2027. Could you check back then?
+
+Best,
+Mikko",not_now,"simulated (llm), arm=research, sample=0"
+L-105,"Hi Mette,
+
+Thanks for reaching out. We do need ISO 27001 for the autumn 2027 tenders, but nothing is needed before spring 2027, so it's too early for us right now. I'll get back to you in the new year if it makes sense then.
+
+Best,
+Mikko",not_now,"simulated (llm), arm=template, sample=0"
+L-105,"Hi Mette,
+
+Thanks for reaching out, and thanks for the congratulations. ISO 27001 is on our radar since the next municipal round will ask for it, but we won't start before spring 2027. Could you check back with me then?
+
+Best,
+Mikko",not_now,"simulated (llm), arm=research, sample=1"
+L-105,"Hi Mette,
+
+Thanks for reaching out. We do need ISO 27001 for the municipal tenders, but the next round is autumn 2027 and we're not looking at it before spring 2027. Could you get back in touch around January 2027?
+
+Best,
+Mikko",not_now,"simulated (llm), arm=template, sample=1"
+L-105,"Hi Mette,
+
+Thanks for reaching out, and thanks for the congratulations. ISO 27001 will be needed for our autumn 2027 tender round, but we're not starting anything before spring 2027. Please check back then.
+
+Best,
+Mikko",not_now,"simulated (llm), arm=research, sample=2"
+L-105,"Hi Mette,
+
+Thanks for reaching out. We do need ISO 27001 eventually, but for the autumn 2027 tender round, so it's too early for us right now. Nothing is needed before spring 2027. I'll get back to you then if it makes sense.
+
+Best,
+Mikko",not_now,"simulated (llm), arm=template, sample=2"
+L-106,"Hi, thanks, but this isn't something I handle. Security and compliance sit with our CTO. You could try them instead.
+
+Silje",wrong_person,"simulated (fixed), arm=template, sample=0"
+L-107,"Thank you for your email. I am on leave until January and have limited access to email. For urgent matters please contact info@granitsoftware.sandbox.test.
+
+Anders",out_of_office,"simulated (fixed), arm=research, sample=0"
+L-107,"Thank you for your email. I am on leave until January and have limited access to email. For urgent matters please contact info@granitsoftware.sandbox.test.
+
+Anders",out_of_office,"simulated (fixed), arm=template, sample=0"
+L-108,"Hi Mette,
+
+We sell only to consumers, we have never had a security questionnaire and we have no business customers, so this does not apply to us. Please remove me from your list.
+
+Emilia",negative,"simulated (llm), arm=template, sample=0"
+L-108,"Hi Mette,
+
+We only sell to consumers, so we have never received a security questionnaire and don't need SOC 2 or ISO 27001. Please remove us from your list.
+
+Emilia",negative,"simulated (llm), arm=template, sample=1"
+L-108,"Hi Mette,
+
+We only sell to consumers, so we've never received a security questionnaire and don't need SOC 2 or ISO 27001 right now. Please remove us from your list.
+
+Emilia",negative,"simulated (llm), arm=template, sample=2"
+L-109,"Hi Mette,
+
+We do need SOC 2 for a renewal in about four months, so this is live for us. Before I take a call, I need specifics: how much of our engineering time does the integration take (GitHub, cloud accounts, HR and access reviews), and what does the 8 weeks look like in practice? Are you a Type I or Type II path, and what does the price look like for 47 people?
+
+Send those and I'll look.
+
+Lars",negative,"simulated (llm), arm=research, sample=0"
+L-109,"Hi Mette,
+
+We're planning to do the SOC 2 work in-house with our own team and the DevSecOps hire. Before I'd take a call, I need to know how many engineering hours the integration takes on our side, what it costs per year, and whether it covers our cloud setup. Fjordline is 14 people, so I'm not sure their case maps to us.
+
+Lars",negative,"simulated (llm), arm=template, sample=0"
+L-109,"Hi Mette,
+
+We're planning to do the SOC 2 work in-house for now. If you want to change that, reply with the actual engineering time it takes on our side (integration, access for the cloud/GitHub/HR connectors, and what the named lead does) and the price per year. We'd need it under EUR 10k.
+
+Lars",negative,"simulated (llm), arm=research, sample=1"
+L-109,"Hi Mette,
+
+We do have a SOC 2 requirement coming up, so this is live for us. A few things first, though: what does the integration actually need from our side in engineering hours (we run AWS and GitHub, mostly), and does SOC 2 Type II coverage fit a four-month window, or is it only Type I? Your email also assumed we're at a stage we're not really at, so I'd want those answers in writing before I spend 20 minutes on a call. Our budget is around EUR 10k a year.
+
+Lars",not_now,"simulated (llm), arm=template, sample=1"
+L-109,"Hi Mette,
+
+The SOC 2 renewal is real, so the question is fair. But I'm not booking a call before I know more. Send me in writing: price for a 47-person company, how many engineering hours the integration takes on our side (GitHub, cloud, HR), and whether the report covers our renewal timeline in four months.
+
+We're planning to start with spreadsheets and our new DevSecOps hire, so I need to see why yours is faster before I switch.
+
+Lars",negative,"simulated (llm), arm=research, sample=2"
+L-109,"Hi Mette,
+
+We have a SOC 2 renewal coming up, so the problem is real. Before I'd take a call, I need specifics: how many engineering hours does the cloud and tooling integration take on our side, and what does the EUR figure cover per year? If you can answer those in writing, I'll look at it.
+
+Lars",negative,"simulated (llm), arm=template, sample=2"
+L-110,"Hi Mette,
+
+Thanks for reaching out, but security certification is not something our customers ask us about, so this is not a priority for us right now.
+
+Best,
+Hanna",negative,"simulated (llm), arm=template, sample=0"
+L-110,"Hi Mette,
+
+Thanks for reaching out, but this is not really relevant for us. Our customers are small publishers and they have not asked about SOC 2 or ISO 27001, so we will pass for now.
+
+Best,
+Hanna",negative,"simulated (llm), arm=template, sample=1"
+L-110,"Hi Mette,
+
+Thanks, but this isn't relevant for us. Our customers are small publishers and none of them have asked about SOC 2 or ISO 27001, so we won't be looking at this.
+
+Best,
+Hanna",negative,"simulated (llm), arm=template, sample=2"
+L-111,"Hi Mette,
+
+Thanks, but we don't need SOC 2 or ISO right now, clients haven't asked. The questionnaires are the problem. What does the helper part cost? EUR 650 a month is a lot for us at 19 people, so if it's much more than that I'll pass.
+
+Karin",negative,"simulated (llm), arm=research, sample=0"
+L-111,"Hi Mette,
+
+We don't need a certificate. Our clients haven't asked for SOC 2 or ISO. The problem is the questionnaires themselves, and I'm not paying EUR 650+ a month for audit prep we don't need.
+
+Karin",negative,"simulated (llm), arm=template, sample=0"
+L-111,"Hi Mette,
+
+Thanks, but we don't need SOC 2 or ISO right now. Our clients haven't asked for either. The only thing that hurts is the questionnaires, and if it's a monthly subscription it would need to be well under what we'd pay for a few hours of our own time. Not a fit at this price.
+
+Karin",negative,"simulated (llm), arm=research, sample=1"
+L-111,"Hi Mette,
+
+Thanks, but we haven't been asked for SOC 2 or ISO by any client, and what eats our time is the questionnaires themselves, not a certificate. Doesn't sound like your product is built for that, and it's well above what I'd pay for it anyway.
+
+Karin",negative,"simulated (llm), arm=template, sample=1"
+L-111,"Hi Mette,
+
+Thanks, but we don't need SOC 2 or ISO right now. Clients haven't asked for either. Our problem is the questionnaires themselves, and that's the part I'd need help with. If you only do that, send me the price in euros per month. EUR 650 is high for us at our size, so I'd want to see it.
+
+Karin",negative,"simulated (llm), arm=research, sample=2"
+L-111,"Hi Mette,
+
+We don't need a certificate at the moment, our clients haven't asked for SOC 2 or ISO. What actually eats my time is the questionnaires themselves. Your pitch is aimed at a different problem, and at the price you'd need to be quite a lot cheaper for us to consider it.
+
+Karin",negative,"simulated (llm), arm=template, sample=2"
+L-112,"Hi Mette,
+
+Thanks, the honest clarity on NIS2 is appreciated. ISO 27001 evidence is exactly what our utility customers are starting to ask for, and we have no security team in-house, so the timing is roughly right for us over the next six months.
+
+Before I read a one-pager, two questions: have you worked with hardware/OT-adjacent companies like us (IoT monitoring for utilities), and does the 8 weeks assume we already have documented policies, or do you build those too?
+
+If the answers look good, send the overview and we can take a short call.
+
+Ola",positive,"simulated (llm), arm=research, sample=0"
+L-112,"Hi Mette,
+
+Thanks, but this is not really the right fit as written. We need ISO 27001 evidence because our utility customers are pushing NIS2 requirements down to us, and your note is mostly about SOC 2 and generic B2B SaaS. Does Kvitto cover ISO 27001 specifically, and does it address NIS2 supplier obligations for power utilities? If yes, send me a short written answer and I'll look at it. A call is not needed yet.
+
+Best,
+Ola",negative,"simulated (llm), arm=template, sample=0"
+L-112,"Hei Mette,
+
+Thanks for the note. ISO 27001 is exactly what our utility customers are asking for, so the topic is real for us. But Kvitto is built for SaaS companies and you say you don't cover NIS2, which is the requirement actually driving the request. We're an IoT monitoring vendor with no security team, so I'd need to know if your 8 weeks work for an OT-adjacent setup and whether utilities accept your ISO 27001 as evidence.
+
+If you can answer that, send the outline and I'll take a look.
+
+Ola",negative,"simulated (llm), arm=research, sample=1"
+L-112,"Hi Mette, thanks for reaching out. We are looking at ISO 27001 within the next six months because our utility customers are asking for it as evidence for NIS2. Your email doesn't say whether Kvitto covers NIS2 or only SOC 2/ISO 27001 evidence. If it does cover NIS2 requirements for suppliers, send me a short write-up and I'll come back to you in about two months when we're closer to starting. Best, Ola",not_now,"simulated (llm), arm=template, sample=1"
+L-112,"Hi Mette,
+
+Thanks for reaching out. We are definitely looking at ISO 27001 because our utility customers are asking for it as NIS2 evidence. Our situation is a bit different from SaaS though: we are an IoT monitoring company with 36 people and no security team yet, and we have never done either audit.
+
+Before I take a call, can you tell me whether Kvitto has worked with industrial IoT or OT-adjacent vendors, and what the 8 weeks assume about our existing controls? If that is a fit I am happy to talk later in the quarter.
+
+Best,
+Ola",negative,"simulated (llm), arm=research, sample=2"
+L-112,"Hi Mette,
+
+Thanks, but this isn't quite our situation. We're an IoT monitoring supplier to Norwegian power utilities, so what matters to us is NIS2 flow-down and ISO 27001 as evidence for utility customers, not general SOC 2 readiness. Does Kvitto cover NIS2 supplier requirements specifically? If not, I don't think a call makes sense right now.
+
+Ola",negative,"simulated (llm), arm=template, sample=2"
