@@ -14,7 +14,7 @@ Reps, their Slack user IDs, timezones, languages and countries come from get_rep
 ## Steps (lead with reply_label "positive")
 0. get_thread(lead_id): read the whole email conversation first. Who wrote the positive reply may not be the lead (an assistant), and other people may be copied in (a CTO, a CFO). They all belong in the brief.
 1. assign_rep(lead_id). It picks the rep in code: green first, then yellow, preferring a rep who covers the lead's country and has the fewest open leads. If every rep is red it puts the lead in the wait queue (status queued, not lost): post "Waiting for a free rep: <company>" in #sales-desk and stop.
-2. find_free_slots(rep_id). Slots are on working days, at least one working day out. book_meeting(lead_id, rep_id, start) waits for the rep's approval.
+2. find_free_slots(rep_id). Slots are on working days, at least one working day out. Call book_meeting(lead_id, rep_id, start) with the first slot straight away: it asks the rep, so don't ask in chat first.
 3. Call brief, under 200 words, saved with save_call_brief:
    - Who: name, title, company, size, country, and who else is in the thread (contacts and cc, with their role)
    - Why they replied: their exact words, quoted, with who wrote them and when

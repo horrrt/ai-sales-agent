@@ -489,3 +489,10 @@ def test_pipeline_weights_open_deals_and_flags_quiet_ones():
     store.LEADS["L-001"]["updated_at"] = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
     assert deals.get_pipeline("rep-1")["stale_deals"][0]["lead_id"] == "L-001"
     assert deals.get_pipeline("rep-2")["by_stage"]["quote"]["count"] == 0
+
+
+def test_funnel_metrics_with_a_deal_that_never_set_auto_close():
+    sent_lead()
+    store.LEADS["L-001"]["deal"] = {"stage": "closed_won", "auto_close": None, "amount_eur": 7800}
+    m = shared.get_funnel_metrics()
+    assert m["closed_automatically"] == 0 and m["deals_won"] == 1

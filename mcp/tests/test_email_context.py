@@ -399,3 +399,16 @@ def test_old_snapshot_outbox_is_upgraded(tmp_path, monkeypatch):
     assert store.INBOX[0]["body"] == "Yes, let's talk." and store.INBOX[0]["in_reply_to"] == store.OUTBOX[0]["message_id"]
     stub("positive")
     assert outreach.read_reply(LEAD)["label"] == "positive"
+
+
+def test_replies_read_one_at_a_time_keep_the_real_reply_waiting():
+    sent_lead()
+    ooo = reply("I'm out of office until Monday.", received_at="2026-11-24T09:05:00+00:00")
+    real = reply("Back now. Yes, send me times.", received_at="2026-11-24T11:00:00+00:00")
+    stub("out_of_office")
+    assert outreach.read_reply(LEAD, message_id=ooo["message_id"])["label"] == "out_of_office"
+    assert "replied" not in store.LEADS[LEAD]["stage_times"]  # an auto-reply isn't the prospect answering
+    assert [r["message_id"] for r in outreach.get_replies()] == [real["message_id"]]
+    stub("positive")
+    assert outreach.read_reply(LEAD, message_id=real["message_id"])["label"] == "positive"
+    assert store.LEADS[LEAD]["stage_times"]["replied"] == "2026-11-24T11:00:00+00:00"

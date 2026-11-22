@@ -100,7 +100,7 @@ def get_funnel_metrics() -> dict:
             "deals_lost": sum((l.get("deal") or {}).get("stage") == "closed_lost" for l in LEADS.values()),
             "won_revenue_eur": round(sum((l.get("deal") or {}).get("amount_eur") or 0 for l in LEADS.values()
                                          if (l.get("deal") or {}).get("stage") == "closed_won"), 2),
-            "closed_automatically": sum((l.get("deal") or {}).get("auto_close") and (l.get("deal") or {}).get("stage") == "closed_won"
+            "closed_automatically": sum(bool((l.get("deal") or {}).get("auto_close")) and (l.get("deal") or {}).get("stage") == "closed_won"
                                         for l in LEADS.values()),
             "median_days_meeting_to_won": _median_deal_days("qualification", "closed_won"),
             "median_hours_reply_to_handoff": _median_hours("replied", "handed_off"),

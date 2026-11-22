@@ -132,6 +132,7 @@ async def run_turns(agent, turns: list[str], approvals: dict, events: list):
 
     approvals = json.loads(json.dumps(approvals))  # reject_first keeps state per case
     config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 150}
+    seen_calls, seen_msgs = set(), set()  # a message streams again after an interrupt resumes: count it once
     for turn in turns:
         events.append({"event": "user", "text": turn})
         payload = {"messages": [{"role": "user", "content": turn}]}
@@ -145,11 +146,15 @@ async def run_turns(agent, turns: list[str], approvals: dict, events: list):
                         continue
                     for m in (val.get("messages", []) if isinstance(val, dict) else []):
                         um = getattr(m, "usage_metadata", None)
-                        if m.type == "ai" and um:
+                        if m.type == "ai" and um and not (m.id and m.id in seen_msgs):
+                            seen_msgs.add(m.id)
                             d = um.get("input_token_details") or {}
                             events.append({"event": "usage", "input": um.get("input_tokens", 0),
                                            "output": um.get("output_tokens", 0), "cache_read": d.get("cache_read", 0) or 0})
                         for tc in getattr(m, "tool_calls", None) or []:
+                            if tc.get("id") and tc["id"] in seen_calls:
+                                continue
+                            seen_calls.add(tc.get("id"))
                             events.append({"event": "tool_call", "agent": who, "tool": tc["name"], "args": tc["args"]})
                         if m.type == "tool":
                             events.append({"event": "tool_result", "agent": who, "tool": m.name, "result": text_of(m.content)[:1500]})

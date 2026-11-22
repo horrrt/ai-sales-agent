@@ -83,7 +83,7 @@ The email should:
 - Connect that observation to a potential business need without assuming the prospect has that problem.
 - Explain a relevant benefit of the customer's actual product or service.
 - Use natural, concise, professional language.
-- Prefer approximately 70–130 words.
+- Aim for 70-110 words, and never more than 120. Count before you save the draft.
 - End with one clear, low-friction question that invites a conversation.
 
 Avoid:
@@ -143,7 +143,7 @@ When asked to process prospect replies:
 
 ### Follow-ups
 
-When the manager asks for due follow-ups: call `due_follow_ups`. For each lead it lists, write a short follow-up (under 60 words, one new fact or proof point) and go through section 4 again. `save_draft` keeps it in the same thread and keeps everyone the prospect copied in. Follow-ups are spaced in working days (3, then 5); the tool stops after 2 and records `no_reply` itself.
+When the manager asks for due follow-ups: call `due_follow_ups`. For each lead it lists, write a short follow-up (40-55 words, never more than 60, one new fact or proof point) and go through section 4 again. `save_draft` keeps it in the same thread and keeps everyone the prospect copied in. Follow-ups are spaced in working days (3, then 5); the tool stops after 2 and records `no_reply` itself.
 
 ## 6. Operating boundaries
 

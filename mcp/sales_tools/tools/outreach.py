@@ -578,7 +578,7 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
         "reply": {k: m[k] for k in ("from", "to", "cc", "subject", "body", "received_at", "attachments")}
                  | {"from_lead": m["from_lead"]},
         "our_email_it_answers": {k: ours[k] for k in ("from", "to", "cc", "subject", "body", "sent_at")} if ours else None,
-        "earlier_unhandled": [p["body"] for p in pending if p is not m],
+        "earlier_unhandled": [p["body"] for p in pending if p is not m and p["received_at"] <= m["received_at"]],
     }
     d = decide("Which kind of reply is this, from the prospect to our sales email? Read it together with our "
                "email it answers, and note who wrote it and who is copied in.", evidence, REPLY_OPTIONS)
@@ -586,8 +586,9 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
         return {"ok": True, "label": None, "decision": d, "message": _public(m), "our_email": _public(ours) if ours else None,
                 "next": "Ask a person to label this reply"}
     label = d["answer"]
-    for p in pending:  # this reply is handled; get_replies won't return it again
-        p["handled"] = True
+    for p in pending:  # this reply and older ones are handled; get_replies won't return them again
+        if datetime.fromisoformat(p["received_at"]) <= datetime.fromisoformat(m["received_at"]):
+            p["handled"] = True
 
     # Who is in the conversation now, and who our next email goes to (reply to all).
     added = []
@@ -604,7 +605,10 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
     out["next_cc"] = _dedupe([a for a in everyone if _addr(a) not in _ours()], drop=[m["from"]])
     out.update(reply_label=label, reply_body=m["body"], reply_from=m["from"], reply_message_id=m["message_id"],
                follow_up_due=None, follow_ups=0)
-    set_stage(lead, "replied", at=m["received_at"])
+    if label == "out_of_office":  # an auto-reply: the stage moves, but it doesn't count as the prospect's reply time
+        lead["stage"], lead["updated_at"] = "replied", now()
+    else:
+        set_stage(lead, "replied", at=m["received_at"])
     gate = {"question": "what kind of reply?", **d}
     base = {"ok": True, "label": label, "decision": d, "from": m["from"], "from_lead": m["from_lead"],
             "cc": m["cc"], "attachments": m["attachments"], "contacts_added": added,
