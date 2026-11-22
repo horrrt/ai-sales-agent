@@ -523,10 +523,10 @@ def _in_days(days: int) -> str:
 
 
 REPLY_OPTIONS = {
-    "positive": "Interested: agrees to talk, asks for a meeting, or asks how to buy or start (also when an assistant or colleague answers for the lead)",
+    "positive": "Interested: agrees to talk, asks for a meeting or times, or asks how to buy or start. Still positive when they copy colleagues in but stay in the conversation themselves, when an assistant answers for the lead, or when they ask us to write to a different address",
     "negative": "Not interested, or declines (including because of price or an existing tool)",
     "not_now": "Interested in principle but asks to come back later",
-    "handover": "Hands the conversation to a colleague they copied in on this reply, who should take it from here",
+    "handover": "Steps back and hands the conversation to a colleague they copied in on this reply, who takes it from here instead of them (e.g. 'Eva will take it from here')",
     "wrong_person": "Says they are not the right contact; may name someone else, but doesn't copy them in",
     "out_of_office": "An automatic absence reply",
     "unsubscribe": "Asks to stop emailing or to be removed",
