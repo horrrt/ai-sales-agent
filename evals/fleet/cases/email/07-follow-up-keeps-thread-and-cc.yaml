@@ -1,0 +1,71 @@
+title: A follow-up after 'not now' stays in the thread and keeps the CFO she copied in
+agent: outreach
+setup:
+  now: '2027-02-23T10:00:00+01:00'
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: replied
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+    positioning:
+      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital
+        procurement asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
+      evidence:
+      - Announced a pilot with a regional hospital trust in Oslo in September 2026
+      confidence: 0.8
+      variant: research
+    outreach:
+      draft_subject: ISO 27001 before the hospital contract
+      draft_body: Hi Ingrid, congratulations on the hospital pilot in Oslo. Hospital procurement usually asks for
+        ISO 27001; Kvitto gets small SaaS teams ready in about 8 weeks. Worth a 20-minute call?
+      sent_at: '2026-11-20T09:00:00+00:00'
+      follow_ups: 0
+      sent_count: 1
+      reply_label: not_now
+      next_to: ingrid@nordvik.sandbox.test
+      next_cc:
+      - Ola Berg <ola@nordvik.sandbox.test>
+      follow_up_due: '2027-02-22T09:00:00+00:00'
+turns:
+- Send the follow-ups that are due today.
+approvals:
+  record_approval: approve
+expect:
+  called:
+  - due_follow_ups
+  - save_draft
+  - send_email
+  asked_person:
+  - record_approval
+  sent:
+    lead: L-201
+    status: sent
+    to_includes:
+    - ingrid@nordvik.sandbox.test
+    cc_includes:
+    - ola@nordvik
+    subject_startswith: 'Re:'
+    same_thread: true
+  email:
+    lead: L-201
+    max_words: 80
+    must_not_contain:
+    - '!'
+  logs_follow_schema: true

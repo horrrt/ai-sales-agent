@@ -27,7 +27,7 @@ Each stage belongs to one subagent. Pass the `lead_id` between stages, never a c
 | 6. Deal closing (the rep runs it) | @deal-desk | `qualify_deal`: BANT from the rep's call notes. `approve_quote`, `record_contract`, `record_deal_outcome` ask a person | Lost: one loss reason. Deals with no activity in 7 days are flagged |
 | Weekly learning loop | @coach | proposals need a person's approval | |
 
-Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
+Handover (the lead passes us to a colleague they copied in): back to @outreach to write to that colleague. Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
 
 ## Where things are recorded
 
@@ -39,6 +39,7 @@ Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-
 ## Rules that always hold
 
 - Sandbox only: every email goes through `send_email`, which sends to test inboxes. Never send real email.
+- Emails go out 08:00-17:00 on working days in the lead's country. A `scheduled` result means it is held until then: report it as scheduled, not sent.
 - The rep approves every email before it is sent. `record_approval` asks the person and shows them the whole email; `send_email` refuses anything not approved. Don't also ask for approval in chat.
 - If a gate returns no answer (`needs_human`, `ready: null`, `label: null`), stop that lead and ask a person in #sales-desk. Never guess.
 - Log every stage with `log_interaction`, including failures, with the prompt_version above. Tag every lost lead with exactly one reason from `schemas/loss_reasons.json` using `tag_loss_reason`.

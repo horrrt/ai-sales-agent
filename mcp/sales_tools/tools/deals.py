@@ -23,7 +23,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from ..app import mcp
 from ..decide import decide
-from ..store import BRIEF, LEADS, log_event, now, set_stage
+from ..store import BRIEF, LEADS, clock, log_event, now, set_stage
 from .shared import REASONS
 
 PROBABILITY = {"qualification": 20, "quote": 40, "negotiation": 70, "closed_won": 100, "closed_lost": 0}
@@ -182,7 +182,7 @@ def send_quote(lead_id: str) -> dict:
     if q.get("status") != "approved" or (q.get("approval") or {}).get("quote_hash") != _quote_hash(q):
         return {"ok": False, "error": "not_approved", "next": "approve_quote first"}
     q["status"] = "sent"
-    deal["expected_close_date"] = deal.get("expected_close_date") or (date.today() + timedelta(days=14)).isoformat()
+    deal["expected_close_date"] = deal.get("expected_close_date") or (clock().date() + timedelta(days=14)).isoformat()
     _set_deal_stage(lead, "negotiation")
     log_event(lead_id, "deal", "success", f"quote sent: EUR {q['total_eur']:,.2f}", channel="email")
     return {"ok": True, "sandbox": True, "expected_close_date": deal["expected_close_date"]}
@@ -241,7 +241,7 @@ def get_pipeline(rep_id: str | None = None) -> dict:
     """Open and closed deals: count and value per stage, the weighted pipeline, and deals that went quiet (no activity in 7 days)."""
     stages: dict[str, dict] = {s: {"count": 0, "value_eur": 0.0} for s in PROBABILITY}
     weighted, stale = 0.0, []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=STALE_DAYS)
+    cutoff = clock() - timedelta(days=STALE_DAYS)
     for lead in LEADS.values():
         deal = lead.get("deal")
         if not deal or (rep_id and deal.get("owner") != rep_id):

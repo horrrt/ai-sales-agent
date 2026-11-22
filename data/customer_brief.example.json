@@ -1,5 +1,6 @@
 {
   "customer_id": "C-demo",
+  "sender": {"name": "TODO: who the emails come from", "email": "TODO@yourcompany.sandbox.test", "timezone": "Europe/Copenhagen"},
   "offer": "TODO: what the customer sells, price and deal terms",
   "icp": {
     "countries": ["SE", "FI", "NO"],

@@ -1,6 +1,7 @@
 {
   "rep-1": {
     "name": "Mette Holm",
+    "email": "mette@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-METTE",
     "status": "green",
     "active_leads": 2,
@@ -12,6 +13,7 @@
   },
   "rep-2": {
     "name": "Jonas Lind",
+    "email": "jonas@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-JONAS",
     "status": "yellow",
     "active_leads": 6,
@@ -23,6 +25,7 @@
   },
   "rep-3": {
     "name": "Aino Virtanen",
+    "email": "aino@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-AINO",
     "status": "red",
     "active_leads": 8,

@@ -11,7 +11,7 @@ team's sheet and Google Calendar free/busy.
 from datetime import datetime, timedelta, timezone
 
 from ..app import mcp
-from ..store import LEADS, QUEUE, REPS, log_event, now, set_stage
+from ..store import LEADS, QUEUE, REPS, clock, log_event, now, set_stage
 
 
 def _traffic_light(rep: dict) -> str:

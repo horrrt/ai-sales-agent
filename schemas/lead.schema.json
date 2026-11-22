@@ -58,11 +58,41 @@
         "draft_subject": {"type": "string"},
         "draft_body": {"type": "string"},
         "sent_at": {"type": "string", "format": "date-time"},
-        "reply_label": {"enum": ["positive", "negative", "not_now", "wrong_person", "out_of_office", "unsubscribe", null]},
+        "draft_to": {"type": "array", "items": {"type": "string"}, "description": "Who the draft goes to: the lead, or whoever the conversation moved to"},
+        "draft_cc": {"type": "array", "items": {"type": "string"}, "description": "Copied in. The approval covers to, cc, subject and body"},
+        "draft_in_reply_to": {"type": ["string", "null"], "description": "message_id the draft answers, so it stays in the thread"},
+        "thread_id": {"type": "string", "description": "One email thread per lead; every message carries it"},
+        "thread_subject": {"type": "string", "description": "Subject of the first email; later emails use Re: <thread_subject>"},
+        "scheduled_for": {"type": ["string", "null"], "format": "date-time", "description": "Set while an approved email is held until business hours in the lead's country"},
+        "sent_count": {"type": "integer"},
+        "follow_ups": {"type": "integer", "description": "Follow-ups sent since the prospect last wrote. At 2, no more follow-ups"},
+        "reply_label": {"enum": ["positive", "negative", "not_now", "handover", "wrong_person", "out_of_office", "unsubscribe", null]},
+        "reply_from": {"type": "string", "description": "Who wrote the last reply. Not always the lead (an assistant, a colleague)"},
+        "reply_message_id": {"type": "string"},
+        "reply_body": {"type": "string"},
+        "next_to": {"type": "string", "description": "Who our next email goes to: the last sender (reply to all), or the colleague the lead handed over to"},
+        "next_cc": {"type": "array", "items": {"type": "string"}, "description": "Everyone else in the conversation, kept in cc on the next email"},
+        "handover_to": {"type": "string", "description": "Email of the colleague the lead handed over to"},
         "approval": {"type": "object", "description": "Written by record_approval. send_email only sends the draft this approval covers (draft_hash)", "properties": {"decision": {"enum": ["approve", "edit", "reject"]}, "by": {"type": "string"}, "at": {"type": "string", "format": "date-time"}, "draft_hash": {"type": "string"}, "note": {"type": "string"}}},
         "follow_up_due": {"type": ["string", "null"], "format": "date-time"}
       }
     },
+    "contacts": {
+      "type": "array",
+      "description": "Other people in the conversation, added by read_reply. Never our own sender or reps",
+      "items": {
+        "type": "object",
+        "required": ["email", "role"],
+        "properties": {
+          "name": {"type": ["string", "null"]},
+          "email": {"type": "string"},
+          "role": {"enum": ["cc", "replied_for_lead", "handover", "referral"], "description": "cc: copied in by the prospect; replied_for_lead: wrote instead of the lead (an assistant); handover: the lead passed the conversation to them; referral: named by a wrong_person reply"},
+          "added_at": {"type": "string", "format": "date-time"},
+          "source_message_id": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "do_not_contact": {"type": "boolean", "description": "Set by an unsubscribe reply. send_email refuses the lead from then on"},
     "handoff": {
       "type": "object",
       "description": "Stream 3 (Slava)",

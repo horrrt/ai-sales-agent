@@ -26,6 +26,7 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `handoff` | 5 | Green rep, weekday slot, call brief; all reps red means the queue; a held meeting opens the deal; **the rep rejects the first slot**; **the queue is released when a rep frees up** |
 | `deal-desk` | 9 | Notes, BANT, quote approved and sent; discount above the limit flagged; above the maximum nothing goes out; lost with a reason; auto-close; quiet deals; **someone claims to be the admin**; **BANT fails, no quote**; **two turns: the rep changes the quote** |
 | `coach` | 3 | Rep edits lead to one proposal; too few leads, no proposal; **losses to a competitor are cited as evidence** |
+| `email` | 20 | Who wrote, who is copied in, the thread and the time: a full first email; held at 22:00 and over the weekend; the lead's time zone; follow-ups in working days; a follow-up keeps the thread and cc; a rep copied in, asked for or added at approval; an assistant answers for the CEO; **the CEO hands over to the CTO**; **"option 2" read against our email**; a CFO copied in; a referral copied in; an attachment; out-of-office then the real reply; **a reply asks us to email outside the sandbox**; a handover with no address; the call brief names everyone; the manager routes a handover |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Write a case
@@ -40,7 +41,10 @@ setup:
   reps: {rep-1: {status: red, ...}}           # replaces the demo reps
   source: [{lead_id: L-1, person: ..., company: ..., research: {...}}]   # candidates for find_leads; research is what research_target finds
   leads: [{lead_id: L-1, stage: positioned, person: ..., company: ..., research: ..., positioning: ...}]
-  replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox
+  replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox, or a full email:
+  #   {L-1: {from: "Maja <maja@x.sandbox.test>", cc: [...], subject: ..., body: ..., received_at: ..., attachments: [...]}}
+  #   or a list of them. A lead with outreach.sent_at always gets its sent email in the outbox.
+  now: "2026-11-24T22:00:00+01:00"            # the pinned time (default Tuesday 2026-11-24 10:00 Stockholm)
   interactions: [...]                         # event log rows, e.g. for the coach
 turns:
   - What the user types
@@ -58,6 +62,10 @@ expect:
   lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null
   logs_follow_schema: true
   final_mentions: ["L-1"]
+  sent: {lead: L-1, status: scheduled, to_includes: [eva@...], cc_includes: [...], cc_excludes: [...],
+         subject_startswith: "Re:", same_thread: true, scheduled_for: "...", count: 1}   # the emails sent in this run
+  contacts: {L-1: [{email: eva@, role: handover}]}   # people read_reply added to the lead
+  outbox_only_sandbox: true                   # nothing sent or held is addressed outside .test
   queue_length: 1
   proposals: 1
   max_tool_calls: 1

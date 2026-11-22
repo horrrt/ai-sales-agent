@@ -2,6 +2,7 @@
   "customer_id": "C-demo",
   "_note": "Fictional demo customer for sandbox runs. Copy to data/customer_brief.json (git-ignored) to make the MCP server use it. Company, product and numbers are invented.",
   "company_name": "Kvitto ApS",
+  "sender": {"name": "Sofie Dahl, Kvitto", "email": "sofie@kvitto.sandbox.test", "timezone": "Europe/Copenhagen"},
   "offer": "Kvitto gets small B2B SaaS companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks. Price: EUR 650 per month on a 12-month plan (about EUR 7,800 a year), auditor fees not included. Setup is free if the customer signs before their first audit window. Monthly plan available at EUR 790 per month.",
   "icp": {
     "countries": ["SE", "FI", "NO"],

@@ -16,22 +16,33 @@ class Script:
     """Answers decide() calls in order; a callable entry gets (question, evidence, options)."""
 
     def __init__(self, *answers):
-        self.answers, self.calls = list(answers), []
+        self.answers, self.calls, self.evidence = list(answers), [], []
 
     def __call__(self, question, evidence, options):
         self.calls.append(question)
+        self.evidence.append(evidence)
         a = self.answers.pop(0) if self.answers else True
         if callable(a):
             a = a(question, evidence, options)
         return {"answer": a, "confidence": 0.9, "reason": "stub", "backend": "stub"}
 
 
+IN_HOURS = "2026-11-24T10:00:00+01:00"
+
+
+def at(iso: str) -> None:
+    """Move the pinned clock."""
+    store.CLOCK["now"] = iso
+
+
 @pytest.fixture(autouse=True)
 def fresh(monkeypatch):
     for obj in (store.LEADS, store.APPROVALS, store.PROPOSALS):
         obj.clear()
-    for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX):
+    for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX, store.INBOX):
         obj.clear()
+    store.CLOCK.clear()
+    store.CLOCK["now"] = IN_HOURS  # a Tuesday morning in Stockholm: inside business hours
     store.REPS.clear()
     store.REPS.update(json.loads((store.DATA / "reps.demo.json").read_text()))
     store.BRIEF.clear()
@@ -221,9 +232,9 @@ def test_auto_close_off_never_sends_an_offer():
 def test_follow_up_due_then_no_reply_after_two():
     sent_lead()
     out = store.LEADS["L-001"]["outreach"]
-    out["follow_up_due"] = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    out["follow_up_due"] = (store.clock() - timedelta(minutes=1)).isoformat()
     assert outreach.due_follow_ups()[0]["follow_up"] == 1
-    out.update(follow_ups=2, follow_up_due=None, sent_at=(datetime.now(timezone.utc) - timedelta(days=6)).isoformat())
+    out.update(follow_ups=2, follow_up_due=None, sent_at=(store.clock() - timedelta(days=8)).isoformat())
     r = outreach.due_follow_ups()
     assert r[0]["loss_reason"] == "no_reply" and store.LEADS["L-001"]["status"] == "lost"
 

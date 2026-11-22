@@ -11,7 +11,10 @@ database (docs/fleet-prompts-v2.md §2).
 - INTERACTIONS: the event log, append-only.
 - REPS: the sales team and their traffic lights (data/reps.json, else data/reps.demo.json).
 - APPROVALS: one per draft, written by record_approval; send_email checks it.
-- OUTBOX: every email sent to a sandbox inbox, with the prospect's reply once there is one.
+- OUTBOX: every email we send (or hold until business hours), as a message record: from, to, cc, subject,
+  body, thread_id, sent_at or scheduled_for.
+- INBOX: every email we receive: from, to, cc, subject, body, received_at, in_reply_to, attachments.
+- CLOCK: SALES_NOW (or CLOCK["now"]) fixes the time for tests and evals; otherwise the real time.
 - QUEUE: positive replies waiting for a rep when every rep is red.
 - PROPOSALS: rule changes the weekly review proposes, for a person to approve.
 """
@@ -26,8 +29,20 @@ from . import sim
 DATA = Path(__file__).resolve().parents[2] / "data"
 
 
+CLOCK: dict = {}  # {"now": iso time} pins the clock; saved with the state so a test server keeps it
+
+
+def clock() -> datetime:
+    """The current time, timezone-aware UTC. SALES_NOW or CLOCK["now"] pin it (tests, evals, demos)."""
+    pinned = CLOCK.get("now") or os.environ.get("SALES_NOW")
+    if pinned:
+        t = datetime.fromisoformat(pinned)
+        return (t if t.tzinfo else t.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    return datetime.now(timezone.utc)
+
+
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return clock().isoformat()
 
 
 def _load_json(*names: str):
@@ -51,12 +66,13 @@ INTERACTIONS: list[dict] = []
 REPS: dict[str, dict] = _load_json("reps.json", "reps.demo.json")
 APPROVALS: dict[str, dict] = {}
 OUTBOX: list[dict] = []
+INBOX: list[dict] = []
 QUEUE: list[dict] = []
 PROPOSALS: list[dict] = []
 
 STATE_FILE = os.environ.get("SALES_STATE")
 _STATE = {"leads": LEADS, "interactions": INTERACTIONS, "reps": REPS, "approvals": APPROVALS,
-          "outbox": OUTBOX, "queue": QUEUE, "proposals": PROPOSALS}
+          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK}
 
 
 def load() -> None:
@@ -88,10 +104,10 @@ def save() -> None:
     os.replace(tmp, path)
 
 
-def set_stage(lead: dict, stage: str) -> None:
-    """Move a lead to a stage and remember when it first got there."""
+def set_stage(lead: dict, stage: str, at: str | None = None) -> None:
+    """Move a lead to a stage and remember when it first got there (at: when it happened, if not now)."""
     lead["stage"] = stage
-    lead.setdefault("stage_times", {}).setdefault(stage, now())
+    lead.setdefault("stage_times", {}).setdefault(stage, at or now())
     lead["updated_at"] = now()
 
 

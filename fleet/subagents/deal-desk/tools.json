@@ -95,6 +95,12 @@
       "mcp_server_url": "https://tools.langchain.com",
       "mcp_server_name": "Fleet",
       "display_name": "slack_send_channel_message"
+    },
+    {
+      "name": "get_thread",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get thread"
     }
   ],
   "interrupt_config": {
@@ -113,6 +119,7 @@
     "https://sales-tools.invalid/mcp::send_offer::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::record_payment::Sales tools (sandbox)": true,
     "https://sales-tools.invalid/mcp::check_deal_done::Sales tools (sandbox)": false,
-    "https://tools.langchain.com::slack_send_channel_message::Fleet": false
+    "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
+    "https://sales-tools.invalid/mcp::get_thread::Sales tools (sandbox)": false
   }
 }
