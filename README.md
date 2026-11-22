@@ -35,6 +35,8 @@ docs/         Architecture, Fleet notes and one-pagers.
 
 See `docs/architecture.md` for how the pieces connect and the Fleet facts that shape this layout.
 
+**Where we are:** [`docs/status-vs-notion.md`](docs/status-vs-notion.md) compares what's built with the Notion plan and lists what's still missing, in order of what blocks the week 3 demo. [`docs/use-cases.md`](docs/use-cases.md) maps every use case to its tests.
+
 ## Week 1 goal: the pipeline runs end to end with stubs
 
 Every tool in `mcp/` returns fake data in the right shape, so each stage can be built without waiting for the others. Replace your own stubs in week 2.
@@ -61,10 +63,10 @@ The deployed server runs on the demo customer (`data/customer_brief.demo.json`) 
 ## Import the agent into Fleet
 
 ```bash
-scripts/build_fleet_zip.sh
+python3 scripts/package_fleet.py --mcp-url https://<your tool server>/mcp
 ```
 
-Then in Fleet: **+ > Import** and pick `dist/sales-assistant-fleet.zip`. Add schedules by hand. After changing anything in Fleet, export the agent and run `scripts/check_fleet_export.sh path/to/export.zip` before copying the changes back into `fleet/`.
+It checks `fleet/` and writes `dist/sales-assistant-fleet.zip` pointing at your tool server (`scripts/build_fleet_zip.sh` builds one with the placeholder URL). Then in Fleet: **+ > Import** and pick the zip. Add schedules by hand. After changing anything in Fleet, export the agent and run `scripts/check_fleet_export.sh path/to/export.zip` before copying the changes back into `fleet/`.
 
 ## How we work
 
