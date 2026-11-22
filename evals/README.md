@@ -21,3 +21,5 @@ Upload each CSV as a LangSmith dataset with the same name (prefix `sales-agent-`
 - `datasets/positioning.csv`: one row per persona lead. `expected_angle_quality` is the best outcome a careful salesperson could reach for that lead (`good`, `weak` or `correct_stop`). It's empty on purpose: the notes column has Claude-proposed labels that Gyula still has to confirm or change before they count as human labels.
 
 Run with `uv run --project simulator python evals/<script>.py`. Results go to `evals/results/`.
+
+To turn an A/B run into funnel numbers, `python3 scripts/ab_to_sheet.py | pbcopy` prints one row per persona and arm. Paste it at `Personas!A5` in the [funnel simulator sheet](https://docs.google.com/spreadsheets/d/1kI-c29_DIgmAz7pDn9VUYFD9S6pYn-5HLIt_igPIi7I/edit) (ask Gyula for access). The sheet simulates a month of outreach 1,000 times from those counts, with Beta uncertainty on the rates, and reports how likely it is that research really beats the template.
