@@ -44,6 +44,13 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | E20 | After an unsubscribe the lead is never emailed again, even if someone reopens it by hand | `test_unsubscribed_lead_is_never_emailed_again` | `outreach/06-unsubscribe` |
 | E21 | Tests and demos pin the time (SALES_NOW, or `setup.now` in a Fleet case) | `test_clock_follows_sales_now` | unit only |
 | E22 | The person approving always sees who gets the email (to and cc) and can change either. An approval without them is refused | `test_approval_without_the_recipients_is_refused`, `test_person_can_change_the_recipient_at_approval` | `email/11-ceo-hands-over-to-cto`, `email/07-follow-up-keeps-thread-and-cc` |
+| E23 | With OpenMail set up, an email to one of our own OpenMail test inboxes really goes out from the agent's inbox, and follow-ups stay in its OpenMail thread | `test_email_to_an_openmail_test_inbox_goes_out_through_openmail` | unit only |
+| E24 | OpenMail is down or refuses the email: nothing counts as sent, the approval still stands, and a held email waits and goes out when the next mailbox read succeeds | `test_openmail_failure_sends_nothing_and_keeps_the_approval`, `test_held_openmail_email_goes_out_when_released` | unit only |
+| E25 | A reply in the OpenMail thread shows up in get_replies once, next to the email it answers, without OpenMail's footer and without our own copy of the email | `test_reply_in_the_openmail_thread_reaches_get_replies_once` | unit only |
+| E26 | OpenMail addresses are refused when OpenMail isn't set up, and one email never mixes OpenMail inboxes with .test addresses. Only our own test inboxes (OPENMAIL_TEST_RECIPIENTS and the agent's address) get real email, not anyone else on the shared omail.sh domain | `test_openmail_addresses_are_refused_without_openmail_and_never_mixed`, `test_only_our_own_openmail_inboxes_get_real_email` | unit only |
+| E27 | The prospect answered in OpenMail but nobody has read it yet: no follow-up is due for them | `test_reply_waiting_in_openmail_stops_the_follow_up` | unit only |
+| E28 | A fake prospect on real email (`simulator/openmail_responder.py`) answers each agent email with a random kind of reply, made-up times and dates and a random delay, logs the label it meant, and never answers twice. The agent reads those replies like any other | `test_every_kind_of_reply_has_made_up_details_and_a_label`, `test_prospect_answers_in_the_thread_and_the_agent_reads_it` | unit only |
+| E29 | The fake prospect hands over to a colleague by copying in a second test inbox, or stays silent (logged as no_reply, nothing sent) | `test_handover_copies_the_second_inbox_in`, `test_silence_is_logged_but_nothing_is_sent` | unit only |
 
 ## The rest of the pipeline
 

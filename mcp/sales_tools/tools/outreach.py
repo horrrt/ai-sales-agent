@@ -1,7 +1,10 @@
 
 """Stream 2: Outreach tools. Owner: JD.
 
-Sandbox only: no real emails are sent, and every recipient (to and cc) must be on a .test domain.
+Sandbox only: no email reaches a real person. Every recipient (to and cc) must be a .test address, which
+stays in the in-memory sandbox, or, when OpenMail is configured, one of our own OpenMail test inboxes, which
+gets a real email from our OpenMail inbox (sales_tools/openmail.py). Replies to those come back through
+get_replies. One email never mixes the two.
 
 Every email is a message record in the store (OUTBOX for ours, INBOX for theirs) with from, to, cc,
 subject, body, thread_id and its time, so a reply is always read next to the email it answers.
@@ -18,9 +21,10 @@ subject, body, thread_id and its time, so a reply is always read next to the ema
 """
 
 from ..app import mcp
-from .. import sim
+from .. import openmail, sim
 import hashlib
 import re
+import uuid
 from datetime import datetime, time, timedelta, timezone
 from email.utils import formataddr, parseaddr
 from zoneinfo import ZoneInfo
@@ -114,8 +118,54 @@ def _addr(value: str) -> str:
 
 
 def _is_sandbox(value: str) -> bool:
+    """A .test address, or (with OpenMail on) one of our own OpenMail test inboxes."""
     a = _addr(value)
-    return a.count("@") == 1 and bool(a.split("@")[0]) and a.split("@")[1].endswith(".test")
+    return (a.count("@") == 1 and bool(a.split("@")[0]) and a.split("@")[1].endswith(".test")) or openmail.is_test_address(a)
+
+
+def _transport(to, cc) -> str:
+    """How an email to these recipients travels: "openmail", "sandbox" (in memory), or "mixed" (refused)."""
+    kinds = {"openmail" if openmail.is_test_address(a) else "sandbox" for a in list(to) + list(cc)}
+    return kinds.pop() if len(kinds) == 1 else "mixed"
+
+
+def _check_transport(to, cc) -> dict | None:
+    """The refusal for recipients OpenMail can't take as one email, else None."""
+    t = _transport(to, cc)
+    if t == "mixed":
+        return {"ok": False, "error": "mixed_recipients",
+                "next": "an email goes either to OpenMail test inboxes or to .test addresses, not both: change to or cc"}
+    if t == "openmail" and len(to) != 1:
+        return {"ok": False, "error": "one_to_recipient", "next": "OpenMail sends to one address in to; put the others in cc"}
+    return None
+
+
+def _send_key(lead: dict, *parts) -> str:
+    """OpenMail idempotency key: the same for a retry of the same send (also after a timeout where OpenMail did
+    send), different for every new lead, draft or follow-up. The salt keeps two runs of a pinned-clock demo apart."""
+    salt = lead.setdefault("send_salt", uuid.uuid4().hex)
+    return hashlib.sha256("|".join(map(str, (lead["lead_id"], salt, *parts))).encode()).hexdigest()
+
+
+def _transmit(m: dict) -> str | None:
+    """Hand an OpenMail email to OpenMail, in the lead's OpenMail thread. None when it went (or travels in memory),
+    else the error. m["send_key"] is stable across retries (_send_key), so a retry never sends twice."""
+    if m.get("transport") != "openmail" or m.get("openmail"):
+        return None
+    out = LEADS[m["lead_id"]].setdefault("outreach", {})
+    try:
+        r = openmail.send(_addr(m["to"][0]), m["subject"], m["body"], cc=[_addr(a) for a in m["cc"]],
+                          thread_id=out.get("openmail_thread_id"), idempotency_key=m["send_key"])
+    except openmail.OpenMailError as e:
+        m["send_error"] = str(e)
+        return str(e)
+    m.pop("send_error", None)
+    m["openmail"] = {"message_id": r.get("messageId"), "thread_id": r.get("threadId")}
+    if openmail.address():
+        m["from"] = formataddr((_sender()["name"], openmail.address()))
+    if r.get("threadId"):
+        out.setdefault("openmail_thread_id", r["threadId"])
+    return None
 
 
 def _sender() -> dict:
@@ -126,7 +176,8 @@ def _sender() -> dict:
 
 def _ours() -> set[str]:
     """Addresses on our side: the sender and the reps. They never become contacts."""
-    return {_addr(_sender()["email"])} | {_addr(r["email"]) for r in REPS.values() if r.get("email")}
+    return ({_addr(_sender()["email"])} | {_addr(r["email"]) for r in REPS.values() if r.get("email")}
+            | ({openmail.address()} if openmail.address() else set()))
 
 
 def _lead_tz(lead: dict) -> ZoneInfo:
@@ -250,8 +301,16 @@ def _release_held() -> list[dict]:
     released = []
     for m in OUTBOX:
         if m.get("status") == "scheduled" and datetime.fromisoformat(m["scheduled_for"]) <= clock():
+            first_try = "send_error" not in m
+            err = _transmit(m)
+            if err:  # OpenMail refused or is down: keep it held, try again on the next mailbox read
+                if first_try:
+                    log_event(m["lead_id"], "outreach", "failure", f"held email not sent yet: {err}", channel="email",
+                              message_id=m["message_id"])
+                continue
             _deliver(m, datetime.fromisoformat(m["scheduled_for"]))
             released.append(m)
+    _pull_openmail()  # every tool that reads the mailbox also sees replies that arrived in OpenMail
     return released
 
 
@@ -281,7 +340,8 @@ def save_draft(lead_id: str, subject: str, body: str, cc: list[str] | None = Non
 
     The draft is addressed for you: to the lead, or to whoever the conversation moved to (the colleague a
     lead handed over to, or the assistant who wrote back), with everyone the prospect copied in kept in cc.
-    cc adds more people on top (for example a rep who asked to be copied in); sandbox .test addresses only.
+    cc adds more people on top (for example a rep who asked to be copied in); sandbox addresses only: .test
+    addresses, or our own OpenMail test inboxes when OpenMail is set up (not both in one email).
     In an existing thread the subject becomes "Re: <first subject>" so the email stays in the thread.
     The result shows the final to, cc and subject: pass all of them to record_approval so the person sees them.
     """
@@ -318,7 +378,7 @@ def save_draft(lead_id: str, subject: str, body: str, cc: list[str] | None = Non
 
     # A new draft replaces the old one and needs a new approval. Send history, thread and addressing carry over.
     keep = ("sent_at", "follow_ups", "sent_count", "thread_id", "thread_subject", "next_to", "next_cc",
-            "reply_label", "reply_from", "reply_message_id", "handover_to")
+            "reply_label", "reply_from", "reply_message_id", "handover_to", "openmail_thread_id")
     lead["outreach"] = {k: v for k, v in previous.items() if k in keep}
     lead["outreach"].update({"draft_subject": subject, "draft_body": body, "draft_to": to, "draft_cc": all_cc,
                              "draft_in_reply_to": in_reply_to})
@@ -391,6 +451,10 @@ def send_email(lead_id: str) -> dict:
 
     Refuses a draft no person has approved. Outside 08:00-17:00 on a working day in the lead's country the
     email is held (status scheduled) and goes out at the next 08:00 there; nothing else to do.
+    `via` says how it travelled: "sandbox" (in memory) or "openmail" (a real email to one of our own test
+    inboxes). Other results: send_failed (OpenMail refused or is down: nothing was sent and the approval
+    still stands, so try again later), mixed_recipients (OpenMail and .test addresses in one email),
+    one_to_recipient (an OpenMail email has exactly one address in to).
     """
     _release_held()
     lead = LEADS.get(lead_id)
@@ -424,6 +488,10 @@ def send_email(lead_id: str) -> dict:
     bad = [a for a in to + cc if not _is_sandbox(a)]
     if bad:
         return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad}
+    refused = _check_transport(to, cc)
+    if refused:
+        return refused
+    via = _transport(to, cc)
 
     cap = (BRIEF.get("limits") or {}).get("emails_per_day", EMAILS_PER_DAY)
     today = clock().date().isoformat()
@@ -440,9 +508,10 @@ def send_email(lead_id: str) -> dict:
          "direction": "out", "from": formataddr((sender["name"], sender["email"])), "to": to, "cc": cc,
          "subject": outreach["draft_subject"], "body": outreach["draft_body"],
          "in_reply_to": outreach.get("draft_in_reply_to"), "attachments": [],
-         "status": "scheduled" if hold else "sending", "scheduled_for": _iso(hold) if hold else None, "sent_at": None}
+         "status": "scheduled" if hold else "sending", "scheduled_for": _iso(hold) if hold else None, "sent_at": None,
+         "transport": via, "send_key": _send_key(lead, "email", approval.get("draft_hash"), outreach.get("sent_count", 0))}
     SANDBOX_OUTBOX.append(m)
-    outreach.pop("approval", None)  # an approval covers one send
+    approval = outreach.pop("approval", None)  # an approval covers one send
     if hold:
         outreach["scheduled_for"] = m["scheduled_for"]
         local = at.astimezone(_lead_tz(lead))
@@ -451,11 +520,18 @@ def send_email(lead_id: str) -> dict:
                   f"{(lead.get('company') or {}).get('country')} is " + (f"a public holiday ({why})" if why else "outside business hours"),
                   channel="email",
                   message_id=m["message_id"])
-        return {"ok": True, "sandbox": True, "status": "scheduled", "scheduled_for": m["scheduled_for"],
+        return {"ok": True, "sandbox": True, "via": via, "status": "scheduled", "scheduled_for": m["scheduled_for"],
                 "local_time_now": local.isoformat(), "message_id": m["message_id"], "to": to, "cc": cc,
                 "next": "nothing: it goes out at the next 08:00 on a working day in the lead's country"}
+    err = _transmit(m)
+    if err:  # nothing went out: the approval still stands, so the same draft can be sent again
+        SANDBOX_OUTBOX.remove(m)
+        outreach["approval"] = approval
+        log_event(lead_id, "outreach", "failure", f"not sent: {err}", channel="email")
+        return {"ok": False, "error": "send_failed", "detail": err,
+                "next": "nothing was sent and the approval still stands: try send_email again later, or tell the rep"}
     _deliver(m, at)
-    return {"ok": True, "sandbox": True, "status": "sent", "sent_at": m["sent_at"], "follow_up_due": outreach["follow_up_due"],
+    return {"ok": True, "sandbox": True, "via": via, "status": "sent", "sent_at": m["sent_at"], "follow_up_due": outreach["follow_up_due"],
             "message_id": m["message_id"], "thread_id": m["thread_id"], "to": to, "cc": cc, "subject": m["subject"]}
 
 
@@ -472,6 +548,9 @@ def send_policy_email(lead_id: str, subject: str, body: str, kind: str) -> dict:
     bad = [a for a in to + cc if not _is_sandbox(a)]
     if bad:
         return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad}
+    refused = _check_transport(to, cc)
+    if refused:
+        return refused
     thread = _delivered(lead_id)
     out.setdefault("thread_id", f"T-{lead_id}")
     if out.get("thread_subject") and not subject.lower().startswith("re:"):
@@ -482,12 +561,20 @@ def send_policy_email(lead_id: str, subject: str, body: str, kind: str) -> dict:
     m = {"message_id": _message_id(lead_id, "out"), "thread_id": out["thread_id"], "lead_id": lead_id, "direction": "out",
          "from": formataddr((sender["name"], sender["email"])), "to": to, "cc": cc, "subject": subject, "body": body,
          "in_reply_to": thread[-1]["message_id"] if thread else None, "attachments": [], "kind": kind, "asked": True,
-         "status": "scheduled" if hold else "sending", "scheduled_for": _iso(hold) if hold else None, "sent_at": None}
+         "status": "scheduled" if hold else "sending", "scheduled_for": _iso(hold) if hold else None, "sent_at": None,
+         "transport": _transport(to, cc),
+         "send_key": _send_key(lead, kind, _draft_hash(subject, body, to, cc),
+                               sum(1 for o in OUTBOX if o["lead_id"] == lead_id and o.get("kind") == kind))}
     SANDBOX_OUTBOX.append(m)
     if hold:
         log_event(lead_id, "deal", "skipped", f"{kind.replace('_', ' ')} held until {m['scheduled_for']} (outside business hours)",
                   channel="email", message_id=m["message_id"])
         return {"ok": True, "status": "scheduled", "scheduled_for": m["scheduled_for"], "message_id": m["message_id"]}
+    err = _transmit(m)
+    if err:
+        SANDBOX_OUTBOX.remove(m)
+        log_event(lead_id, "deal", "failure", f"{kind.replace('_', ' ')} not sent: {err}", channel="email")
+        return {"ok": False, "error": "send_failed", "detail": err}
     _deliver(m, at)
     return {"ok": True, "status": "sent", "sent_at": m["sent_at"], "message_id": m["message_id"]}
 
@@ -520,6 +607,54 @@ def _receive(lead_id: str, reply: dict, answering: dict | None) -> dict:
     return m
 
 
+def _pull_openmail() -> list[dict]:
+    """Copy new emails from our OpenMail inbox into INBOX: those in a thread one of our OpenMail emails started,
+    each answering our latest email in that thread sent before it arrived. Our own email coming back (when a
+    test lead's address is our own inbox) is skipped. Each OpenMail message is copied once."""
+    ours = [m for m in OUTBOX if (m.get("openmail") or {}).get("thread_id") and m.get("status") == "sent"]
+    if not ours or not openmail.enabled():
+        return []
+    try:
+        incoming = openmail.inbound()
+    except openmail.OpenMailError as e:
+        log_event(ours[-1]["lead_id"], "outreach", "failure", f"could not read the OpenMail inbox: {e}", channel="email")
+        return []
+    seen = {i.get("openmail_id") for i in INBOX if i.get("openmail_id")}
+    by_thread: dict[str, list[dict]] = {}
+    by_sender: dict[str, list[dict]] = {}  # a reply from another inbox can land in a new thread on our side
+    for o in ours:
+        by_thread.setdefault(o["openmail"]["thread_id"], []).append(o)
+        lead = LEADS.get(o["lead_id"]) or {}
+        for a in {_addr((lead.get("person") or {}).get("email"))} | {c["email"] for c in lead.get("contacts") or []}:
+            if a and a != openmail.address():
+                by_sender.setdefault(a, [])
+                if o not in by_sender[a]:
+                    by_sender[a].append(o)
+    added = []
+    for x in sorted(incoming, key=lambda x: x.get("createdAt") or ""):
+        sender = _addr(x.get("fromAddr"))
+        thread = by_thread.get(x.get("threadId")) or by_sender.get(sender)
+        if x.get("id") in seen or not thread or len({o["lead_id"] for o in thread}) != 1 or thread[0]["lead_id"] not in LEADS:
+            continue
+        body = openmail.clean_body(x.get("bodyText") or "")
+        if sender == openmail.address() and any(o["body"].strip() == body for o in thread):
+            continue  # our own email, delivered back to us
+        received = datetime.fromisoformat(x["createdAt"]).astimezone(timezone.utc) if x.get("createdAt") else clock()
+        before = [o for o in thread if datetime.fromisoformat(o["sent_at"]) <= received]
+        answering = (before or thread)[-1]
+        names = x.get("addressNames") or {}
+        m = _receive(answering["lead_id"], {
+            "from": formataddr((names.get(sender) or "", sender)) if names.get(sender) else sender,
+            "to": [x.get("toAddr")] if isinstance(x.get("toAddr"), str) else list(x.get("toAddr") or []),
+            "cc": list(x.get("cc") or []), "subject": x.get("subject"), "body": body, "received_at": _iso(received),
+            "in_reply_to": answering["message_id"],
+            "attachments": [a.get("filename") for a in x.get("attachments") or [] if a.get("filename")]}, answering)
+        m["openmail_id"] = x["id"]
+        seen.add(x["id"])
+        added.append(m)
+    return added
+
+
 @mcp.tool()
 def get_replies(since: str | None = None) -> list[dict]:
     """New emails from prospects, each with who wrote (from, and from_lead: false when it isn't the lead),
@@ -527,11 +662,13 @@ def get_replies(since: str | None = None) -> list[dict]:
 
     Replies read_reply already handled are left out. A prospect who ignores the email has no reply here.
     """
-    _release_held()
+    _release_held()  # also copies new OpenMail replies into the inbox
     for m in OUTBOX:  # ask each simulated prospect once per sent email
         if m.get("status") != "sent" or m.get("asked"):
             continue
         m["asked"] = True
+        if m.get("transport") == "openmail":  # a real inbox: its replies arrive through _pull_openmail
+            continue
         if any(i.get("in_reply_to") == m["message_id"] for i in INBOX):
             continue
         if sim.ENABLED:
@@ -769,6 +906,8 @@ def due_follow_ups() -> list[dict]:
             continue
         if (lead.get("handoff") or {}).get("meeting_status") in ("booked", "held"):
             continue  # a meeting is booked or held: no outreach follow-ups
+        if any(i["lead_id"] == lead["lead_id"] and not i.get("handled") for i in INBOX):
+            continue  # they wrote back and nobody has read it yet (get_replies, read_reply): don't chase them
         if out.get("follow_up_due") and datetime.fromisoformat(out["follow_up_due"]) <= now_dt:
             due.append({"lead_id": lead["lead_id"], "kind": "email", "follow_up": out.get("follow_ups", 0) + 1,
                         "to": out.get("next_to") or lead["person"]["email"], "cc": out.get("next_cc") or [],

@@ -58,6 +58,14 @@ scripts/deploy_mcp.sh            # prints https://sales-tools-....run.app/mcp
 scripts/set_mcp_url.sh <that url>
 ```
 
+Real email in the sandbox: put `OPENMAIL_API_KEY`, `OPENMAIL_INBOX_ID` and `OPENMAIL_ADDRESS` in `.env` (see `.env.example`), and list our other test inboxes in `OPENMAIL_TEST_RECIPIENTS`. Then an approved email to a lead whose address is one of those inboxes really goes out from the agent's inbox, and replies come back in through the mailbox tools (`get_replies`, `due_follow_ups`, ...). Leads on `.test` addresses still stay in memory, and nobody else on omail.sh can be emailed. The server doesn't read `.env` itself:
+
+```bash
+cd mcp && uv run --env-file ../.env python -m sales_tools.server
+```
+
+`scripts/deploy_mcp.sh` doesn't pass these variables yet, so the deployed server stays in memory. See `mcp/sales_tools/openmail.py`.
+
 The deployed server runs on the demo customer (`data/customer_brief.demo.json`) with an in-memory store, so data resets when the instance restarts.
 
 ## Import the agent into Fleet
