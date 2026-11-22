@@ -14,10 +14,10 @@ setup:
       domain: p-q1.example
       country: DE
       employees: 275
-      industry: Wholesale
+      industry: Wholesale and distribution
     stage: handed_off
     research:
-      summary: A Wholesale company in DE.
+      summary: A Wholesale and distribution company in DE.
       enough_to_personalize: true
       facts:
       - fact: 'Moving to a new warehouse: announced in November 2026'

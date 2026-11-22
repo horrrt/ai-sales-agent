@@ -21,8 +21,7 @@
     "employees_min": 50,
     "employees_max": 500,
     "industries": [
-      "Wholesale",
-      "Distribution"
+      "Wholesale and distribution"
     ],
     "titles": [
       "Head of Logistics",

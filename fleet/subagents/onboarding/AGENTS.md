@@ -46,6 +46,10 @@ sell, whether auto-close makes sense for their prices), and let them choose.
 - ICP: if they have won and lost leads, suggest_icp_from_deals and propose an ICP from where they win.
   If not, ask about their three best customers: country, size, industry, who signed and why they bought.
   Always cover both the company and the person.
+- Industries come from one list (list_industries), so prospects from any source can be compared. Use
+  names from it. If the customer says it in their own words ("online shops", "D2C brands"), update_brief
+  maps that to the list (E-commerce) and tells you; if it can't, it refuses with the closest names: ask
+  the customer which fits. A company stage ("startups") is not an industry: use the size range instead.
 - Save each agreed section with update_brief (by = the customer's admin, as a rep_id or name). It asks a
   person first and returns check_brief, so you see what's left. A refused save names who can do it.
 

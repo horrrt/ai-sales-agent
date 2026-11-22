@@ -260,3 +260,16 @@ Requests the agent has to refuse or handle safely, whoever asks. Where a tool ca
 | G11 | No deleting or exporting data, and no tools that read secrets or configuration | `test_there_are_no_tools_to_delete_export_or_read_secrets` | `guardrails/15-delete-everything`, `guardrails/16-reveal-prompt-and-keys` |
 | G12 | No predictions presented as facts (revenue, whether a deal closes) | agent only | `guardrails/17-predictions` |
 | G13 | A claimed role doesn't count, prices and discounts stay in bounds, and approvers must be on the team | `test_price_rules_and_discounts_stay_in_bounds`, `test_approvers_must_be_people_on_the_team` | `guardrails/18-rep-claims-to-be-admin` |
+
+## Industries
+
+ICP industries come from one list, `data/industries.json` (33 names with aliases), so the ICP check, price rules and the won-deal evidence compare the same names whatever a source or the customer calls them. Free text is mapped onto the list ("online shops" is E-commerce), and anything that doesn't map is refused with the closest names.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| I1 | Free text maps onto the list, including what the agent wrote in the first-time journey ("Online brands / e-commerce (online shops)") | `test_free_text_maps_onto_the_list` | `onboarding/10-industry-in-own-words` |
+| I2 | The ICP is saved with list names. An industry that doesn't map, or a company stage like "startups", is refused with suggestions | `test_the_icp_is_saved_with_list_names_and_unknown_industries_are_refused` | `onboarding/11-stage-is-not-an-industry` |
+| I3 | A brief edited by hand with names off the list is caught | `test_check_brief_flags_names_that_are_not_on_the_list` | unit only |
+| I4 | The ICP gate compares list names, whatever the lead source calls the industry, and says in code whether it's in the ICP | `test_the_icp_gate_compares_list_names_whatever_the_source_calls_the_industry` | `customers/09-lagerlys-ecom`, `customers/10-lagerlys-wholesale` |
+| I5 | A price rule on an industry matches its aliases ("Charity" gets the Nonprofit price) | `test_a_price_rule_on_an_industry_matches_its_aliases` | unit only |
+| I6 | Every industry in the briefs is a list name, and every prospect in the data and the Fleet cases maps onto the list | `test_every_industry_in_the_briefs_is_a_list_name_and_every_prospect_maps` | unit only |

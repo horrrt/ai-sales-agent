@@ -13,7 +13,7 @@ auto-close can actually fire), and proposes an ICP from their won and lost deals
 """
 import re
 
-from .. import access
+from .. import access, industries
 from ..app import mcp
 from ..store import BRIEF, LEADS, WEBSITES, log_event
 
@@ -143,6 +143,10 @@ def check_brief() -> dict:
         missing.append("icp.employees_min is above employees_max")
     if not icp.get("industries"):
         missing.append("icp.industries (the company)")
+    else:
+        off = [i for i in icp["industries"] if i not in industries.names()]
+        if off:
+            missing.append(f"icp.industries not on the industry list: {off} (list_industries; update_brief maps free text)")
     if not icp.get("titles"):
         missing.append("icp.titles (the person): who in the company to write to")
     if _protected({k: icp.get(k) for k in ("industries", "titles", "triggers")}):
@@ -229,12 +233,19 @@ def suggest_icp_from_deals() -> dict:
     return {"ok": True, "closed_leads": len(rows), "won": sum(l["status"] == "won" for l in rows),
             "lost": len(rows) - sum(l["status"] == "won" for l in rows),
             "by_country": tally(lambda l: c(l).get("country")), "by_size": tally(lambda l: _band(c(l).get("employees"))),
-            "by_industry": tally(lambda l: c(l).get("industry")),
+            "by_industry": tally(lambda l: (industries.normalize(c(l).get("industry") or "")[0] or [c(l).get("industry")])[0]),
             "by_title": tally(lambda l: (l.get("person") or {}).get("title")), "loss_reasons": reasons,
             "won_deals_notes": BRIEF.get("won_deals") or [], "current_icp": BRIEF.get("icp"),
             "enough_data": enough,
             "next": "propose an ICP: where they win, the size they win at, who signs; update_brief icp" if enough else
                     "too few closed leads to trust: ask the customer about their three best customers and why they bought"}
+
+
+@mcp.tool()
+def list_industries() -> dict:
+    """The industry names an ICP uses. update_brief maps free text onto them ("online shops" is E-commerce)
+    and refuses what doesn't map, with suggestions."""
+    return {"ok": True, "industries": industries.names()}
 
 
 @mcp.tool()
@@ -259,6 +270,12 @@ def update_brief(section: str, value, by: str = "") -> dict:
             return {"ok": False, "error": "not_allowed_targeting", "words": _protected(value),
                     "next": "the ICP can't target people by gender, age, religion, ethnicity, nationality, disability, family "
                             "status or sexuality; describe companies and roles instead"}
+        if "industries" in value:
+            mapped, problems = industries.normalize_list(value["industries"])
+            if problems:
+                return {"ok": False, "error": "unknown_industries", "unknown": problems,
+                        "next": "pick names from the suggestions or list_industries; a new industry is added to data/industries.json"}
+            value = {**value, "industries": mapped}
     if section == "sender" and "email" in value and not str(value["email"]).endswith(".test"):
         return {"ok": False, "error": "the sender must be a sandbox .test address during the course"}
     if section == "approvers":

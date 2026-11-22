@@ -28,6 +28,7 @@ class Script:
 
 
 IN_HOURS = "2026-11-24T10:00:00+01:00"
+SOURCE_AT_START = json.loads(json.dumps(store.SOURCE))  # tests add candidates; each test starts from these
 
 
 def at(iso: str) -> None:
@@ -43,6 +44,8 @@ def fresh(monkeypatch):
         obj.clear()
     store.CALENDARS.clear()
     store.WEBSITES.clear()
+    store.SOURCE.clear()
+    store.SOURCE.update(json.loads(json.dumps(SOURCE_AT_START)))
     store.CLOCK.clear()
     store.CLOCK["now"] = IN_HOURS  # a Tuesday morning in Stockholm: inside business hours
     store.REPS.clear()

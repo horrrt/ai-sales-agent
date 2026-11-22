@@ -14,7 +14,7 @@ setup:
       domain: p-91.example
       country: DE
       employees: 275
-      industry: Wholesale
+      industry: Wholesale and distribution
   - lead_id: P-92
     person:
       name: Kim Berg

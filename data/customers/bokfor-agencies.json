@@ -20,8 +20,7 @@
     "employees_min": 10,
     "employees_max": 60,
     "industries": [
-      "Marketing agencies",
-      "Creative agencies"
+      "Marketing agencies"
     ],
     "titles": [
       "CFO",

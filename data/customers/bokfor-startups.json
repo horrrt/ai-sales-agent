@@ -21,8 +21,7 @@
     "employees_min": 2,
     "employees_max": 25,
     "industries": [
-      "Software",
-      "Startups"
+      "Software"
     ],
     "titles": [
       "Founder",

@@ -20,8 +20,7 @@
     "employees_min": 20,
     "employees_max": 150,
     "industries": [
-      "Fintech",
-      "Insurtech"
+      "Fintech"
     ],
     "titles": [
       "CTO",

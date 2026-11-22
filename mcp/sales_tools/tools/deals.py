@@ -97,8 +97,12 @@ def _matches(cond: dict, lead: dict | None, plan: str, quantity: int, term: int)
             return False
         if k == "country_not_in" and country in [x.upper() for x in v]:
             return False
-        if k == "industry_in" and industry not in [x.lower() for x in v]:
-            return False
+        if k == "industry_in":
+            from .. import industries as ind
+            mine = {industry} | {x.lower() for x in (c.get("industries") or [])} | \
+                   {x.lower() for x in ind.normalize(c.get("industry") or "")[0]}
+            if not mine & {x.lower() for x in v}:
+                return False
         if k == "quantity_min" and quantity < v:
             return False
         if k == "term_months_min" and term < v:

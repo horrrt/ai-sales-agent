@@ -1,0 +1,15 @@
+title: 'The customer says their industry is ''startups'': the agent explains and uses the size range instead'
+agent: onboarding
+setup:
+  customer: bokfor-startups
+turns:
+- Mette here (rep-1, our admin). Set our ICP industry to Startups, that's who we sell to.
+- OK, do that.
+approvals:
+  default: approve
+expect:
+  brief:
+    icp.industries: ~Software
+  final_must_not_contain:
+  - saved Startups
+  logs_follow_schema: true
