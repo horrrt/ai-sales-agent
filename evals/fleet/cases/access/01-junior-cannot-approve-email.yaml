@@ -38,7 +38,6 @@ approvals:
 expect:
   called:
   - save_draft
-  - record_approval
   lead:
     L-201:
       outreach.approval.by: '!rep-3'

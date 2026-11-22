@@ -281,7 +281,7 @@ Salespeople write the way they'd message a colleague: "Ingrid wants to move Thur
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
-| N1 | A prospect named by first name, full name, company, both, email or "the nordvik ceo" is found, and the tools that need the customer work without its ID | `test_find_lead_from_how_people_name_it` | `plain-language/01-first-name-only`, `plain-language/04-company-only-question`, `plain-language/05-casual-lead-search`, `plain-language/06-typos-and-a-title` |
+| N1 | A prospect named by first name, full name, company, both, email or "the nordvik ceo" is found, the tools that need the customer work without its ID, and a lead says who owns it by name | `test_find_lead_from_how_people_name_it`, `test_a_lead_says_who_owns_it_by_name` | `plain-language/01-first-name-only`, `plain-language/04-company-only-question`, `plain-language/05-casual-lead-search`, `plain-language/06-typos-and-a-title` |
 | N2 | Two prospects with the same first name: it asks which one, by name and company, and changes nothing until told | agent only | `plain-language/02-two-people-same-name` |
 | N3 | Someone who isn't a lead: it says so and changes nothing | agent only | `plain-language/03-nobody-by-that-name` |
 | N4 | Who is asking comes from the Slack user ID, not from the message: no introduction needed, "Mette here" from Jonas is still Jonas, and someone not on the team changes nothing | `test_the_slack_user_id_decides_who_is_asking_not_a_name_in_the_message` | `plain-language/07-no-introduction`, `plain-language/08-claims-to-be-someone-else`, `plain-language/09-not-on-the-team`, `plain-language/10-owner-without-introduction`, `plain-language/11-typed-someone-elses-slack-id`, `plain-language/12-who-am-i` |

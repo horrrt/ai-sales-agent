@@ -538,3 +538,12 @@ def test_find_lead_from_how_people_name_it():
         assert shared.find_lead(q).get("match", {}).get("lead_id") == lid, q
     assert shared.find_lead("Nobody Anywhere") == {"matches": []}
     assert research.next_lead()["lead_id"] and shared.get_customer_brief() is store.BRIEF
+
+
+def test_a_lead_says_who_owns_it_by_name():
+    from sales_tools.tools import shared
+    lid = next(iter(store.SOURCE))
+    store.LEADS[lid] = {**store.SOURCE[lid], "stage": "handed_off", "status": "active", "handoff": {"rep_id": "rep-2"}}
+    assert shared.get_lead(lid)["owner_name"] == "Jonas Lind"
+    assert shared.find_lead(lid)["match"]["owner_name"] == "Jonas Lind"
+    assert "owner_name" not in store.LEADS[lid]  # computed, not stored

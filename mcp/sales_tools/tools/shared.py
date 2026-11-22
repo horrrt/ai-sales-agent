@@ -73,13 +73,23 @@ def _summary(lead: dict) -> dict:
     p, c, deal = lead.get("person") or {}, lead.get("company") or {}, lead.get("deal") or {}
     return {"lead_id": lead["lead_id"], "person": p.get("name"), "title": p.get("title"), "company": c.get("name"),
             "country": c.get("country"), "stage": lead.get("stage"), "status": lead.get("status"),
-            "owner": deal.get("owner") or (lead.get("handoff") or {}).get("rep_id")}
+            "owner": deal.get("owner") or (lead.get("handoff") or {}).get("rep_id"), "owner_name": _owner_name(lead)}
 
 
 @mcp.tool()
 def get_lead(lead_id: str) -> dict:
-    """Get one lead with everything the pipeline knows about it."""
-    return LEADS.get(lead_id, {"error": f"unknown lead {lead_id}"})
+    """Get one lead with everything the pipeline knows about it, plus owner_name: the name of the rep who owns
+    it, so answers can say "Mette" rather than rep-1."""
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"error": f"unknown lead {lead_id}"}
+    return {**lead, "owner_name": _owner_name(lead)}
+
+
+def _owner_name(lead: dict) -> str | None:
+    from ..store import REPS
+    rid = (lead.get("deal") or {}).get("owner") or (lead.get("handoff") or {}).get("rep_id")
+    return (REPS.get(rid) or {}).get("name") if rid else None
 
 
 @mcp.tool()
