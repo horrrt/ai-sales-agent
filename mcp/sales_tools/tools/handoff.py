@@ -431,7 +431,8 @@ def handoff_follow_ups() -> list[dict]:
         if (h.get("rep_id") and not h.get("meeting_status") and assigned_at
                 and _add_working_days(_parse(assigned_at), 1, _lead_tz(lead)) <= t):
             due.append({"lead_id": lead["lead_id"], "kind": "not_booked", "rep_id": h["rep_id"],
-                        "next": "@handoff: the lead has a rep but no meeting; offer slots (find_free_slots with lead_id) and book"})
+                        "next": "@handoff: the lead said yes but has no meeting; book the first free slot (find_free_slots with "
+                                "lead_id, then book_meeting), as for any positive reply. The invite lets them accept or ask for another time"})
         if lead.get("needs_person"):
             due.append({"lead_id": lead["lead_id"], "kind": "needs_person", **lead["needs_person"],
                         "next": "ask a person in #sales-desk; clear it with update_lead(needs_person=null) once decided"})

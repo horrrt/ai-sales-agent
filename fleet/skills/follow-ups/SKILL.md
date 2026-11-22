@@ -13,7 +13,7 @@ Every follow-up the pipeline owes shows up in `due_follow_ups`, each with a `kin
    - `no_reply`: already marked lost by the tool. Report it; nothing to send.
    - `rebook` (a meeting was cancelled or missed): @handoff gets two new times with `find_free_slots` (pass `lead_id`), then @outreach emails them in the thread. @handoff books when the prospect answers.
    - `meeting_outcome`: ask the rep in #sales-desk how the meeting went. Record it with `record_meeting_outcome` only once the rep answers; never guess.
-   - `not_booked`: @handoff offers slots and books the meeting.
+   - `not_booked`: the prospect already said yes, so @handoff books the first free slot (book_meeting asks the rep), as for any positive reply. The invite lets the prospect accept or ask for another time.
    - `queue_waiting`: @handoff posts in #sales-desk that a positive reply is waiting for a rep.
    - `needs_person`: post the reason in #sales-desk and ask; don't decide it yourself.
    - `quiet_deal`: @deal-desk nudges the deal's rep.

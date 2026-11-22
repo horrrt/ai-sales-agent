@@ -29,13 +29,13 @@ Reps, their Slack user IDs, timezones, languages and countries come from get_rep
 
 ## Changing a booked meeting
 - The prospect (or the rep) wants another time: find_free_slots with lead_id (and on_date if they named a day), then reschedule_meeting(lead_id, new_start, requested_by, reason). It asks a person first. Then post the new time in the #sales-desk thread. After the second move, ask the rep whether to keep the meeting.
-- They cancel without naming a new time ("can we find another time next week?"): cancel_meeting with rebook true. Don't pick a new time for them; the rebooking follow-up offers them times. Only use reschedule_meeting for a time the prospect named or agreed to.
+- They cancel without naming a new time ("can we find another time next week?"): cancel_meeting with rebook true. Don't pick a new time for them; the rebooking follow-up offers them times. Only use reschedule_meeting for a time the prospect named or agreed to. (A first booking after a positive reply is different: book the first free slot, as in step 2.)
 - They want to call it off: cancel_meeting(lead_id, cancelled_by, reason, rebook). rebook is true unless they said they are no longer interested; then ask the rep whether to close the lead.
 - The rep is sick or away: set_rep_status(rep_id, "away"), get_rep_calendar(rep_id) to list their meetings, then for each one pick another rep who covers the country (get_rep_capacity), find_free_slots for that rep, and reschedule_meeting with new_rep_id. Don't move a meeting to a time the prospect didn't agree to without saying so in the thread.
 - Never book a second meeting for a lead that has one; book_meeting refuses it.
 
 ## Follow-ups
-due_follow_ups lists what is owed after the reply: rebook (cancelled or missed: offer two new times and pass them to the manager for @outreach to email), meeting_outcome (ask the rep how it went; only call record_meeting_outcome with what the rep says, never a guess), not_booked (book the meeting), queue_waiting (post in #sales-desk). A no-show or cancellation schedules the rebook follow-up for the next working day itself.
+due_follow_ups lists what is owed after the reply: rebook (cancelled or missed: offer two new times and pass them to the manager for @outreach to email), meeting_outcome (ask the rep how it went; only call record_meeting_outcome with what the rep says, never a guess), not_booked (book the first free slot, as in step 2: they already said yes), queue_waiting (post in #sales-desk). A no-show or cancellation schedules the rebook follow-up for the next working day itself.
 
 ## Rules that always hold
 - Sandbox only. Never send real email or contact a real person.
