@@ -36,8 +36,13 @@ def load_brief() -> dict:
     raise FileNotFoundError("no customer brief in data/")
 
 
-def positioner_prompt() -> str:
-    text = (ROOT / "fleet/subagents/positioner/AGENTS.md").read_text()
+POSITIONER_FILE = ROOT / "fleet/subagents/positioner/AGENTS.md"
+
+
+def positioner_prompt(raw: str | None = None) -> str:
+    """The system prompt Fleet runs: AGENTS.md without frontmatter and maintainer comments.
+    Pass raw to strip a candidate version of the file instead (evals/hill_climb.py)."""
+    text = POSITIONER_FILE.read_text() if raw is None else raw
     text = re.sub(r"\A---.*?---\s*", "", text, flags=re.S)  # frontmatter
     return re.sub(r"<!--.*?-->\s*", "", text, flags=re.S).strip()  # maintainer comments
 
@@ -62,10 +67,10 @@ def public_lead(lead: dict) -> dict:
     return {k: v for k, v in lead.items() if k not in ("positioning", "outreach", "handoff")}
 
 
-def run_positioner(lead: dict, brief: dict) -> dict:
+def run_positioner(lead: dict, brief: dict, system: str | None = None) -> dict:
     user = (f"{HARNESS_NOTE}\n\n<lead>\n{json.dumps(public_lead(lead), indent=2, ensure_ascii=False)}\n</lead>\n\n"
             f"<customer_brief>\n{json.dumps(brief, indent=2, ensure_ascii=False)}\n</customer_brief>")
-    out = llm.structured(llm.POSITIONER_MODEL, positioner_prompt(), user, PositioningOut, effort="medium")
+    out = llm.structured(llm.POSITIONER_MODEL, system or positioner_prompt(), user, PositioningOut, effort="medium")
     result = out.model_dump()
     result["validation_problems"] = [] if out.no_fit else positioning_checks.check_positioning(lead, out.angle, out.evidence, out.confidence)
     return result
