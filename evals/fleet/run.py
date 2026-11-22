@@ -193,8 +193,12 @@ def initial_state(setup: dict) -> dict:
     the outbox; setup.replies become the prospect's emails in the inbox, answering it."""
     now = _utc(setup.get("now") or DEFAULT_NOW)
     # every case starts from the demo customer, or from one of the test customer types in data/customers/
-    base = REPO / "data/customers" / f"{setup['customer']}.json" if setup.get("customer") else REPO / "data/customer_brief.demo.json"
-    brief = json.loads(base.read_text())
+    # customer: blank starts from the empty example brief (a customer who has just signed up)
+    base = (REPO / "data/customer_brief.example.json" if setup.get("customer") == "blank" else
+            REPO / "data/customers" / f"{setup['customer']}.json" if setup.get("customer") else REPO / "data/customer_brief.demo.json")
+    brief = {k: v for k, v in json.loads(base.read_text()).items() if not k.startswith("_")}
+    if setup.get("customer") == "blank":
+        brief["customer_id"] = "C-new"
     for k, v in (setup.get("brief") or {}).items():
         brief[k] = {**brief[k], **v} if isinstance(v, dict) and isinstance(brief.get(k), dict) else v
     sender = brief.get("sender") or {"name": "Kvitto", "email": "outreach@sandbox.test"}

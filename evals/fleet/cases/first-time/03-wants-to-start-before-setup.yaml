@@ -1,49 +1,7 @@
 title: 'A new customer wants leads straight away: the agent explains what it needs first and starts nothing'
 agent: manager
 setup:
-  brief:
-    customer_id: C-new
-    sender:
-      name: 'TODO: who the emails come from'
-      email: TODO@yourcompany.sandbox.test
-      timezone: Europe/Copenhagen
-    offer: 'TODO: what the customer sells, price and deal terms'
-    icp:
-      countries:
-      - SE
-      - FI
-      - 'NO'
-      employees_min: 10
-      employees_max: 50
-      industries:
-      - B2B SaaS
-      - IT services
-      titles:
-      - CEO
-      - Founder
-      - Head of Sales
-    product_info: 'TODO: product or service description, proof points, case studies'
-    won_deals:
-    - 'TODO: 3-5 past won deals and why they were won'
-    exclusions:
-    - 'TODO: current customers, competitors, partners'
-    tone: 'TODO: approved tone and claims'
-    auto_close:
-      enabled: false
-      max_annual_value_eur: 'TODO: price cap (EUR per year) for deals the agent may close itself'
-      plans:
-      - 'TODO: the plans the agent may sell by itself, e.g. a self-serve tier under the cap'
-      standard_terms: 'TODO: what counts as a standard deal'
-      checkout_url: 'TODO: payment link, test mode during the course'
-    pricing:
-      currency: EUR
-      plans:
-        TODO-plan:
-          price_per_month: 0
-          min_term_months: 1
-      max_discount_pct_without_approval: 0
-      max_discount_pct: 0
-      deal_policy: 'TODO: discount and contract rules'
+  customer: blank
   reps:
     rep-1:
       name: Mette Holm

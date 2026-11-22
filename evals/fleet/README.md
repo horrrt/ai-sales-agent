@@ -64,7 +64,8 @@ setup:
   replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox, or a full email:
   #   {L-1: {from: "Maja <maja@x.sandbox.test>", cc: [...], subject: ..., body: ..., received_at: ..., attachments: [...]}}
   #   or a list of them. A lead with outreach.sent_at always gets its sent email in the outbox.
-  customer: lagerlys-ecom                     # start from a test customer type in data/customers/ instead of the demo
+  customer: lagerlys-ecom                     # start from a test customer type in data/customers/ instead of the demo,
+                                              # or blank: the empty example brief, a customer who has just signed up
   websites: {lagerlys.example: {title: ..., pages: [{path: /, text: ...}]}}   # sites import_website can read
   now: "2026-11-24T22:00:00+01:00"            # the pinned time (default Tuesday 2026-11-24 10:00 Stockholm)
   calendars: {rep-1: [{start: ..., end: ..., title: Board meeting}]}   # busy blocks; kind: meeting + lead_id for a booked one
