@@ -72,7 +72,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P21 | A quote changed after approval can't be sent | `test_quote_cannot_be_sent_without_approval_or_after_a_change` | `deal-desk/09-rep-changes-the-quote` |
 | P22 | A deal is won once, or lost with a reason from the list | `test_won_deal_is_recorded_once_on_the_lead`, `test_lost_deal_needs_a_reason_from_the_list` | `deal-desk/04-lost-with-reason`, `manager/06-other-rep-closes-a-deal` |
 | P23 | Auto-close: a small deal is paid and won without a rep, a deal over the cap goes to a rep, and with auto-close off no offer is sent | `test_auto_close_small_deal_paid_is_won`, `test_auto_close_off_never_sends_an_offer`, `test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1`, `test_payment_amount_is_kept` | `deal-desk/05-auto-close-small-deal` |
-| P24 | The pipeline is weighted by stage and quiet deals are flagged | `test_pipeline_weights_open_deals_and_flags_quiet_ones` | `deal-desk/06-pipeline-quiet-deals` |
+| P24 | The pipeline is weighted by stage, quiet deals are flagged, and sent quotes that aren't paid are listed | `test_pipeline_weights_open_deals_and_flags_quiet_ones`, `test_pipeline_lists_sent_quotes_awaiting_payment` | `deal-desk/06-pipeline-quiet-deals` |
 | P25 | The weekly review proposes a rule change from rep edits, waits when there's too little data, and spots losses to a competitor | `test_event_log_and_proposals`, `test_funnel_metrics_with_a_deal_that_never_set_auto_close` | `coach/01-proposal-from-rep-edits`, `coach/02-too-early`, `coach/03-losses-to-a-competitor` |
 | P26 | Every log row uses the schema's stages and outcomes | `test_log_interaction_rejects_values_outside_the_schema` | `manager/05-batch-end-to-end` |
 | P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | unit only |
@@ -274,3 +274,33 @@ ICP industries come from one list, `data/industries.json` (33 names with aliases
 | I4 | The ICP gate compares list names, whatever the lead source calls the industry, and says in code whether it's in the ICP | `test_the_icp_gate_compares_list_names_whatever_the_source_calls_the_industry` | `customers/09-lagerlys-ecom`, `customers/10-lagerlys-wholesale` |
 | I5 | A price rule on an industry matches its aliases ("Charity" gets the Nonprofit price) | `test_a_price_rule_on_an_industry_matches_its_aliases` | unit only |
 | I6 | Every industry in the briefs is a list name, and every prospect in the data and the Fleet cases maps onto the list | `test_every_industry_in_the_briefs_is_a_list_name_and_every_prospect_maps` | unit only |
+
+## Saying hello
+
+A bare "hey" is the most common first message. The agent works out who is asking (role, traffic light, load) and where things stand, then offers what it can do for that person next, by lead_id and company. It offers and stops: nothing is sent, booked, released or changed until they say so.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| H1 | Before setup, "hey" gets the setup steps still missing | agent only | `greetings/01-hey-before-setup` |
+| H2 | After setup with nothing running, "hi" or "hej" gets finding leads and a first batch | agent only | `greetings/02-hi-after-setup`, `greetings/05-hej-in-swedish` |
+| H3 | A waiting reply or a due follow-up is named, and not handled until asked. The manager can't see the inbox, so it asks @outreach for the list instead of saying there are none | agent only | `greetings/03-hello-with-a-reply-waiting`, `greetings/04-hey-with-a-follow-up-due` |
+| H4 | A rep hears about their own meeting coming up and their quiet deal | agent only | `greetings/06-rep-meeting-and-quiet-deal` |
+| H5 | A junior who is full is told so, and isn't offered approvals or new leads | agent only | `greetings/07-junior-who-is-full` |
+| H6 | Finance hears about the offer waiting for payment, from the pipeline's awaiting_payment list, and gets no lead work | `test_pipeline_lists_sent_quotes_awaiting_payment` | `greetings/08-finance-unpaid-offer` |
+| H7 | An admin hears about the lead in the wait queue and the rep who is full | agent only | `greetings/09-admin-queue-and-full-rep` |
+| H8 | A rep back from sick leave, still set to away, is offered green, and the status isn't changed for them | agent only | `greetings/10-rep-back-from-leave` |
+
+## What next, and how options are put
+
+"What next?", "what should I do?" and "what's the best thing to do here?" get one pick: the step that unblocks a person or a prospect soonest, with the reason. When the agent offers options or asks a question it follows a question mode: recommend (the best step first, then the rest) or neutral (options side by side, no pick). The brief's `question_mode` is the team default, set by an admin; a person's own `question_mode` overrides it and they can set it themselves.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| N1 | "What next?" after setup gets one pick and why | agent only | `what-next/01-what-next-after-setup` |
+| N2 | "What should I do?" from a rep picks among their own meeting and quiet deal | agent only | `what-next/02-what-should-i-do-rep` |
+| N3 | "What is the best thing to do here?" puts the waiting prospect first, without handling the reply | agent only | `what-next/03-best-thing-with-a-reply-waiting` |
+| N4 | Finance's pick is the unpaid offer, never lead work | agent only | `what-next/04-what-next-finance` |
+| N5 | Neutral mode, from the team or the person, lists options without a pick; a person's recommend beats a neutral team | `test_rep_capacity_gives_each_persons_resolved_question_mode` | `what-next/05-neutral-team-greeting`, `what-next/06-neutral-person-overrides-team`, `what-next/07-recommend-person-in-a-neutral-team` |
+| N6 | Asked directly, the agent picks even in neutral mode | agent only | `what-next/08-neutral-but-asked-directly` |
+| N7 | The team default is the brief's question_mode, admin only, and only "recommend" or "neutral" | `test_question_mode_is_a_team_default_an_admin_sets` | `what-next/10-admin-sets-team-neutral` |
+| N8 | Anyone sets their own question_mode, not a colleague's, and it doesn't open up the rest of their record | `test_anyone_sets_their_own_question_mode_but_not_a_colleagues` | `what-next/09-rep-switches-himself-to-neutral` |

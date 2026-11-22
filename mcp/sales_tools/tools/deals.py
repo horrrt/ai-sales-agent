@@ -337,9 +337,10 @@ def record_deal_outcome(lead_id: str, outcome: str, by: str, amount_eur: float |
 
 @mcp.tool()
 def get_pipeline(rep_id: str | None = None) -> dict:
-    """Open and closed deals: count and value per stage, the weighted pipeline, and deals that went quiet (no activity in 7 days)."""
+    """Open and closed deals: count and value per stage, the weighted pipeline, deals that went quiet (no activity
+    in 7 days), and awaiting_payment: open deals whose quote or offer was sent and isn't paid yet (what finance watches)."""
     stages: dict[str, dict] = {s: {"count": 0, "value_eur": 0.0} for s in PROBABILITY}
-    weighted, stale = 0.0, []
+    weighted, stale, unpaid = 0.0, [], []
     cutoff = clock() - timedelta(days=STALE_DAYS)
     for lead in LEADS.values():
         deal = lead.get("deal")
@@ -353,7 +354,11 @@ def get_pipeline(rep_id: str | None = None) -> dict:
             last = lead.get("updated_at") or lead.get("created_at")
             if last and datetime.fromisoformat(last) < cutoff:
                 stale.append({"lead_id": lead["lead_id"], "company": lead["company"]["name"], "stage": deal["stage"], "last_activity": last})
-    return {"by_stage": stages, "weighted_pipeline_eur": round(weighted, 2), "stale_deals": stale}
+            quote = deal.get("quote") or {}
+            if quote.get("status") == "sent" and not deal.get("paid"):
+                unpaid.append({"lead_id": lead["lead_id"], "company": lead["company"]["name"], "total_eur": value,
+                               "auto_close": bool(deal.get("auto_close")), "sent_at": deal.get("offer_sent_at")})
+    return {"by_stage": stages, "weighted_pipeline_eur": round(weighted, 2), "stale_deals": stale, "awaiting_payment": unpaid}
 
 
 # --- Auto-close: the agent closes a small, standard deal alone (off unless the brief enables it) --------

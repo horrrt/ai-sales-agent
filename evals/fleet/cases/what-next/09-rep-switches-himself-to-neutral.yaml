@@ -1,0 +1,26 @@
+title: '"Just give me the options from now on": saved on Jonas only, not the team'
+agent: manager
+setup: {}
+turns:
+- Jonas here (rep-2). From now on just give me the options, don't pick for me.
+expect:
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - read_reply
+  - update_brief
+  max_tool_calls: 8
+  logs_follow_schema: true
+  called_with:
+    update_team_member:
+      rep_id: rep-2
+      fields: ~neutral

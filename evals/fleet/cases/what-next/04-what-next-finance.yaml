@@ -1,0 +1,78 @@
+title: '"What next?" from finance: the pick is the unpaid offer, never lead work'
+agent: manager
+setup:
+  brief:
+    auto_close:
+      enabled: true
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: offer_sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+      follow_ups: 0
+      sent_count: 1
+    deal:
+      owner: null
+      auto_close: true
+      call_notes: []
+      bant: {}
+      contract:
+        status: none
+        signed_at: null
+      paid: false
+      amount_eur: null
+      closed_at: null
+      expected_close_date: null
+      stage: negotiation
+      stage_times:
+        qualification: '2026-11-02T11:00:00+00:00'
+      probability: 70
+      small_deal: true
+      estimated_value_eur: 1188
+      quote:
+        plan: starter
+        quantity: 1
+        term_months: 1
+        discount_pct: 0
+        list_total_eur: 99.0
+        total_eur: 99.0
+        status: sent
+turns:
+- 'Lena from finance (fin-1): what next?'
+expect:
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - read_reply
+  - update_brief
+  max_tool_calls: 16
+  logs_follow_schema: true
+  final_mentions_any:
+  - - L-201
+    - Nordvik
+  - - pay
+  final_must_not_contain:
+  - outreach batch
+  - find new leads
+  - i'd start with
+  - i’d start with

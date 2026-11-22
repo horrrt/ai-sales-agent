@@ -1,0 +1,15 @@
+title: '"Hej" from a Swedish rep after setup: answers with what it can do next, starts nothing'
+agent: manager
+setup: {}
+turns:
+- Hej!
+expect:
+  not_called:
+  - find_leads
+  - add_lead
+  - send_email
+  - update_brief
+  final_mentions_any:
+  - [lead]
+  max_tool_calls: 8
+  logs_follow_schema: true

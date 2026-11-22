@@ -51,8 +51,11 @@ def _pick(lead: dict) -> str | None:
 
 @mcp.tool()
 def get_rep_capacity() -> list[dict]:
-    """Traffic light per rep: green has capacity, yellow is busy, red is full."""
-    return [{"rep_id": k, **v} for k, v in REPS.items()]
+    """Traffic light per rep: green has capacity, yellow is busy, red is full. question_mode is how to put
+    options to that person, already resolved: their own, else the brief's team default, else recommend."""
+    from ..store import BRIEF
+    team = BRIEF.get("question_mode") or "recommend"
+    return [{"rep_id": k, **v, "question_mode": v.get("question_mode") or team} for k, v in REPS.items()]
 
 
 @mcp.tool()

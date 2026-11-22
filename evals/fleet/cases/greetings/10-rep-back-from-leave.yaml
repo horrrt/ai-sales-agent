@@ -1,0 +1,93 @@
+title: 'Jonas says hey after sick leave while still set to away: offered to go back to green, status not changed'
+agent: manager
+setup:
+  reps:
+    rep-1:
+      name: Mette Holm
+      role: admin
+      email: mette@kvitto.sandbox.test
+      slack_user_id: TODO-U-METTE
+      status: green
+      active_leads: 2
+      max_leads: 8
+      timezone: Europe/Copenhagen
+      countries:
+      - SE
+      - 'NO'
+      - FI
+      languages:
+      - en
+      - da
+      - sv
+      calendar_id: TODO
+    rep-2:
+      name: Jonas Lind
+      role: rep
+      email: jonas@kvitto.sandbox.test
+      slack_user_id: TODO-U-JONAS
+      status: away
+      active_leads: 6
+      max_leads: 8
+      timezone: Europe/Stockholm
+      countries:
+      - SE
+      languages:
+      - en
+      - sv
+      calendar_id: TODO
+    rep-3:
+      name: Aino Virtanen
+      role: junior
+      email: aino@kvitto.sandbox.test
+      slack_user_id: TODO-U-AINO
+      status: red
+      active_leads: 8
+      max_leads: 8
+      timezone: Europe/Helsinki
+      countries:
+      - FI
+      languages:
+      - en
+      - fi
+      calendar_id: TODO
+    fin-1:
+      name: Lena Brandt
+      email: lena@kvitto.sandbox.test
+      role: finance
+      takes_leads: false
+      slack_user_id: TODO-U-LENA
+      status: green
+      active_leads: 0
+      max_leads: 0
+      timezone: Europe/Copenhagen
+      countries: []
+      languages:
+      - en
+      - da
+      calendar_id: TODO
+turns:
+- hey, Jonas (rep-2), back from sick leave today
+expect:
+  called:
+  - get_rep_capacity
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - update_brief
+  final_mentions_any:
+  - - away
+  - - green
+    - back on
+    - available
+    - status
+  max_tool_calls: 16
+  logs_follow_schema: true

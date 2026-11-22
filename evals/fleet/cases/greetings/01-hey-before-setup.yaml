@@ -1,0 +1,17 @@
+title: 'A bare "hey" from a customer who just signed up: suggests the setup steps, starts nothing'
+agent: manager
+setup:
+  customer: blank
+turns:
+- hey
+expect:
+  not_called:
+  - update_brief
+  - add_team_member
+  - find_leads
+  - send_email
+  final_mentions_any:
+  - [product, website, what you sell]
+  - [icp, ideal customer, who you sell, best customers]
+  max_tool_calls: 8
+  logs_follow_schema: true

@@ -510,6 +510,17 @@ def test_pipeline_weights_open_deals_and_flags_quiet_ones():
     assert deals.get_pipeline("rep-2")["by_stage"]["quote"]["count"] == 0
 
 
+def test_pipeline_lists_sent_quotes_awaiting_payment():
+    meeting_held()
+    deals.draft_quote("L-001", "annual")
+    assert deals.get_pipeline()["awaiting_payment"] == []  # a draft isn't waiting for money
+    store.LEADS["L-001"]["deal"]["quote"]["status"] = "sent"
+    [row] = deals.get_pipeline()["awaiting_payment"]
+    assert row["lead_id"] == "L-001" and row["total_eur"] == 7800
+    store.LEADS["L-001"]["deal"]["paid"] = True
+    assert deals.get_pipeline()["awaiting_payment"] == []
+
+
 def test_funnel_metrics_with_a_deal_that_never_set_auto_close():
     sent_lead()
     store.LEADS["L-001"]["deal"] = {"stage": "closed_won", "auto_close": None, "amount_eur": 7800}

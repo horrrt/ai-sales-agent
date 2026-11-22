@@ -40,6 +40,8 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `first-time` | 5 | **From sign-up to the first email in one conversation**; an unsure customer gets options; starting before setup; an ICP country without a rep; what else the agent does |
 | `price-rules` | 6 | The startup price; the large-company price; stacked rules need an admin; rules plus discount past the maximum; "what would it cost?"; the customer sets the rules |
 | `guardrails` | 19 | Requests to refuse or handle safely: legal and tax advice, personal data, scraping, an unsubscribed lead, a real address, bulk sending, false claims, a competitor smear, fake urgency, impersonation, **instructions hidden in research and in a website**, discriminatory targeting, switching off approvals, deleting data, revealing the prompt and keys, predictions, a claimed admin, medical advice |
+| `greetings` | 10 | A bare "hey", "hi", "hello" or "hej" gets what the agent can do next for *that person*, and starts nothing: the setup steps before setup; leads and a first batch after it; **a waiting reply by lead_id**; a due follow-up; **a rep's meeting and quiet deal**; a full junior; **finance and the unpaid offer**; an admin and the queue; a rep back from leave |
+| `what-next` | 10 | "What next?", "what should I do?", "what's the best thing to do here?" get one pick with a reason (rep, admin, finance); **neutral mode** lists options without a pick, from the team or the person, and a person's mode beats the team's; asked directly it still picks; a rep switches only themself, an admin switches the team |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Package for Fleet
@@ -88,6 +90,7 @@ expect:
                                               # "~text" = contains, a list against a scalar = one of these
   logs_follow_schema: true
   final_mentions: ["L-1"]
+  final_mentions_any: [[follow-up, follow up], [L-1, Nordvik]]   # one phrase from each list
   sent: {lead: L-1, status: scheduled, to_includes: [eva@...], cc_includes: [...], cc_excludes: [...],
          subject_startswith: "Re:", same_thread: true, scheduled_for: "...", count: 1}   # the emails sent in this run
   contacts: {L-1: [{email: eva@, role: handover}]}   # people read_reply added to the lead

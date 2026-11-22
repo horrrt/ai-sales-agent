@@ -1,0 +1,33 @@
+title: '"What next?" after setup with nothing running: one pick (find leads or a first batch) and why'
+agent: manager
+setup: {}
+turns:
+- Mette (rep-1) here. What next?
+expect:
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - read_reply
+  - update_brief
+  max_tool_calls: 16
+  logs_follow_schema: true
+  final_mentions_any:
+  - - recommend
+    - 'i''d '
+    - 'i’d '
+    - i would
+    - best next step
+    - start with
+    - first,
+    - 'first:'
+  - - lead
+    - batch
