@@ -74,10 +74,31 @@
         "meeting_outcome_at": {"type": ["string", "null"], "format": "date-time"}
       }
     },
-    "close": {
+    "deal": {
       "type": "object",
-      "description": "Auto-close, only when the brief enables it",
-      "properties": {"small_deal": {"type": "boolean"}, "estimated_value_eur": {"type": ["number", "null"], "description": "Expected value per year, compared with the brief's auto_close price cap"}, "offer_link": {"type": "string"}, "paid": {"type": "boolean"}, "amount_eur": {"type": ["number", "null"], "description": "What was actually paid (Salesforce: Opportunity.Amount)"}, "closed_at": {"type": "string", "format": "date-time"}}
+      "description": "Opened when a meeting is held, or by auto-close. Like a Salesforce Opportunity. The rep runs it; the agent drafts and records. Won or lost lives in the lead's status and loss_reason, not here",
+      "properties": {
+        "stage": {"enum": ["qualification", "quote", "negotiation", "closed_won", "closed_lost"], "description": "Salesforce Opportunity stage names"},
+        "stage_times": {"type": "object", "additionalProperties": {"type": "string", "format": "date-time"}},
+        "owner": {"type": ["string", "null"], "description": "rep_id (Salesforce: OwnerId)"},
+        "auto_close": {"type": "boolean", "description": "true when the agent closes it alone (small standard deal)"},
+        "small_deal": {"type": "boolean"},
+        "estimated_value_eur": {"type": ["number", "null"], "description": "Expected value per year"},
+        "probability": {"type": "integer", "minimum": 0, "maximum": 100, "description": "Set from the stage"},
+        "expected_close_date": {"type": ["string", "null"], "format": "date"},
+        "call_notes": {"type": "array", "items": {"type": "object", "properties": {"at": {"type": "string"}, "by": {"type": "string"}, "notes": {"type": "string"}}}},
+        "bant": {"type": "object", "description": "From the rep's call notes. unknown never blocks a quote", "additionalProperties": {"type": "object", "properties": {"answer": {"enum": ["yes", "no", "unknown"]}, "confidence": {"type": ["number", "null"]}, "backend": {"type": "string"}}}},
+        "quote": {"type": "object", "properties": {
+          "plan": {"type": "string"}, "quantity": {"type": "integer"}, "term_months": {"type": "integer"},
+          "list_total_eur": {"type": "number"}, "discount_pct": {"type": "number"}, "total_eur": {"type": "number"},
+          "needs_admin": {"type": "boolean", "description": "Discount above the brief's max_discount_pct_without_approval"},
+          "status": {"enum": ["draft", "approved", "sent", "accepted", "rejected"]},
+          "quote_hash": {"type": "string"}, "approval": {"type": "object"}, "checkout_url": {"type": "string"}}},
+        "contract": {"type": "object", "properties": {"status": {"enum": ["none", "sent", "signed"]}, "signed_at": {"type": ["string", "null"], "format": "date-time"}}},
+        "paid": {"type": "boolean"},
+        "amount_eur": {"type": ["number", "null"], "description": "Final value of a won deal (Salesforce: Opportunity.Amount)"},
+        "closed_at": {"type": ["string", "null"], "format": "date-time"}
+      }
     },
     "stage": {"enum": ["new", "researched", "positioned", "drafted", "approved", "sent", "replied", "offer_sent", "handed_off", "closed"]},
     "status": {"enum": ["active", "won", "lost", "insufficient_data", "on_hold", "queued"], "description": "on_hold: research still thin after 2 retries. queued: positive reply waiting for a free rep. Neither is lost"},

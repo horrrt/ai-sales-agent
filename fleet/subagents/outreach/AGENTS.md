@@ -130,7 +130,7 @@ When asked to process prospect replies:
 
 1. Call `get_replies`.
 2. For each reply, call `read_reply(lead_id, reply_body)` with the reply text exactly as received. It picks one label, applies the exit for that label and records any loss reason itself:
-   - `positive`: continue. Return the lead to the Manager Agent with the tool's `next` (`check_small_deal` for @closer, or `assign_rep` for @handoff).
+   - `positive`: continue. Return the lead to the Manager Agent with the tool's `next` (`check_small_deal` for @deal-desk, or `assign_rep` for @handoff).
    - `not_now`, `out_of_office`: stop for now. The tool schedules a follow-up; this is not a loss.
    - `negative`: lost, with the reason (has_competitor, price or negative).
    - `wrong_person`: lost. Include the referred name in your report so a person can follow it up.

@@ -12,5 +12,6 @@
   "won_deals": ["TODO: 3-5 past won deals and why they were won"],
   "exclusions": ["TODO: current customers, competitors, partners"],
   "tone": "TODO: approved tone and claims",
-  "auto_close": {"enabled": false, "max_annual_value_eur": "TODO: price cap (EUR per year) for deals the agent may close itself", "standard_terms": "TODO: what counts as a standard deal", "checkout_url": "TODO: payment link, test mode during the course"}
+  "auto_close": {"enabled": false, "max_annual_value_eur": "TODO: price cap (EUR per year) for deals the agent may close itself", "standard_terms": "TODO: what counts as a standard deal", "checkout_url": "TODO: payment link, test mode during the course"},
+  "pricing": {"currency": "EUR", "plans": {"TODO-plan": {"price_per_month": 0, "min_term_months": 1}}, "max_discount_pct_without_approval": 0, "max_discount_pct": 0, "deal_policy": "TODO: discount and contract rules"}
 }

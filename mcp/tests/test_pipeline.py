@@ -9,7 +9,7 @@ import pytest
 
 from sales_tools import decide as decide_mod
 from sales_tools import store
-from sales_tools.tools import close, handoff, outreach, positioning, research, shared
+from sales_tools.tools import deals, handoff, outreach, positioning, research, shared
 
 
 class Script:
@@ -202,18 +202,18 @@ def test_auto_close_small_deal_paid_is_won():
     stub("positive")
     assert outreach.read_reply("L-001", "How do I sign up?")["next"] == "check_small_deal"
     stub(True)
-    assert close.check_small_deal("L-001")["next"] == "send_offer"
-    assert close.send_offer("L-001")["offer_link"].startswith("https://checkout.sandbox.test")
-    close.record_payment("L-001", True)
+    assert deals.check_small_deal("L-001", estimated_value_eur=1500)["next"] == "send_offer"
+    assert deals.send_offer("L-001")["offer_link"].startswith("https://checkout.sandbox.test")
+    deals.record_payment("L-001", True)
     stub(True)
-    assert close.check_deal_done("L-001")["done"] is True
+    assert deals.check_deal_done("L-001")["done"] is True
     assert store.LEADS["L-001"]["status"] == "won"
 
 
 def test_auto_close_off_never_sends_an_offer():
     sent_lead()
-    assert close.check_small_deal("L-001")["next"] == "assign_rep"
-    assert close.send_offer("L-001")["ok"] is False
+    assert deals.check_small_deal("L-001")["next"] == "assign_rep"
+    assert deals.send_offer("L-001")["ok"] is False
 
 
 # --- Follow-ups ------------------------------------------------------------------------------
@@ -360,19 +360,115 @@ def test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1():
     store.BRIEF["auto_close"]["enabled"] = True
     sent_lead()
     script = stub()
-    r = close.check_small_deal("L-001", estimated_value_eur=9480)
+    r = deals.check_small_deal("L-001", estimated_value_eur=9480)
     assert r["small_deal"] is False and r["next"] == "assign_rep" and script.calls == []
-    assert store.LEADS["L-001"]["close"]["estimated_value_eur"] == 9480
+    assert "deal" not in store.LEADS["L-001"]  # no deal opens for a deal that goes to a rep
 
 
 def test_payment_amount_is_kept():
     store.BRIEF["auto_close"]["enabled"] = True
     sent_lead()
     stub(True)
-    close.check_small_deal("L-001", estimated_value_eur=1500)
-    close.send_offer("L-001")
-    close.record_payment("L-001", True, amount_eur=1500)
+    deals.check_small_deal("L-001", estimated_value_eur=1500)
+    deals.send_offer("L-001")
+    deals.record_payment("L-001", True, amount_eur=1500)
     stub(True)
-    close.check_deal_done("L-001")
+    deals.check_deal_done("L-001")
     lead = store.LEADS["L-001"]
-    assert lead["close"]["amount_eur"] == 1500 and "closed" in lead["stage_times"]
+    assert lead["deal"]["amount_eur"] == 1500 and lead["deal"]["stage"] == "closed_won" and lead["deal"]["auto_close"]
+    assert "closed" in lead["stage_times"] and lead["status"] == "won"
+
+
+# --- 6. Deal closing ---------------------------------------------------------------------------
+
+def meeting_held(lead_id="L-001"):
+    sent_lead(lead_id)
+    stub("positive")
+    outreach.read_reply(lead_id, "Yes, let's talk")
+    handoff.assign_rep(lead_id)
+    handoff.book_meeting(lead_id, store.LEADS[lead_id]["handoff"]["rep_id"], handoff.find_free_slots("rep-1")[0])
+    r = handoff.record_meeting_outcome(lead_id, "held")
+    assert r["deal"] == "qualification"
+    return store.LEADS[lead_id]["deal"]
+
+
+def test_held_meeting_opens_a_deal_owned_by_the_rep():
+    deal = meeting_held()
+    assert deal["stage"] == "qualification" and deal["owner"] == "rep-1" and deal["probability"] == 20
+    assert deal["auto_close"] is False
+
+
+def test_no_deal_before_a_meeting_is_held():
+    sent_lead()
+    assert deals.draft_quote("L-001", "annual")["ok"] is False
+    assert deals.record_call_notes("L-001", "notes")["ok"] is False
+
+
+def test_bant_comes_from_call_notes_and_unknown_does_not_block():
+    meeting_held()
+    assert deals.qualify_deal("L-001")["ok"] is False  # no notes yet
+    deals.record_call_notes("L-001", "CEO decides. Needs ISO 27001 by Q2. Budget not discussed.", by="rep-1")
+    stub("unknown", "yes", "yes", "yes")
+    r = deals.qualify_deal("L-001")
+    assert r["failing"] == [] and r["unknown"] == ["budget"] and r["next"] == "draft_quote"
+    stub("no", "yes", "yes", "no")
+    assert deals.qualify_deal("L-001")["failing"] == ["budget", "timeline"]
+
+
+def test_quote_totals_are_computed_in_code_and_policy_is_enforced():
+    meeting_held()
+    assert deals.draft_quote("L-001", "enterprise")["ok"] is False          # not in the price list
+    assert deals.draft_quote("L-001", "annual", term_months=6)["ok"] is False  # under the minimum term
+    assert deals.draft_quote("L-001", "annual", discount_pct=25)["ok"] is False  # above the maximum discount
+    r = deals.draft_quote("L-001", "annual", discount_pct=5)
+    q = r["quote"]
+    assert q["list_total_eur"] == 650 * 12 and q["total_eur"] == 7410.0 and q["needs_admin"] is False
+    assert store.LEADS["L-001"]["deal"]["stage"] == "quote"
+    assert deals.draft_quote("L-001", "annual", discount_pct=15)["quote"]["needs_admin"] is True
+
+
+def test_quote_cannot_be_sent_without_approval_or_after_a_change():
+    meeting_held()
+    deals.draft_quote("L-001", "annual")
+    assert deals.send_quote("L-001")["error"] == "not_approved"
+    deals.approve_quote("L-001", by="rep-1")
+    store.LEADS["L-001"]["deal"]["quote"]["total_eur"] = 1.0  # changed after approval
+    assert deals.send_quote("L-001")["error"] == "not_approved"
+    deals.draft_quote("L-001", "annual")
+    deals.approve_quote("L-001", by="rep-1")
+    r = deals.send_quote("L-001")
+    assert r["ok"] and store.LEADS["L-001"]["deal"]["stage"] == "negotiation"
+
+
+def test_won_deal_is_recorded_once_on_the_lead():
+    meeting_held()
+    deals.draft_quote("L-001", "annual")
+    deals.approve_quote("L-001", by="rep-1")
+    deals.send_quote("L-001")
+    deals.record_contract("L-001", "signed", by="rep-1")
+    r = deals.record_deal_outcome("L-001", "won", by="rep-1")
+    lead = store.LEADS["L-001"]
+    assert r["amount_eur"] == 7800 and lead["status"] == "won" and lead["deal"]["stage"] == "closed_won"
+    assert deals.record_deal_outcome("L-001", "lost", by="rep-1", loss_reason="price")["ok"] is False
+    m = shared.get_funnel_metrics()
+    assert m["deals_won"] == 1 and m["won_revenue_eur"] == 7800 and m["closed_automatically"] == 0
+    assert m["median_days_meeting_to_won"] is not None
+
+
+def test_lost_deal_needs_a_reason_from_the_list():
+    meeting_held()
+    assert deals.record_deal_outcome("L-001", "lost", by="rep-1", loss_reason="went quiet")["ok"] is False
+    deals.record_deal_outcome("L-001", "lost", by="rep-1", loss_reason="has_competitor")
+    lead = store.LEADS["L-001"]
+    assert lead["status"] == "lost" and lead["loss_reason"] == "has_competitor"
+    assert shared.get_funnel_metrics()["losses_by_reason"] == {"has_competitor": 1}
+
+
+def test_pipeline_weights_open_deals_and_flags_quiet_ones():
+    meeting_held()
+    deals.draft_quote("L-001", "annual")
+    p = deals.get_pipeline()
+    assert p["by_stage"]["quote"]["count"] == 1 and p["weighted_pipeline_eur"] == round(7800 * 0.4, 2)
+    store.LEADS["L-001"]["updated_at"] = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+    assert deals.get_pipeline("rep-1")["stale_deals"][0]["lead_id"] == "L-001"
+    assert deals.get_pipeline("rep-2")["by_stage"]["quote"]["count"] == 0

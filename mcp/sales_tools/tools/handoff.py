@@ -132,7 +132,12 @@ def record_meeting_outcome(lead_id: str, outcome: str, by: str = "rep") -> dict:
         return {"ok": False, "error": "outcome must be held, no_show or cancelled"}
     lead["handoff"].update(meeting_outcome=outcome, meeting_outcome_at=now())
     log_event(lead_id, "handoff", "success" if outcome == "held" else "failure", f"meeting {outcome}", channel="calendar", by=by)
-    return {"ok": True, "meeting_outcome": outcome}
+    if outcome == "held":
+        from .deals import open_deal  # a held meeting opens the deal (stage qualification)
+        open_deal(lead_id)
+        return {"ok": True, "meeting_outcome": outcome, "deal": "qualification",
+                "next": "the rep adds call notes (record_call_notes), then qualify_deal and draft_quote"}
+    return {"ok": True, "meeting_outcome": outcome, "next": "ask the rep whether to rebook or close the lead"}
 
 
 @mcp.tool()
