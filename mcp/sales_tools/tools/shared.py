@@ -94,7 +94,22 @@ def get_funnel_metrics() -> dict:
     by_status: dict[str, int] = {}
     for lead in LEADS.values():
         by_status[lead.get("status", "?")] = by_status.get(lead.get("status", "?"), 0) + 1
-    return {"interactions_by_stage": by_stage, "losses_by_reason": by_reason, "leads_by_status": by_status}
+    return {"interactions_by_stage": by_stage, "losses_by_reason": by_reason, "leads_by_status": by_status,
+            "north_star_meetings_held": sum((l.get("handoff") or {}).get("meeting_outcome") == "held" for l in LEADS.values()),
+            "closed_automatically": sum(l.get("status") == "won" for l in LEADS.values()),
+            "median_hours_reply_to_handoff": _median_hours("replied", "handed_off"),
+            "median_days_added_to_sent": _median_hours("new", "sent", days=True)}
+
+
+def _median_hours(start: str, end: str, days: bool = False) -> float | None:
+    """Median time between two stages over the leads that reached both (from stage_times)."""
+    from datetime import datetime
+    spans = sorted((datetime.fromisoformat(t[end]) - datetime.fromisoformat(t[start])).total_seconds() / 3600
+                   for t in (l.get("stage_times") or {} for l in LEADS.values()) if start in t and end in t)
+    if not spans:
+        return None
+    mid = spans[len(spans) // 2] if len(spans) % 2 else (spans[len(spans) // 2 - 1] + spans[len(spans) // 2]) / 2
+    return round(mid / 24 if days else mid, 2)
 
 
 @mcp.tool()

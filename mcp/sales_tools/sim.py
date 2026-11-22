@@ -33,7 +33,7 @@ def leads() -> dict[str, dict]:
     for lead_id, p in PERSONAS.items():
         lead = copy.deepcopy(p["lead"])
         lead.pop("research", None)
-        lead.update(stage="new", status="active", loss_reason=None)
+        lead.update(stage="new", status="active", loss_reason=None)  # a candidate; add_lead sets created_at and stage_times
         out[lead_id] = lead
     return out
 

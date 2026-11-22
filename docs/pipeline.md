@@ -46,6 +46,7 @@ flowchart TD
         H2["Hand to a free rep<br/>@handoff · assign_rep<br/>green first, then yellow"]:::human
         Q1["Wait queue if all reps red<br/>status queued · release_queue"]:::exit
         B1["Book a slot and write the call brief<br/>find_free_slots · book_meeting · save_call_brief"]:::human
+        M1["Meeting held? (North Star)<br/>record_meeting_outcome"]:::human
         T1 --> G3
         G3 -- other --> X3
         G3 -- positive --> G4
@@ -56,6 +57,7 @@ flowchart TD
         H2 -- "all reps red" --> Q1
         Q1 -. "a rep has room" .-> H2
         H2 -- assigned --> B1
+        B1 --> M1
     end
 
     subgraph L["Weekly learning loop · @coach"]
@@ -74,7 +76,7 @@ flowchart TD
     H1 -- "approved or edited" --> T1
     T1 -. "no reply" .-> F1
     F1 -. "follow-up draft" .-> A5
-    B1 -. logged .-> E1
+    M1 -. logged .-> E1
     W1 -. logged .-> E1
     X3 -. logged .-> E1
 
@@ -122,7 +124,7 @@ Every gate and tool writes a row to the event log, not only the three dotted "lo
 | Auto-close agent: offer + checkout link | @closer, `send_offer` (sandbox link) | `fleet/subagents/closer/` |
 | d1: deal done? | `check_deal_done` on the payment status (`record_payment`, by a person for now) | `close.py` |
 | Closed automatically, rep gets a summary | status won, Slack message from @closer | |
-| Hand to a free rep (green first, then yellow) | `assign_rep`, then `find_free_slots`, `book_meeting`, `save_call_brief` | `mcp/sales_tools/tools/handoff.py` |
+| Hand to a free rep (green first, then yellow) | `assign_rep`, then `find_free_slots`, `book_meeting`, `save_call_brief`; after the meeting the rep records held, no-show or cancelled with `record_meeting_outcome` | `mcp/sales_tools/tools/handoff.py` |
 | Wait queue if all reps red | status `queued` (not lost), `release_queue` when a rep has room | same |
 | **Weekly learning loop** | | |
 | What happened: edits, replies | every gate and tool writes the event log; rep edits keep the original and the edited email | `mcp/sales_tools/store.py` |
@@ -130,7 +132,7 @@ Every gate and tool writes a row to the event log, not only the three dotted "lo
 | Weekly review finds patterns | @coach, skill `weekly-review` | `fleet/subagents/coach/` |
 | Agent rules: new SKILL.md | `save_proposal`, then a person approves with `decide_proposal`; the change goes in as a PR with a new `prompt_version` | `shared.py` |
 
-Additions the diagram doesn't show but the Notion plan needs: a booked slot and a call brief for every hand-off, one loss reason on every lost lead, sandbox-only sending, follow-ups (2, then `no_reply`), and a person approving every rule change.
+Additions the diagram doesn't show but the Notion plan needs: a booked slot and a call brief for every hand-off, whether the meeting was held (the North Star), one loss reason on every lost lead, sandbox-only sending, follow-ups (2, then `no_reply`), and a person approving every rule change.
 
 ## The d1 checks
 

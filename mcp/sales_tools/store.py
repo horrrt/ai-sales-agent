@@ -82,6 +82,13 @@ def save() -> None:
     os.replace(tmp, path)
 
 
+def set_stage(lead: dict, stage: str) -> None:
+    """Move a lead to a stage and remember when it first got there."""
+    lead["stage"] = stage
+    lead.setdefault("stage_times", {}).setdefault(stage, now())
+    lead["updated_at"] = now()
+
+
 def log_event(lead_id: str, stage: str, outcome: str, message: str = "", channel: str = "internal",
               loss_reason: str | None = None, **extra) -> dict:
     """Append one row to the event log. Tools call this for facts; agents call log_interaction for decisions."""
@@ -89,6 +96,8 @@ def log_event(lead_id: str, stage: str, outcome: str, message: str = "", channel
              "outcome": outcome, "loss_reason": loss_reason, "prompt_version": extra.pop("prompt_version", None),
              "variant": extra.pop("variant", None), "trace_id": None, "by": extra.pop("by", "tool"), **extra}
     INTERACTIONS.append(entry)
+    if lead_id in LEADS:
+        LEADS[lead_id]["updated_at"] = entry["timestamp"]
     return entry
 
 

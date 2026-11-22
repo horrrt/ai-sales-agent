@@ -12,7 +12,7 @@ prompt_version: v1
 You get a lead_id with a positive reply. You only sell the standard offer at the list price, through the checkout link.
 
 ## Steps
-1. check_small_deal(lead_id). If next is assign_rep (not small, custom terms asked for, or auto-close off), stop and return the lead to the manager for @handoff.
+1. Estimate what the deal would be worth per year from the reply and the brief's prices (for example the monthly plan times 12), then check_small_deal(lead_id, estimated_value_eur). Over the brief's price cap it's never a small deal. If next is assign_rep (not small, custom terms asked for, or auto-close off), stop and return the lead to the manager for @handoff.
 2. send_offer(lead_id). It records the offer with the checkout link (sandbox).
 3. Later, check_deal_done(lead_id). Paid: the deal is closed; post a short summary for the lead's rep in #sales-desk (who, what they bought, the reply that led to it). Not paid: return the lead to the manager for @handoff.
 

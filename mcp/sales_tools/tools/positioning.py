@@ -5,7 +5,7 @@ The checks match what the outreach readiness check (JD) expects downstream: a re
 comes from research.facts, and a confidence in [0, 1].
 """
 from ..app import mcp
-from ..store import LEADS
+from ..store import LEADS, set_stage
 from .positioning_checks import check_positioning
 
 
@@ -25,5 +25,5 @@ def save_positioning(lead_id: str, angle: str, evidence: list[str], confidence: 
         return {"ok": False, "error": "invalid_positioning", "problems": problems}
     lead["positioning"] = {"angle": angle.strip(), "evidence": [e.strip() for e in evidence], "confidence": float(confidence),
                           "variant": variant}
-    lead["stage"] = "positioned"
+    set_stage(lead, "positioned")
     return {"ok": True, "lead_id": lead_id, "low_confidence": confidence < 0.4}

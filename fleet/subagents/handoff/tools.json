@@ -67,6 +67,12 @@
       "display_name": "Save call brief"
     },
     {
+      "name": "record_meeting_outcome",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Record meeting outcome"
+    },
+    {
       "name": "slack_send_channel_message",
       "mcp_server_url": "https://tools.langchain.com",
       "mcp_server_name": "Fleet",
@@ -99,6 +105,7 @@
     "https://sales-tools.invalid/mcp::save_call_brief::Sales tools (sandbox)": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
     "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
-    "https://tools.langchain.com::slack_read_thread_messages::Fleet": false
+    "https://tools.langchain.com::slack_read_thread_messages::Fleet": false,
+    "https://sales-tools.invalid/mcp::record_meeting_outcome::Sales tools (sandbox)": true
   }
 }

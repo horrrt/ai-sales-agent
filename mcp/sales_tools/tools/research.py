@@ -15,7 +15,7 @@ import copy
 from .. import sim
 from ..app import mcp
 from ..decide import decide
-from ..store import BRIEF, LEADS, SOURCE, log_event
+from ..store import BRIEF, LEADS, SOURCE, log_event, now, set_stage
 
 MAX_RESEARCH_RETRIES = 2
 
@@ -69,12 +69,14 @@ def add_lead(lead_id: str) -> dict:
         return {"ok": True, "status": "needs_human", "lead_id": lead_id, "decision": d,
                 "next": "Ask a person whether this lead fits the ICP"}
     if not d["answer"]:
-        lead.update(stage="new", status="lost", loss_reason="wrong_company_fit")
+        lead.update(status="lost", loss_reason="wrong_company_fit", created_at=now())
+        set_stage(lead, "new")
         LEADS[lead_id] = lead
         log_event(lead_id, "targeting", "skipped", f"not a fit: {d['reason']}", loss_reason="wrong_company_fit",
                   decision={"question": "fits our ICP?", **d})
         return {"ok": True, "status": "skipped", "lead_id": lead_id, "decision": d}
-    lead.update(stage="new", status="active", loss_reason=None)
+    lead.update(status="active", loss_reason=None, created_at=now())
+    set_stage(lead, "new")
     lead.setdefault("source", "salesforce" if lead.get("source_id") else "manual")
     LEADS[lead_id] = lead
     log_event(lead_id, "targeting", "success", "added to the lead sheet", decision={"question": "fits our ICP?", **d})
@@ -112,7 +114,7 @@ def research_target(lead_id: str) -> dict:
     }
     # Save it on the lead: positioning and outreach read research from get_lead, not from this return value.
     lead["research"] = {**profile, "attempts": attempts}
-    lead["stage"] = "researched"
+    set_stage(lead, "researched")
     return profile
 
 

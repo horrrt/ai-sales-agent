@@ -11,7 +11,7 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 
 from ..decide import decide
-from ..store import BRIEF, LEADS, OUTBOX, log_event, now
+from ..store import BRIEF, LEADS, OUTBOX, log_event, now, set_stage
 
 SANDBOX_OUTBOX = OUTBOX  # kept in the store, so a restart doesn't lose sent emails
 
@@ -104,7 +104,7 @@ def save_draft(lead_id: str, subject: str, body: str) -> dict:
     # A new draft replaces the old one and needs a new approval. Send history and follow-up count carry over.
     lead["outreach"] = {k: v for k, v in previous.items() if k in ("sent_at", "follow_ups", "sent_count")}
     lead["outreach"].update({"draft_subject": subject, "draft_body": body})
-    lead["stage"] = "drafted"
+    set_stage(lead, "drafted")
     log_event(lead_id, "outreach", "success", f"draft saved: {subject!r}")
 
     return {"ok": True, "lead_id": lead_id, "next": "record_approval (the rep approves, edits or rejects)"}
@@ -143,7 +143,7 @@ def record_approval(lead_id: str, subject: str, body: str, decision: str = "appr
         decision = "edit"
     outreach["approval"] = {"decision": decision, "by": by, "at": now(), "note": note,
                             "draft_hash": _draft_hash(outreach["draft_subject"], outreach["draft_body"])}
-    lead["stage"] = "approved"
+    set_stage(lead, "approved")
     log_event(lead_id, "approval", "success", "approved with edits" if edited else "approved", by=by,
               draft=original, edited_to={"subject": subject, "body": body} if edited else None)
     return {"ok": True, "decision": decision, "next": "send_email"}
@@ -201,7 +201,7 @@ def send_email(lead_id: str) -> dict:
     outreach["sent_at"] = sent_at
     outreach.pop("approval", None)  # an approval covers one send
     outreach["follow_up_due"] = _in_days(FOLLOW_UP_DAYS[outreach["follow_ups"]]) if outreach["follow_ups"] < MAX_FOLLOW_UPS else None
-    lead["stage"] = "sent"
+    set_stage(lead, "sent")
     log_event(lead_id, "outreach", "success", "follow-up sent" if is_follow_up else "sent", channel="email")
 
     return {"ok": True, "sandbox": True, "sent_at": sent_at, "follow_up_due": outreach["follow_up_due"]}
@@ -247,7 +247,7 @@ def save_reply_label(lead_id: str, label: str) -> dict:
         return {"ok": False, "error": "invalid_label"}
 
     LEADS[lead_id].setdefault("outreach", {})["reply_label"] = label
-    LEADS[lead_id]["stage"] = "replied"
+    set_stage(LEADS[lead_id], "replied")
     log_event(lead_id, "reply", "success", f"labelled {label}", channel="email")
 
     return {"ok": True, "lead_id": lead_id, "label": label}
@@ -303,7 +303,7 @@ def read_reply(lead_id: str, reply_body: str) -> dict:
         m["handled"] = True
     out = lead.setdefault("outreach", {})
     out["reply_label"], out["reply_body"], out["follow_up_due"] = label, reply_body, None
-    lead["stage"] = "replied"
+    set_stage(lead, "replied")
     gate = {"question": "what kind of reply?", **d}
     if label == "positive":
         nxt = "check_small_deal" if (BRIEF.get("auto_close") or {}).get("enabled") else "assign_rep"

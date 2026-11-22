@@ -11,7 +11,7 @@ team's sheet and Google Calendar free/busy.
 from datetime import datetime, timedelta, timezone
 
 from ..app import mcp
-from ..store import LEADS, QUEUE, REPS, log_event, now
+from ..store import LEADS, QUEUE, REPS, log_event, now, set_stage
 
 
 def _traffic_light(rep: dict) -> str:
@@ -112,9 +112,27 @@ def book_meeting(lead_id: str, rep_id: str, start: str) -> dict:
     except ValueError:
         return {"ok": False, "error": "start must be an ISO date-time from find_free_slots"}
     LEADS[lead_id]["handoff"] = {**LEADS[lead_id].get("handoff", {}), "rep_id": rep_id, "meeting_start": start}
-    LEADS[lead_id]["stage"] = "handed_off"
+    set_stage(LEADS[lead_id], "handed_off")
     log_event(lead_id, "handoff", "success", f"meeting booked with {rep_id} at {start}", channel="calendar")
     return {"ok": True, "stub": True}
+
+
+@mcp.tool()
+def record_meeting_outcome(lead_id: str, outcome: str, by: str = "rep") -> dict:
+    """The rep reports how the booked meeting went: held, no_show or cancelled. This tool always asks a person first.
+
+    held is the North Star: a qualified meeting that actually happened. The rep takes the deal from here.
+    """
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"ok": False, "error": f"unknown lead {lead_id}"}
+    if not (lead.get("handoff") or {}).get("meeting_start"):
+        return {"ok": False, "error": "no meeting was booked for this lead"}
+    if outcome not in ("held", "no_show", "cancelled"):
+        return {"ok": False, "error": "outcome must be held, no_show or cancelled"}
+    lead["handoff"].update(meeting_outcome=outcome, meeting_outcome_at=now())
+    log_event(lead_id, "handoff", "success" if outcome == "held" else "failure", f"meeting {outcome}", channel="calendar", by=by)
+    return {"ok": True, "meeting_outcome": outcome}
 
 
 @mcp.tool()

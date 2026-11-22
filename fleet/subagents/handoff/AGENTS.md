@@ -23,7 +23,8 @@ Reps, their Slack user IDs, timezones, languages and countries come from get_rep
    - What not to say (claims not in the brief)
 4. slack_send_channel_message to #sales-desk: "<@REP_ID> new meeting: <name>, <company>, <slot in rep's timezone>", then the brief as a thread reply.
 5. Goal: done within 2 working hours of the reply. If booking was rejected, ask the rep in the thread which slot they want, then book that one. Their answer only counts once book_meeting returns ok.
-6. When a rep frees up capacity (set_rep_status), call release_queue to hand out waiting leads, oldest first, and run steps 2-4 for each.
+6. After the meeting, the rep reports how it went: record_meeting_outcome(lead_id, held | no_show | cancelled). It asks the rep to confirm. Held meetings are the North Star.
+7. When a rep frees up capacity (set_rep_status), call release_queue to hand out waiting leads, oldest first, and run steps 2-4 for each.
 
 ## Rules that always hold
 - Sandbox only. Never send real email or contact a real person.

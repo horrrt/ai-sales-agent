@@ -9,6 +9,9 @@
     "customer_id": {"type": "string", "description": "Which customer's brief this lead belongs to"},
     "source": {"enum": ["salesforce", "clay", "referral", "manual"], "description": "Where the lead came from. The source is not the record; the Sales DB is (docs/fleet-prompts-v2.md §2)"},
     "source_id": {"type": ["string", "null"], "description": "The lead's ID in the source system, e.g. the Salesforce Lead Id"},
+    "created_at": {"type": "string", "format": "date-time", "description": "When add_lead put the lead in the lead sheet (Salesforce: CreatedDate)"},
+    "updated_at": {"type": "string", "format": "date-time", "description": "Last time anything was logged for this lead"},
+    "stage_times": {"type": "object", "description": "When the lead first reached each stage, e.g. {\"replied\": ..., \"handed_off\": ...}. Gives reply-to-rep time and cycle time", "additionalProperties": {"type": "string", "format": "date-time"}},
     "person": {
       "type": "object",
       "properties": {
@@ -66,13 +69,15 @@
       "properties": {
         "rep_id": {"type": "string"},
         "meeting_start": {"type": "string", "format": "date-time"},
-        "call_brief": {"type": "string"}
+        "call_brief": {"type": "string"},
+        "meeting_outcome": {"enum": ["held", "no_show", "cancelled", null], "description": "Set by the rep after the meeting with record_meeting_outcome. held counts toward the North Star (qualified meetings held)"},
+        "meeting_outcome_at": {"type": ["string", "null"], "format": "date-time"}
       }
     },
     "close": {
       "type": "object",
       "description": "Auto-close, only when the brief enables it",
-      "properties": {"small_deal": {"type": "boolean"}, "offer_link": {"type": "string"}, "paid": {"type": "boolean"}, "closed_at": {"type": "string", "format": "date-time"}}
+      "properties": {"small_deal": {"type": "boolean"}, "estimated_value_eur": {"type": ["number", "null"], "description": "Expected value per year, compared with the brief's auto_close price cap"}, "offer_link": {"type": "string"}, "paid": {"type": "boolean"}, "amount_eur": {"type": ["number", "null"], "description": "What was actually paid (Salesforce: Opportunity.Amount)"}, "closed_at": {"type": "string", "format": "date-time"}}
     },
     "stage": {"enum": ["new", "researched", "positioned", "drafted", "approved", "sent", "replied", "offer_sent", "handed_off", "closed"]},
     "status": {"enum": ["active", "won", "lost", "insufficient_data", "on_hold", "queued"], "description": "on_hold: research still thin after 2 retries. queued: positive reply waiting for a free rep. Neither is lost"},

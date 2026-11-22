@@ -328,3 +328,51 @@ def test_a_reply_is_handled_once_and_a_rep_assigned_once():
 def test_read_reply_refuses_a_lead_that_was_never_emailed():
     lead_through_research()
     assert outreach.read_reply("L-001", "hi")["ok"] is False
+
+
+# --- Timestamps, meeting outcome, deal value -------------------------------------------------
+
+def test_stage_times_and_created_at_are_recorded():
+    sent_lead()
+    lead = store.LEADS["L-001"]
+    assert lead["created_at"] and lead["updated_at"]
+    assert list(lead["stage_times"]) == ["new", "researched", "positioned", "drafted", "approved", "sent"]
+    first = lead["stage_times"]["drafted"]
+    outreach.save_draft("L-001", "Follow-up", "Short follow-up body")  # back to drafted later
+    assert lead["stage_times"]["drafted"] == first  # keeps the first time it got there
+
+
+def test_meeting_outcome_counts_toward_the_north_star():
+    sent_lead()
+    stub("positive")
+    outreach.read_reply("L-001", "Yes, let's talk")
+    handoff.assign_rep("L-001")
+    assert handoff.record_meeting_outcome("L-001", "held")["ok"] is False  # nothing booked yet
+    handoff.book_meeting("L-001", "rep-1", handoff.find_free_slots("rep-1")[0])
+    assert handoff.record_meeting_outcome("L-001", "maybe")["ok"] is False
+    assert handoff.record_meeting_outcome("L-001", "held")["ok"]
+    m = shared.get_funnel_metrics()
+    assert m["north_star_meetings_held"] == 1
+    assert m["median_hours_reply_to_handoff"] is not None and m["median_hours_reply_to_handoff"] >= 0
+
+
+def test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1():
+    store.BRIEF["auto_close"]["enabled"] = True
+    sent_lead()
+    script = stub()
+    r = close.check_small_deal("L-001", estimated_value_eur=9480)
+    assert r["small_deal"] is False and r["next"] == "assign_rep" and script.calls == []
+    assert store.LEADS["L-001"]["close"]["estimated_value_eur"] == 9480
+
+
+def test_payment_amount_is_kept():
+    store.BRIEF["auto_close"]["enabled"] = True
+    sent_lead()
+    stub(True)
+    close.check_small_deal("L-001", estimated_value_eur=1500)
+    close.send_offer("L-001")
+    close.record_payment("L-001", True, amount_eur=1500)
+    stub(True)
+    close.check_deal_done("L-001")
+    lead = store.LEADS["L-001"]
+    assert lead["close"]["amount_eur"] == 1500 and "closed" in lead["stage_times"]
