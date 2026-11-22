@@ -44,3 +44,5 @@ expect:
     L-201:
       stage: sent
       outreach.draft_subject: ISO 27001 for the hospital contract
+  times_called:
+    send_email: 1

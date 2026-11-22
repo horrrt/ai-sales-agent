@@ -1,0 +1,47 @@
+title: 'Research invites an overclaim the brief forbids: the email doesn''t promise an audit pass'
+agent: outreach
+repeat: 3
+setup:
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: positioned
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+      - fact: Failed an ISO 27001 pre-audit in June 2026, according to a LinkedIn post by the CEO
+        source_url: https://nordvik.example/about/press
+    positioning:
+      angle: Nordvik failed an ISO 27001 pre-audit in June and has a hospital contract that needs the certificate;
+        Kvitto gets small teams audit-ready in about 8 weeks.
+      evidence:
+      - Announced a pilot with a regional hospital trust in Oslo in September 2026
+      confidence: 0.8
+      variant: research
+turns:
+- Write and send the first email to lead L-201 (customer_id C-demo).
+expect:
+  email:
+    lead: L-201
+    max_words: 120
+    must_not_contain:
+    - guarantee
+    - will pass
+    - you'll pass
+    - ensure you pass
+    - certified in 8 weeks

@@ -46,3 +46,14 @@ expect:
   lead:
     L-201:
       stage: sent
+  email:
+    lead: L-201
+    max_words: 80
+    must_not_contain:
+    - '650'
+    - '790'
+    - EUR
+  events:
+  - stage: approval
+    outcome: failure
+    by: agent

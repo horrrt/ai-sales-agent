@@ -40,3 +40,6 @@ expect:
   lead:
     L-201:
       outreach.sent_at: null
+  not_called:
+  - send_email
+repeat: 3

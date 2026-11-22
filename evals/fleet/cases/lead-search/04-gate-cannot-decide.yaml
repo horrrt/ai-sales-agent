@@ -1,0 +1,25 @@
+title: 'No decision backend: candidates aren''t added, a person is asked'
+agent: lead-search
+setup:
+  no_decisions: true
+  source:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+turns:
+- Find new leads for customer_id C-demo.
+expect:
+  called:
+  - add_lead
+  lead:
+    L-201:
+      status: null

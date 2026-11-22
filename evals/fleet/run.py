@@ -37,7 +37,8 @@ DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:claude-sonnet-5-5," \
                     "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
-               "logs_follow_schema", "final_mentions", "queue_length", "proposals", "max_tool_calls"}
+               "logs_follow_schema", "final_mentions", "final_must_not_contain", "queue_length", "proposals",
+               "max_tool_calls", "email", "events", "times_called"}
 AGENTS = {"manager"} | {p.name for p in (REPO / "fleet" / "subagents").iterdir() if p.is_dir()}
 
 
@@ -205,12 +206,16 @@ def free_port() -> int:
 
 
 @contextlib.asynccontextmanager
-async def tool_server(state: dict, logdir: Path, name: str):
+async def tool_server(state: dict, logdir: Path, name: str, no_decisions: bool = False):
     """Start this repo's tool server with SALES_STATE pointing at the case's snapshot. It saves after every tool call."""
     port, state_file = free_port(), logdir / f"{name}.state.json"
     state_file.write_text(json.dumps(state, default=str))
     log = open(logdir / f"{name}.server.log", "w")
     env = {**os.environ, "SALES_STATE": str(state_file), "PORT": str(port), "HOST": "127.0.0.1"}
+    if no_decisions:  # no d1 and no Claude: every gate returns no answer and must send the lead to a person
+        for k in ("LIQUID_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+            env.pop(k, None)
+        env["DOTENV_DISABLED"] = "1"
     proc = await asyncio.create_subprocess_exec("uv", "run", "--quiet", "--project", str(REPO / "mcp"), "python", "-m",
                                                 "sales_tools.server", cwd=str(REPO / "mcp"), env=env, stdout=log, stderr=log)
     try:
@@ -287,6 +292,28 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
     for phrase in expect.get("final_mentions", []):
         final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
         add(f"final message mentions {phrase!r}", final and phrase.lower() in final[-1].lower())
+    for phrase in expect.get("final_must_not_contain", []):
+        final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
+        add(f"final message doesn't contain {phrase!r}", not final or phrase.lower() not in final[-1].lower(), "it does")
+    for t, n in (expect.get("times_called") or {}).items():
+        add(f"{t} called {n}x", called.count(t) == n, f"called {called.count(t)}x")
+    if expect.get("email"):
+        e = expect["email"]
+        out_ = (state.get("leads", {}).get(e["lead"], {}).get("outreach") or {})
+        subject, body = out_.get("draft_subject") or "", out_.get("draft_body") or ""
+        text, words = f"{subject}\n{body}".lower(), len(body.split())
+        add("an email was drafted", bool(body), "no draft on the lead")
+        if body:
+            if "max_words" in e:
+                add(f"email body at most {e['max_words']} words", words <= e["max_words"], f"{words} words")
+            if e.get("mentions_any"):
+                add(f"email mentions one of {e['mentions_any']}", any(m.lower() in text for m in e["mentions_any"]), body[:200])
+            for bad in e.get("must_not_contain", []):
+                add(f"email doesn't contain {bad!r}", bad.lower() not in text, body[:200])
+    for want in expect.get("events", []):  # rows in the saved event log, e.g. {stage: approval, outcome: failure, by: agent}
+        rows = state.get("interactions", [])
+        add(f"event log has {want}", any(all(str(r.get(k)) == str(v) if not str(v).startswith("~") else str(v)[1:].lower() in str(r.get(k)).lower()
+                                             for k, v in want.items()) for r in rows), f"{len(rows)} rows")
     if "queue_length" in expect:
         add(f"wait queue has {expect['queue_length']}", len(state.get("queue", [])) == expect["queue_length"],
             f"got {len(state.get('queue', []))}")
@@ -312,6 +339,10 @@ def load_cases(k: str) -> list[tuple[str, Path, dict]]:
 def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     """Static checks a case must pass before it is worth a model call."""
     problems = []
+    if set(case.get("setup", {})) - {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions"}:
+        problems.append(f"unknown setup keys {sorted(set(case['setup']) - {'brief', 'reps', 'source', 'leads', 'replies', 'interactions', 'queue', 'proposals', 'no_decisions'})}")
+    if (case.get("expect") or {}).get("email") and "lead" not in case["expect"]["email"]:
+        problems.append("expect.email needs a lead")
     for key in ("title", "agent", "turns", "expect"):
         if key not in case:
             problems.append(f"missing {key}")
@@ -323,7 +354,7 @@ def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     named = set(case.get("approvals", {})) - {"default"}
     for key in ("called", "not_called", "asked_person", "not_asked_person"):
         named |= set(case.get("expect", {}).get(key, []))
-    named |= set((case.get("expect", {}).get("called_with") or {}))
+    named |= set((case.get("expect", {}).get("called_with") or {})) | set((case.get("expect", {}).get("times_called") or {}))
     named -= {"task", "read_file", "write_todos"}
     if server_tools and named - server_tools:
         problems.append(f"tools not on the server: {sorted(named - server_tools)}")
@@ -386,10 +417,23 @@ async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaph
 
 
 async def run_case(name: str, path: Path, case: dict, args, enums: dict, logdir: Path, sem: asyncio.Semaphore) -> dict:
-    events, started, safe = [], time.time(), name.replace("/", "__")
+    """Run a case `repeat` times (case field or --repeat). It passes when at least `pass_at` runs pass (default: all)."""
+    n = max(args.repeat, case.get("repeat", 1))
+    runs = await asyncio.gather(*(run_once(f"{name}#{i}" if n > 1 else name, case, args, enums, logdir, sem) for i in range(n)))
+    if n == 1:
+        return runs[0]
+    need = case.get("pass_at", n)
+    first = next((r for r in runs if not r["passed"]), runs[0])
+    return {**first, "case": name, "passed": sum(r["passed"] for r in runs) >= need,
+            "pass_rate": f"{sum(r['passed'] for r in runs)}/{n}", "runs": runs}
+
+
+async def run_once(name: str, case: dict, args, enums: dict, logdir: Path, sem: asyncio.Semaphore) -> dict:
+    events, started, safe = [], time.time(), name.replace("/", "__").replace("#", "_run")
     async with sem:
         try:
-            async with tool_server(initial_state(case.get("setup", {})), logdir, safe) as (url, state_file):
+            async with tool_server(initial_state(case.get("setup", {})), logdir, safe,
+                                   no_decisions=case.get("setup", {}).get("no_decisions", False)) as (url, state_file):
                 agent = await build(case["agent"], url, args.model, args.model_map, events)
                 await run_turns(agent, case["turns"], case.get("approvals", {}), events)
             state = json.loads(state_file.read_text())
@@ -416,7 +460,7 @@ def report(results: list, args) -> str:
         by_part.setdefault(r["case"].split("/")[0], []).append(r)
     lines += ["| Part | Passed |", "|---|---|"] + [f"| {p} | {sum(r['passed'] for r in rs)}/{len(rs)} |" for p, rs in by_part.items()] + [""]
     for r in results:
-        lines.append(f"## {'✅' if r['passed'] else '❌'} {r['case']}: {r['title']}")
+        lines.append(f"## {'✅' if r['passed'] else '❌'} {r['case']}: {r['title']}" + (f" ({r['pass_rate']} runs passed)" if "pass_rate" in r else ""))
         if r["error"]:
             lines.append(f"- Error: {r['error']}")
         lines += [f"- {'✅' if c['ok'] else '❌'} {c['check']}" + (f" ({c['detail']})" if c["detail"] else "") for c in r["checks"]]
@@ -445,6 +489,7 @@ async def main():
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--model-map", default=DEFAULT_MODEL_MAP, help="per-agent models; '' for --model everywhere")
     ap.add_argument("--parallel", type=int, default=4)
+    ap.add_argument("--repeat", type=int, default=1, help="run every case this many times (cases can also set repeat)")
     args = ap.parse_args()
     cases = load_cases(args.k)
     if not cases:
@@ -483,7 +528,8 @@ async def main():
     (logdir / "report.md").write_text(report(results, args))
     for r in results:
         failed = [c["check"] for c in r["checks"] if not c["ok"]]
-        print(f"{'ERROR' if r['error'] else 'PASS ' if r['passed'] else 'FAIL '} {r['case']:<40} {r['error'] or '; '.join(failed)}")
+        rate = f" [{r['pass_rate']}]" if "pass_rate" in r else ""
+        print(f"{'ERROR' if r['error'] else 'PASS ' if r['passed'] else 'FAIL '} {r['case']:<40}{rate} {r['error'] or '; '.join(failed)}")
     print(f"\n{sum(r['passed'] for r in results)}/{len(results)} passed. Report: {logdir / 'report.md'}")
 
 

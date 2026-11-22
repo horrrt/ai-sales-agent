@@ -46,3 +46,17 @@ expect:
       stage: sent
       outreach.sent_at: set
   logs_follow_schema: true
+  email:
+    lead: L-201
+    max_words: 120
+    mentions_any:
+    - hospital
+    - pilot
+    - security officer
+    - ISO 27001
+    must_not_contain:
+    - '!'
+    - guarantee
+    - will pass
+  times_called:
+    send_email: 1

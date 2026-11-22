@@ -47,3 +47,7 @@ expect:
       status: active
       research.facts: *id001
   logs_follow_schema: true
+  events:
+  - stage: research
+    outcome: success
+    by: tool
