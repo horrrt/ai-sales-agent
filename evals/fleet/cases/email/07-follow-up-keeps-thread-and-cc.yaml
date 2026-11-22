@@ -54,6 +54,9 @@ expect:
   - send_email
   asked_person:
   - record_approval
+  called_with:
+    record_approval:
+      cc: ~ola@nordvik
   sent:
     lead: L-201
     status: sent

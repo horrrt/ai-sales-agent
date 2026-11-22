@@ -311,7 +311,9 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
         lead = state.get("leads", {}).get(lid, {})
         for path, want in fields.items():
             got = dig(lead, path)
-            ok = (got is not None) if want == "set" else (got in want) if isinstance(want, list) else got == want
+            # "set": not null. A list against a scalar: one of these values. A list against a list: equal.
+            ok = ((got is not None) if want == "set" else (got in want) if isinstance(want, list) and not isinstance(got, list)
+                  else got == want)
             add(f"{lid}.{path} == {want}", ok, f"got {got!r}")
     for name in expect.get("delegated_to", []):
         add(f"manager delegated to @{name}",

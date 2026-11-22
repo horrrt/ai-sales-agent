@@ -29,7 +29,7 @@ def reply(body, sender=ANNA, cc=(), received_at=None, attachments=(), subject=No
 def write_and_send(subject="Quick question", body="A short email", cc=None):
     r = outreach.save_draft(LEAD, subject, body, cc=cc)
     assert r["ok"], r
-    assert outreach.record_approval(LEAD, r["subject"], body, cc=r["cc"])["ok"]
+    assert outreach.record_approval(LEAD, r["subject"], body, to=r["to"], cc=r["cc"])["ok"]
     return r, outreach.send_email(LEAD)
 
 
@@ -49,7 +49,7 @@ def test_rep_added_to_cc_at_approval_is_sent_to_them():
     lead_through_research()
     d = outreach.save_draft(LEAD, "Subject line", "Body of the email")
     assert d["cc"] == []
-    r = outreach.record_approval(LEAD, "Subject line", "Body of the email", cc=[REP], by="rep-1")
+    r = outreach.record_approval(LEAD, "Subject line", "Body of the email", to=d["to"], cc=[REP], by="rep-1")
     assert r["decision"] == "edit" and r["cc"] == [REP]
     assert store.INTERACTIONS[-1]["edited_to"]["cc"] == [REP]
     sent = outreach.send_email(LEAD)
@@ -60,8 +60,25 @@ def test_cc_asked_for_in_the_draft_is_shown_for_approval():
     lead_through_research()
     d = outreach.save_draft(LEAD, "Subject line", "Body of the email", cc=[REP])
     assert d["cc"] == [REP] and d["to"] == [ANNA]
-    assert outreach.record_approval(LEAD, "Subject line", "Body of the email", cc=d["cc"])["decision"] == "approve"
+    assert outreach.record_approval(LEAD, "Subject line", "Body of the email", to=d["to"], cc=d["cc"])["decision"] == "approve"
     assert outreach.send_email(LEAD)["cc"] == [REP]
+
+
+def test_approval_without_the_recipients_is_refused():
+    lead_through_research()
+    d = outreach.save_draft(LEAD, "Subject line", "Body of the email", cc=[REP])
+    r = outreach.record_approval(LEAD, "Subject line", "Body of the email")
+    assert r["ok"] is False and r["error"] == "recipients_missing" and r["to"] == [ANNA] and r["cc"] == [REP]
+    assert outreach.record_approval(LEAD, "Subject line", "Body of the email", to=d["to"])["error"] == "recipients_missing"
+    assert outreach.send_email(LEAD)["error"] == "not_approved"
+
+
+def test_person_can_change_the_recipient_at_approval():
+    lead_through_research()
+    outreach.save_draft(LEAD, "Subject line", "Body of the email")
+    r = outreach.record_approval(LEAD, "Subject line", "Body of the email", to=[CTO], cc=[ANNA])
+    assert r["decision"] == "edit" and r["to"] == [CTO]
+    assert outreach.send_email(LEAD)["to"] == [CTO]
 
 
 def test_cc_outside_the_sandbox_is_refused():
@@ -69,7 +86,7 @@ def test_cc_outside_the_sandbox_is_refused():
     r = outreach.save_draft(LEAD, "Subject line", "Body of the email", cc=["boss@realcompany.com"])
     assert r["ok"] is False and r["error"] == "not_sandbox_recipient"
     outreach.save_draft(LEAD, "Subject line", "Body of the email")
-    r = outreach.record_approval(LEAD, "Subject line", "Body of the email", cc=["boss@realcompany.com"])
+    r = outreach.record_approval(LEAD, "Subject line", "Body of the email", to=[ANNA], cc=["boss@realcompany.com"])
     assert r["ok"] is False and r["error"] == "not_sandbox_recipient"
 
 
@@ -222,7 +239,7 @@ def test_ceo_hands_over_to_the_cto_they_copied_in():
     assert lead["contacts"] == [{**lead["contacts"][0], "email": "erik@acme.sandbox.test", "role": "handover", "name": "Erik Berg"}]
     d = outreach.save_draft(LEAD, "Hi Erik", "Thanks Anna. Erik, here is the short version.")
     assert d["to"] == [CTO] and d["cc"] == [ANNA] and d["subject"] == "Re: Subject line"
-    assert outreach.record_approval(LEAD, d["subject"], "Thanks Anna. Erik, here is the short version.", cc=d["cc"])["ok"]
+    assert outreach.record_approval(LEAD, d["subject"], "Thanks Anna. Erik, here is the short version.", to=d["to"], cc=d["cc"])["ok"]
     sent = outreach.send_email(LEAD)
     assert sent["to"] == [CTO] and sent["cc"] == [ANNA]
 
@@ -368,3 +385,17 @@ def test_reply_text_never_changes_who_we_email():
     d = outreach.save_draft(LEAD, "Re: Subject line", "Thanks, here are two times.")
     assert d["to"] == [ANNA] and d["cc"] == []
     assert outreach.save_draft(LEAD, "Re: Subject line", "Thanks.", cc=["ingrid.private@gmail.com"])["error"] == "not_sandbox_recipient"
+
+
+def test_old_snapshot_outbox_is_upgraded(tmp_path, monkeypatch):
+    sent_lead()
+    old = {"lead_id": LEAD, "to": ANNA, "draft_subject": "Subject line", "draft_body": "Body",
+           "sent_at": "2026-11-20T09:00:00+00:00", "reply": {"body": "Yes, let's talk."}}
+    path = tmp_path / "state.json"
+    path.write_text(__import__("json").dumps({"outbox": [old], "inbox": []}))
+    monkeypatch.setattr(store, "STATE_FILE", str(path))
+    store.load()
+    assert store.OUTBOX[0]["direction"] == "out" and store.OUTBOX[0]["to"] == [ANNA]
+    assert store.INBOX[0]["body"] == "Yes, let's talk." and store.INBOX[0]["in_reply_to"] == store.OUTBOX[0]["message_id"]
+    stub("positive")
+    assert outreach.read_reply(LEAD)["label"] == "positive"

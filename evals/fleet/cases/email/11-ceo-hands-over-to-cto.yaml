@@ -53,6 +53,10 @@ expect:
   - send_email
   asked_person:
   - record_approval
+  called_with:
+    record_approval:
+      to: ~eva@nordvik
+      cc: ~ingrid@nordvik
   lead:
     L-201:
       outreach.reply_label: handover

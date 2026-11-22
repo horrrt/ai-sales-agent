@@ -84,12 +84,33 @@ def load() -> None:
         if key in saved:
             obj.clear()
             (obj.update if isinstance(obj, dict) else obj.extend)(saved[key])
+    _upgrade_old_outbox()
     # Test fixtures (evals/fleet) can also set the lead source and change the brief. Neither is saved back.
     if "source" in saved:
         SOURCE.clear()
         SOURCE.update(saved["source"])
     for k, v in (saved.get("brief") or {}).items():
         BRIEF[k] = {**BRIEF[k], **v} if isinstance(v, dict) and isinstance(BRIEF.get(k), dict) else v
+
+
+def _upgrade_old_outbox() -> None:
+    """Snapshots from before message records kept {to, draft_subject, draft_body, sent_at, reply} per sent email.
+    Turn each into a message in the outbox, and its reply into a message in the inbox."""
+    for i, m in enumerate(OUTBOX):
+        if "message_id" in m:
+            continue
+        lid, reply = m["lead_id"], m.pop("reply", None)
+        new = {"message_id": f"{lid}-out-old{i}", "thread_id": f"T-{lid}", "lead_id": lid, "direction": "out",
+               "from": "", "to": [m["to"]] if isinstance(m.get("to"), str) else list(m.get("to") or []), "cc": [],
+               "subject": m.get("draft_subject", ""), "body": m.get("draft_body", ""), "in_reply_to": None,
+               "attachments": [], "status": "sent", "scheduled_for": None, "sent_at": m.get("sent_at"), "asked": True}
+        if reply:
+            email = (new["to"] or [""])[0]
+            INBOX.append({"message_id": f"{lid}-in-old{i}", "thread_id": new["thread_id"], "lead_id": lid,
+                          "direction": "in", "from": email, "to": [], "cc": [], "subject": "Re: " + new["subject"],
+                          "body": reply.get("body", ""), "received_at": m.get("sent_at"), "in_reply_to": new["message_id"],
+                          "attachments": [], "handled": bool(m.get("handled")), "from_lead": True})
+        OUTBOX[i] = new
 
 
 def save() -> None:

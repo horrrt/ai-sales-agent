@@ -267,7 +267,7 @@ def save_draft(lead_id: str, subject: str, body: str, cc: list[str] | None = Non
     lead handed over to, or the assistant who wrote back), with everyone the prospect copied in kept in cc.
     cc adds more people on top (for example a rep who asked to be copied in); sandbox .test addresses only.
     In an existing thread the subject becomes "Re: <first subject>" so the email stays in the thread.
-    The result shows the final to, cc and subject: pass them to record_approval so the person sees them.
+    The result shows the final to, cc and subject: pass all of them to record_approval so the person sees them.
     """
 
     lead = LEADS.get(lead_id)
@@ -310,19 +310,19 @@ def save_draft(lead_id: str, subject: str, body: str, cc: list[str] | None = Non
     log_event(lead_id, "outreach", "success", f"draft saved: {subject!r}")
 
     return {"ok": True, "lead_id": lead_id, "to": to, "cc": all_cc, "subject": subject, "in_reply_to": in_reply_to,
-            "next": "record_approval with this subject, body and cc (the rep approves, edits or rejects)"}
+            "next": "record_approval with this subject, body, to and cc (the rep approves, edits or rejects)"}
 
 
 @mcp.tool()
-def record_approval(lead_id: str, subject: str, body: str, cc: list[str] | None = None, decision: str = "approve",
-                    note: str = "", by: str = "rep") -> dict:
+def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None = None, cc: list[str] | None = None,
+                    decision: str = "approve", note: str = "", by: str = "rep") -> dict:
     """The human check: a rep approves, edits or rejects the saved draft. This tool always asks a person first.
 
-    Call it with the current draft's subject, body and cc (from save_draft), so the person sees exactly
-    who gets the email. The person can accept it, edit the subject, body or cc before accepting, or reject
-    it. An edited email is saved as the new draft and counts as approved. The original and the edit are
-    kept in the event log, so the weekly review can learn from them. send_email only sends a draft that
-    has an approval, to exactly the approved recipients. cc left out keeps the draft's cc.
+    Call it with the subject, body, to and cc that save_draft returned (cc may be an empty list), so the
+    person sees exactly who gets the email. Approving needs both to and cc. The person can accept it, edit
+    the subject, body, to or cc before accepting, or reject it. An edited email is saved as the new draft
+    and counts as approved. The original and the edit are kept in the event log, so the weekly review can
+    learn from them. send_email only sends a draft that has an approval, to exactly the approved recipients.
     """
     lead = LEADS.get(lead_id)
     if lead is None:
@@ -332,24 +332,30 @@ def record_approval(lead_id: str, subject: str, body: str, cc: list[str] | None 
         return {"ok": False, "error": "no_draft_to_approve"}
     if decision not in ("approve", "edit", "reject"):
         return {"ok": False, "error": "decision must be approve, edit or reject"}
-    original = {"subject": outreach["draft_subject"], "body": outreach["draft_body"], "cc": list(outreach.get("draft_cc") or [])}
+    original = {"subject": outreach["draft_subject"], "body": outreach["draft_body"],
+                "to": list(outreach.get("draft_to") or [lead["person"]["email"]]), "cc": list(outreach.get("draft_cc") or [])}
     if decision == "reject":
         outreach["approval"] = {"decision": "reject", "by": by, "at": now(), "note": note, "draft_hash": _hash_of(outreach)}
         log_event(lead_id, "approval", "failure", f"rejected: {note}", by=by, draft=original)
         return {"ok": True, "decision": "reject", "next": "redraft with the rep's note, then save_draft and record_approval again"}
-    new_cc = original["cc"] if cc is None else _dedupe(cc, drop=outreach.get("draft_to") or [])
-    bad = [a for a in new_cc if not _is_sandbox(a)]
-    if bad:
-        return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad}
+    if to is None or cc is None:  # the person must see who gets the email, so the recipients are always in the ask
+        return {"ok": False, "error": "recipients_missing", "to": original["to"], "cc": original["cc"],
+                "next": "call record_approval again with to and cc exactly as save_draft returned them"}
+    new_to = _dedupe(to)
+    new_cc = _dedupe(cc, drop=new_to)
+    bad = [a for a in new_to + new_cc if not _is_sandbox(a)]
+    if bad or not new_to:
+        return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad or ["(no to)"]}
     edited = ((subject.strip(), body.strip()) != (original["subject"].strip(), original["body"].strip())
-              or sorted(map(_addr, new_cc)) != sorted(map(_addr, original["cc"])))
+              or sorted(map(_addr, new_cc)) != sorted(map(_addr, original["cc"]))
+              or sorted(map(_addr, new_to)) != sorted(map(_addr, original["to"])))
     if edited:
-        outreach["draft_subject"], outreach["draft_body"], outreach["draft_cc"] = subject, body, new_cc
+        outreach.update(draft_subject=subject, draft_body=body, draft_to=new_to, draft_cc=new_cc)
         decision = "edit"
     outreach["approval"] = {"decision": decision, "by": by, "at": now(), "note": note, "draft_hash": _hash_of(outreach)}
     set_stage(lead, "approved")
     log_event(lead_id, "approval", "success", "approved with edits" if edited else "approved", by=by,
-              draft=original, edited_to={"subject": subject, "body": body, "cc": new_cc} if edited else None)
+              draft=original, edited_to={"subject": subject, "body": body, "to": new_to, "cc": new_cc} if edited else None)
     return {"ok": True, "decision": decision, "to": outreach.get("draft_to"), "cc": outreach["draft_cc"], "next": "send_email"}
 
 

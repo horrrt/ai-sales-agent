@@ -48,8 +48,6 @@ expect:
   lead:
     L-201:
       outreach.reply_label: positive
-      outreach.next_cc:
-      - Ola Berg <ola@nordvik.sandbox.test>
   contacts:
     L-201:
     - email: ola@nordvik

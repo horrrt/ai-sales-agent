@@ -18,7 +18,7 @@ The dry run and the fixture check make no model calls. A full Fleet run (`uv run
 
 ## Email context
 
-Every email is a message record: from, to, cc, subject, body, thread and time, for ours and theirs (`schemas/message.schema.json`). The person approving an email sees the final subject, to and cc, and `send_email` sends to exactly those. Emails go out 08:00-17:00 on working days in the lead's country. Outside that they're held until the next 08:00. Weekends count, public holidays don't yet.
+Every email is a message record: from, to, cc, subject, body, thread and time, for ours and theirs (`schemas/message.schema.json`). The person approving an email sees the final subject, to and cc (`record_approval` refuses to approve without them), and `send_email` sends to exactly those. Emails go out 08:00-17:00 on working days in the lead's country. Outside that they're held until the next 08:00. Weekends count, public holidays don't yet.
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | E19 | Someone pastes a reply that isn't in the inbox. It's still recorded as a message | `test_pasted_reply_without_an_inbox_entry_is_still_recorded` | `outreach/05-reply-exits` |
 | E20 | After an unsubscribe the lead is never emailed again, even if someone reopens it by hand | `test_unsubscribed_lead_is_never_emailed_again` | `outreach/06-unsubscribe` |
 | E21 | Tests and demos pin the time (SALES_NOW, or `setup.now` in a Fleet case) | `test_clock_follows_sales_now` | `email/02-night-send-is-held` |
+| E22 | The person approving always sees who gets the email (to and cc) and can change either. An approval without them is refused | `test_approval_without_the_recipients_is_refused`, `test_person_can_change_the_recipient_at_approval` | `email/11-ceo-hands-over-to-cto`, `email/07-follow-up-keeps-thread-and-cc` |
 
 ## The rest of the pipeline
 
@@ -74,5 +75,5 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P24 | The pipeline is weighted by stage and quiet deals are flagged | `test_pipeline_weights_open_deals_and_flags_quiet_ones` | `deal-desk/06-pipeline-quiet-deals` |
 | P25 | The weekly review proposes a rule change from rep edits, waits when there's too little data, and spots losses to a competitor | `test_event_log_and_proposals` | `coach/01-proposal-from-rep-edits`, `coach/02-too-early`, `coach/03-losses-to-a-competitor` |
 | P26 | Every log row uses the schema's stages and outcomes | `test_log_interaction_rejects_values_outside_the_schema` | `manager/05-batch-end-to-end` |
-| P27 | The lead sheet survives a server restart | `test_state_snapshot_round_trip` | `manager/05-batch-end-to-end` |
+| P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | `manager/05-batch-end-to-end` |
 | P28 | The manager sends each request to the right agent and declines off-topic ones | agent only | `manager/01-routes-lead-search`, `manager/02-routes-replies`, `manager/03-routes-deal`, `manager/04-off-topic` |

@@ -66,10 +66,16 @@ def lead_through_research(lead_id="L-001"):
     assert positioning.save_positioning(lead_id, "A real angle for this lead", [fact], 0.7)["ok"]
 
 
+def rcpt(lead_id="L-001") -> dict:
+    """The draft's recipients, as the agent passes them to record_approval."""
+    out = store.LEADS[lead_id]["outreach"]
+    return {"to": out["draft_to"], "cc": out["draft_cc"]}
+
+
 def approved_draft(lead_id="L-001", subject="Subject line", body="Body of the email"):
     lead_through_research(lead_id)
     assert outreach.save_draft(lead_id, subject, body)["ok"]
-    assert outreach.record_approval(lead_id, subject, body)["decision"] == "approve"
+    assert outreach.record_approval(lead_id, subject, body, **rcpt(lead_id))["decision"] == "approve"
 
 
 # --- 1. Find leads ---------------------------------------------------------------------------
@@ -134,7 +140,7 @@ def test_approved_draft_sends_once_and_schedules_a_follow_up():
 def test_rep_edit_becomes_the_draft_and_is_logged():
     lead_through_research()
     outreach.save_draft("L-001", "Subject line", "Body of the email")
-    r = outreach.record_approval("L-001", "Better subject", "Body of the email, shorter")
+    r = outreach.record_approval("L-001", "Better subject", "Body of the email, shorter", **rcpt())
     assert r["decision"] == "edit"
     assert store.LEADS["L-001"]["outreach"]["draft_subject"] == "Better subject"
     ev = store.INTERACTIONS[-1]
@@ -252,7 +258,7 @@ def test_log_interaction_rejects_values_outside_the_schema():
 def test_event_log_and_proposals():
     lead_through_research()
     outreach.save_draft("L-001", "Subject line", "Body of the email")
-    outreach.record_approval("L-001", "Edited subject", "Body of the email")
+    outreach.record_approval("L-001", "Edited subject", "Body of the email", **rcpt())
     edits = shared.get_event_log(stage="approval")
     assert len(edits) == 1 and edits[0]["edited_to"]
     p = shared.save_proposal("outreach", "old -> new", "3 of 5 drafts had the subject edited", "first-ask approval rate")
