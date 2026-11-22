@@ -1,6 +1,99 @@
 # Pipeline
 
-How the agent runs a lead from search to a closed deal or a booked meeting, box by box from the team's pipeline diagram. Purple boxes are LLM agents (Fleet subagents), green boxes are yes/no checks (tools that call d1), orange boxes are people.
+How the agent runs a lead from search to a closed deal or a booked meeting, box by box from the team's pipeline diagram. The diagram below is Mermaid, so GitHub draws it and it stays editable as text. Each box names the subagent and the tool that does the step.
+
+```mermaid
+flowchart TD
+    subgraph S1["1. Find leads · weekly · @lead-search"]
+        A1["Lead search agent<br/>find_leads"]:::agent
+        G1{{"d1: fits our ICP?<br/>add_lead"}}:::gate
+        X1["Skipped<br/>lost: wrong_company_fit"]:::exit
+        D1[("Lead sheet<br/>skips duplicates")]:::data
+        A1 --> G1
+        G1 -- no --> X1
+        G1 -- yes --> D1
+    end
+
+    subgraph S2["2. Research · daily · @researcher"]
+        A2["Manager picks next lead<br/>next_lead"]:::agent
+        A3["Research the company<br/>research_target"]:::agent
+        G2{{"d1: enough to write?<br/>check_ready_to_write<br/>yes/no per required fact"}}:::gate
+        X2["On hold after 2 retries<br/>status on_hold, not lost"]:::exit
+        A2 --> A3 --> G2
+        G2 -- "missing info: retry, max 2" --> A3
+        G2 -- "still missing" --> X2
+    end
+
+    subgraph S3["3. Write"]
+        A4["Find the angle<br/>@positioner · save_positioning"]:::agent
+        A5["Write the email<br/>@outreach · save_draft"]:::agent
+        A4 --> A5
+    end
+
+    subgraph S4["4. Human check"]
+        H1["Rep approves, edits or rejects<br/>record_approval"]:::human
+    end
+
+    subgraph S5["5. Reply and hand-off"]
+        T1["Send<br/>send_email: refuses unapproved drafts"]:::tool
+        G3{{"d1: what kind of reply?<br/>read_reply"}}:::gate
+        X3["Other replies<br/>not_now, out_of_office: follow up later<br/>negative, wrong_person, unsubscribe: lost with a reason"]:::exit
+        F1["No reply: due_follow_ups<br/>max 2, then lost: no_reply"]:::tool
+        G4{{"d1: small, standard deal?<br/>check_small_deal<br/>only if auto_close.enabled"}}:::gate
+        A6["Auto-close agent<br/>@closer · send_offer<br/>offer + checkout link"]:::agent
+        G5{{"d1: deal done?<br/>check_deal_done"}}:::gate
+        W1["Closed automatically<br/>won · rep gets a summary in Slack"]:::exit
+        H2["Hand to a free rep<br/>@handoff · assign_rep<br/>green first, then yellow"]:::human
+        Q1["Wait queue if all reps red<br/>status queued · release_queue"]:::exit
+        B1["Book a slot and write the call brief<br/>find_free_slots · book_meeting · save_call_brief"]:::human
+        T1 --> G3
+        G3 -- other --> X3
+        G3 -- positive --> G4
+        G4 -- yes --> A6 --> G5
+        G5 -- paid --> W1
+        G5 -- "not paid" --> H2
+        G4 -- "no, or auto-close off" --> H2
+        H2 -- "all reps red" --> Q1
+        Q1 -. "a rep has room" .-> H2
+        H2 -- assigned --> B1
+    end
+
+    subgraph L["Weekly learning loop · @coach"]
+        E1[("Event log<br/>gates, rep edits, replies<br/>get_event_log")]:::data
+        R1["Weekly review<br/>finds patterns"]:::agent
+        P1["Proposal<br/>save_proposal"]:::agent
+        H3["A person approves<br/>decide_proposal"]:::human
+        K1["New SKILL.md or prompt line<br/>PR with a new prompt_version"]:::data
+        E1 --> R1 --> P1 --> H3 --> K1
+    end
+
+    D1 --> A2
+    G2 -- yes --> A4
+    A5 --> H1
+    H1 -- rejected --> A5
+    H1 -- "approved or edited" --> T1
+    T1 -. "no reply" .-> F1
+    F1 -. "follow-up draft" .-> A5
+    K1 -. "next week: better search, better drafts" .-> A1
+
+    classDef agent fill:#4b3fae,stroke:#8c80ff,color:#ffffff
+    classDef gate fill:#0e6b50,stroke:#33c49a,color:#ffffff
+    classDef human fill:#8a3512,stroke:#ec7a45,color:#ffffff
+    classDef tool fill:#1f4e79,stroke:#5aa0e0,color:#ffffff
+    classDef data fill:#2d3748,stroke:#a0aec0,color:#ffffff
+    classDef exit fill:#2b2b2b,stroke:#8a8a8a,color:#e0e0e0,stroke-dasharray: 4 3
+```
+
+| Shape and colour | Meaning |
+|---|---|
+| Purple box | LLM agent (a Fleet subagent) |
+| Green hexagon | d1 yes/no or choice check: a tool that decides, saves the result and returns `next` |
+| Orange box | A person: Fleet asks them before the tool runs (`record_approval`, `book_meeting`, `decide_proposal`), or a rep takes over |
+| Blue box | A tool with a rule enforced in code |
+| Grey cylinder | Stored data (lead sheet, event log, rules) |
+| Dashed box | An exit: the lead stops here, with a status and, if it's lost, one loss reason |
+
+Every gate and tool writes a row to the event log, which feeds the weekly loop. Lines from each stage to the event log are left out to keep the diagram readable.
 
 | Diagram box | Built as | File |
 |---|---|---|
