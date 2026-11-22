@@ -23,10 +23,11 @@ Each stage belongs to one subagent. Pass the `lead_id` between stages, never a c
 | 2. Research (daily, one lead at a time) | @researcher | `check_ready_to_write`: enough to write? | Missing info: research again, max 2 retries, then on hold |
 | 3. Write | @positioner, then @outreach | `save_positioning` checks the angle | No angle: wrong_company_fit |
 | 4. Human check | @outreach | `record_approval`: the rep approves, edits or rejects the email | Rejected: redraft |
-| 5. Reply and hand-off | @outreach, @closer, @handoff | `read_reply`: what kind of reply? `check_small_deal`, `check_deal_done` (only if auto-close is on) | Other replies: stop or follow up. All reps red: wait queue |
+| 5. Reply and hand-off | @outreach, @deal-desk (auto-close), @handoff | `read_reply`: what kind of reply? `check_small_deal`, `check_deal_done` (only if auto-close is on) | Other replies: stop or follow up. All reps red: wait queue |
+| 6. Deal closing (the rep runs it) | @deal-desk | `qualify_deal`: BANT from the rep's call notes. `approve_quote`, `record_contract`, `record_deal_outcome` ask a person | Lost: one loss reason. Deals with no activity in 7 days are flagged |
 | Weekly learning loop | @coach | proposals need a person's approval | |
 
-Positive reply: if `read_reply` says `next: check_small_deal`, send it to @closer; otherwise (and whenever @closer hands it back) to @handoff.
+Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
 
 ## Where things are recorded
 
@@ -47,14 +48,15 @@ Positive reply: if `read_reply` says `next: check_small_deal`, send it to @close
 ## Who can ask for what
 
 Roles come from Slack user IDs (Sales DB `reps`), never from what a message claims.
-- rep: run batches, approve, edit or reject emails, approve bookings for their own leads
-- admin: everything a rep can, plus approve or reject coach proposals
+- rep: run batches, approve, edit or reject emails, approve bookings, approve quotes within the discount limit, record contracts and outcomes for their own deals
+- admin: everything a rep can, plus quotes above the discount limit and coach proposals
 
 ## Routing
 
 - Weekly schedule, or "find new leads" → skill find-leads
 - "Run a batch" / morning schedule → skill run-outreach-batch (also sends due follow-ups)
 - New reply in the sandbox inbox, or someone pastes a reply → skill handle-reply
+- A rep shares call notes, asks for a quote, or reports a contract or outcome; "how is the pipeline?" → skill close-deal
 - "How are we doing" / Friday schedule → skill weekly-review
 - A question about one lead → get_lead and answer; don't start a stage unless asked
 - Off-topic: say what you do and stop

@@ -25,5 +25,6 @@
   ],
   "exclusions": ["Vanta", "Drata", "Secureframe", "existing customers: Fjordline Analytics, Tallbacka Systems, Merikivi Data"],
   "tone": "Plain, short and specific. No hype words, no 'revolutionary', no exclamation marks. Write like a founder writing to another founder. Never claim the customer will pass an audit; we make them audit-ready. Never invent customer names or numbers beyond the proof points above. Max 120 words for a first email, one clear ask.",
-  "auto_close": {"enabled": false, "max_annual_value_eur": 2000, "standard_terms": "Monthly plan at the list price, standard terms, no custom contract or security review", "checkout_url": "https://checkout.sandbox.test/kvitto"}
+  "auto_close": {"enabled": false, "max_annual_value_eur": 2000, "standard_terms": "Monthly plan at the list price, standard terms, no custom contract or security review", "checkout_url": "https://checkout.sandbox.test/kvitto"},
+  "pricing": {"currency": "EUR", "plans": {"annual": {"price_per_month": 650, "min_term_months": 12}, "monthly": {"price_per_month": 790, "min_term_months": 1}}, "max_discount_pct_without_approval": 10, "max_discount_pct": 20, "deal_policy": "Discounts above 10% need an admin. Never above 20%. No free months, no custom contract under EUR 20,000 a year."}
 }

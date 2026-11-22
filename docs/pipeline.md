@@ -40,8 +40,8 @@ flowchart TD
         X3["Other replies<br/>not_now, out_of_office: follow up later<br/>negative, wrong_person, unsubscribe: lost with a reason"]:::exit
         F1["No reply: due_follow_ups<br/>max 2, then lost: no_reply"]:::tool
         G4{{"d1: small, standard deal?<br/>check_small_deal<br/>only if auto_close.enabled"}}:::gate
-        A6["Auto-close agent<br/>@closer · send_offer<br/>offer + checkout link"]:::agent
-        G5{{"d1: deal done?<br/>check_deal_done"}}:::gate
+        A6["Auto-close<br/>@deal-desk · send_offer<br/>standard offer + checkout link"]:::agent
+        G5["Deal done?<br/>check_deal_done: paid flag, checked in code"]:::tool
         W1["Closed automatically<br/>won · rep gets a summary in Slack"]:::exit
         H2["Hand to a free rep<br/>@handoff · assign_rep<br/>green first, then yellow"]:::human
         Q1["Wait queue if all reps red<br/>status queued · release_queue"]:::exit
@@ -60,6 +60,29 @@ flowchart TD
         B1 --> M1
     end
 
+    M1 -- "held: deal opens at qualification" --> C1
+
+    subgraph S6["6. Deal closing · the rep runs it · @deal-desk"]
+        C1["Call notes from the rep<br/>record_call_notes"]:::human
+        G6{{"d1: BANT from the notes<br/>qualify_deal<br/>yes / no / unknown each"}}:::gate
+        Q2["Quote from the price list<br/>draft_quote: totals in code"]:::agent
+        H4["A person approves the quote<br/>approve_quote<br/>admin above the discount limit"]:::human
+        T2["Send the quote<br/>send_quote: refuses unapproved or changed quotes"]:::tool
+        H5["Contract sent or signed<br/>record_contract"]:::human
+        H6["Won or lost<br/>record_deal_outcome"]:::human
+        W2["Closed won<br/>amount · lead status won"]:::exit
+        X4["Closed lost<br/>one loss reason"]:::exit
+        P2["Pipeline and quiet deals<br/>get_pipeline: weighted value, no activity in 7 days"]:::tool
+        C1 --> G6
+        G6 -- "yes or unknown" --> Q2
+        G6 -- "a clear no: the rep decides" --> H6
+        Q2 --> H4 --> T2 --> H5 --> H6
+        H4 -. "rejected: redraft" .-> Q2
+        H6 -- won --> W2
+        H6 -- lost --> X4
+        T2 -. "weekly" .-> P2
+    end
+
     subgraph L["Weekly learning loop · @coach"]
         E1[("Event log<br/>gates, rep edits, replies<br/>get_event_log")]:::data
         R1["Weekly review<br/>finds patterns"]:::agent
@@ -76,7 +99,8 @@ flowchart TD
     H1 -- "approved or edited" --> T1
     T1 -. "no reply" .-> F1
     F1 -. "follow-up draft" .-> A5
-    M1 -. logged .-> E1
+    W2 -. logged .-> E1
+    X4 -. logged .-> E1
     W1 -. logged .-> E1
     X3 -. logged .-> E1
 
@@ -92,7 +116,7 @@ flowchart TD
 |---|---|
 | Purple box | LLM agent (a Fleet subagent) |
 | Green hexagon | d1 yes/no or choice check: a tool that decides, saves the result and returns `next` |
-| Orange box | A person: Fleet asks them before the tool runs (`record_approval`, `book_meeting`, `decide_proposal`), or a rep takes over |
+| Orange box | A person: Fleet asks them before the tool runs (`record_approval`, `book_meeting`, `record_meeting_outcome`, `approve_quote`, `record_contract`, `record_deal_outcome`, `record_payment`, `decide_proposal`), or a rep takes over |
 | Blue box | A tool with a rule enforced in code |
 | Grey cylinder | Stored data (lead sheet, event log, rules) |
 | Dashed box | An exit: the lead stops here, with a status and, if it's lost, one loss reason |
@@ -120,19 +144,25 @@ Every gate and tool writes a row to the event log, not only the three dotted "lo
 | **5. Reply and hand-off** | | |
 | Send, d1 reads the reply | `send_email`, `get_replies`, `read_reply` (one label, then its exit) | same |
 | Other replies: stop or follow up | not_now and out_of_office: follow-up date, not lost. negative: lost with has_competitor, price or negative. wrong_person: lost. unsubscribe: lost, never contacted again | same |
-| d1: small, standard deal? | `check_small_deal` (only if the brief's `auto_close.enabled`) | `mcp/sales_tools/tools/close.py` |
-| Auto-close agent: offer + checkout link | @closer, `send_offer` (sandbox link) | `fleet/subagents/closer/` |
-| d1: deal done? | `check_deal_done` on the payment status (`record_payment`, by a person for now) | `close.py` |
-| Closed automatically, rep gets a summary | status won, Slack message from @closer | |
+| d1: small, standard deal? | `check_small_deal` (only if the brief's `auto_close.enabled`; over the price cap is always no) | `mcp/sales_tools/tools/deals.py` |
+| Auto-close agent: offer + checkout link | @deal-desk, `send_offer` (standard quote at list price, sandbox link) | `fleet/subagents/deal-desk/` |
+| Deal done? | `check_deal_done` reads the paid flag in code (`record_payment`, by a person for now) | `deals.py` |
+| Closed automatically, rep gets a summary | deal closed_won with `auto_close: true`, lead status won, Slack message from @deal-desk | |
 | Hand to a free rep (green first, then yellow) | `assign_rep`, then `find_free_slots`, `book_meeting`, `save_call_brief`; after the meeting the rep records held, no-show or cancelled with `record_meeting_outcome` | `mcp/sales_tools/tools/handoff.py` |
 | Wait queue if all reps red | status `queued` (not lost), `release_queue` when a rep has room | same |
+| **6. Deal closing** (not in the team's diagram) | | |
+| Meeting held opens the deal | `record_meeting_outcome(held)` opens `deal` at qualification, owned by the rep | `handoff.py` |
+| Rep's call notes, BANT | `record_call_notes`, then `qualify_deal`: d1 answers yes, no or unknown per factor from the notes only; unknown never blocks | `deals.py` |
+| Quote | `draft_quote` computes totals from the brief's `pricing` (plans, minimum term, discount limits); `approve_quote` asks a person, an admin above the discount limit; `send_quote` refuses anything not approved or changed after approval | same |
+| Contract, won or lost | `record_contract`, `record_deal_outcome` (both ask a person); won and lost are recorded on the lead's status and loss_reason, once | same |
+| Pipeline | `get_pipeline`: count and value per stage, weighted pipeline, deals with no activity in 7 days | same |
 | **Weekly learning loop** | | |
 | What happened: edits, replies | every gate and tool writes the event log; rep edits keep the original and the edited email | `mcp/sales_tools/store.py` |
 | Event log | `get_event_log` (a Google Sheet export is not built yet) | `shared.py` |
 | Weekly review finds patterns | @coach, skill `weekly-review` | `fleet/subagents/coach/` |
 | Agent rules: new SKILL.md | `save_proposal`, then a person approves with `decide_proposal`; the change goes in as a PR with a new `prompt_version` | `shared.py` |
 
-Additions the diagram doesn't show but the Notion plan needs: a booked slot and a call brief for every hand-off, whether the meeting was held (the North Star), one loss reason on every lost lead, sandbox-only sending, follow-ups (2, then `no_reply`), and a person approving every rule change.
+Additions the diagram doesn't show but the Notion plan needs: a booked slot and a call brief for every hand-off, whether the meeting was held (the North Star), the deal after it (stage 6: Salesforce opportunity stages qualification, quote, negotiation, closed won or lost), one loss reason on every lost lead, sandbox-only sending, follow-ups (2, then `no_reply`), and a person approving every rule change.
 
 ## The d1 checks
 

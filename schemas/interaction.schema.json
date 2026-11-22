@@ -7,7 +7,7 @@
   "properties": {
     "timestamp": {"type": "string", "format": "date-time"},
     "lead_id": {"type": "string"},
-    "stage": {"enum": ["targeting", "research", "positioning", "outreach", "approval", "reply", "close", "handoff"]},
+    "stage": {"enum": ["targeting", "research", "positioning", "outreach", "approval", "reply", "close", "handoff", "deal"]},
     "channel": {"enum": ["email", "slack", "calendar", "internal"]},
     "message": {"type": "string"},
     "outcome": {"enum": ["success", "failure", "skipped"]},

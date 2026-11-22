@@ -223,6 +223,54 @@
       "display_name": "Send offer"
     },
     {
+      "name": "record_call_notes",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Record call notes"
+    },
+    {
+      "name": "qualify_deal",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Qualify deal"
+    },
+    {
+      "name": "draft_quote",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Draft quote"
+    },
+    {
+      "name": "approve_quote",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Approve quote"
+    },
+    {
+      "name": "send_quote",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Send quote"
+    },
+    {
+      "name": "record_contract",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Record contract"
+    },
+    {
+      "name": "record_deal_outcome",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Record deal outcome"
+    },
+    {
+      "name": "get_pipeline",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get pipeline"
+    },
+    {
       "name": "slack_send_channel_message",
       "mcp_server_url": "https://tools.langchain.com",
       "mcp_server_name": "Fleet",
@@ -281,6 +329,14 @@
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
     "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
     "https://tools.langchain.com::slack_read_thread_messages::Fleet": false,
-    "https://sales-tools.invalid/mcp::record_meeting_outcome::Sales tools (sandbox)": true
+    "https://sales-tools.invalid/mcp::record_meeting_outcome::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::record_call_notes::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::qualify_deal::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::draft_quote::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::approve_quote::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::send_quote::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::record_contract::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::record_deal_outcome::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_pipeline::Sales tools (sandbox)": false
   }
 }

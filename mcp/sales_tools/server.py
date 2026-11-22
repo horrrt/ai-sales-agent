@@ -12,7 +12,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from .app import mcp
 from . import store
-from .tools import close, handoff, outreach, positioning, research, shared  # noqa: F401  (registers the tools)
+from .tools import deals, handoff, outreach, positioning, research, shared  # noqa: F401  (registers the tools)
 
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 

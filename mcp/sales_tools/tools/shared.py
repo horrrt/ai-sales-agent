@@ -96,9 +96,25 @@ def get_funnel_metrics() -> dict:
         by_status[lead.get("status", "?")] = by_status.get(lead.get("status", "?"), 0) + 1
     return {"interactions_by_stage": by_stage, "losses_by_reason": by_reason, "leads_by_status": by_status,
             "north_star_meetings_held": sum((l.get("handoff") or {}).get("meeting_outcome") == "held" for l in LEADS.values()),
-            "closed_automatically": sum(l.get("status") == "won" for l in LEADS.values()),
+            "deals_won": sum((l.get("deal") or {}).get("stage") == "closed_won" for l in LEADS.values()),
+            "deals_lost": sum((l.get("deal") or {}).get("stage") == "closed_lost" for l in LEADS.values()),
+            "won_revenue_eur": round(sum((l.get("deal") or {}).get("amount_eur") or 0 for l in LEADS.values()
+                                         if (l.get("deal") or {}).get("stage") == "closed_won"), 2),
+            "closed_automatically": sum((l.get("deal") or {}).get("auto_close") and (l.get("deal") or {}).get("stage") == "closed_won"
+                                        for l in LEADS.values()),
+            "median_days_meeting_to_won": _median_deal_days("qualification", "closed_won"),
             "median_hours_reply_to_handoff": _median_hours("replied", "handed_off"),
             "median_days_added_to_sent": _median_hours("new", "sent", days=True)}
+
+
+def _median_deal_days(start: str, end: str) -> float | None:
+    """Median days between two deal stages (from deal.stage_times)."""
+    from datetime import datetime
+    spans = sorted((datetime.fromisoformat(t[end]) - datetime.fromisoformat(t[start])).total_seconds() / 86400
+                   for t in ((l.get("deal") or {}).get("stage_times") or {} for l in LEADS.values()) if start in t and end in t)
+    if not spans:
+        return None
+    return round(spans[len(spans) // 2] if len(spans) % 2 else (spans[len(spans) // 2 - 1] + spans[len(spans) // 2]) / 2, 2)
 
 
 def _median_hours(start: str, end: str, days: bool = False) -> float | None:
