@@ -1,0 +1,327 @@
+{
+  "_note": "The industries an ICP and a prospect can have. Free text is mapped to these names by its aliases; anything that doesn't map is refused with suggestions. Add an industry here (with its aliases) rather than writing a new name into a brief.",
+  "industries": [
+    {
+      "name": "B2B SaaS",
+      "aliases": [
+        "saas",
+        "b2b software",
+        "software as a service",
+        "cloud software",
+        "b2b saas company",
+        "saas company"
+      ]
+    },
+    {
+      "name": "Software",
+      "aliases": [
+        "software company",
+        "software development",
+        "dev shop",
+        "tech company",
+        "technology"
+      ]
+    },
+    {
+      "name": "IT services",
+      "aliases": [
+        "it consulting",
+        "managed services",
+        "msp",
+        "it outsourcing",
+        "system integrator"
+      ]
+    },
+    {
+      "name": "Fintech",
+      "aliases": [
+        "financial technology",
+        "payments",
+        "insurtech",
+        "regtech",
+        "lending",
+        "neobank"
+      ]
+    },
+    {
+      "name": "Banking",
+      "aliases": [
+        "bank",
+        "banks"
+      ]
+    },
+    {
+      "name": "Insurance",
+      "aliases": [
+        "insurer",
+        "insurers",
+        "insurance company"
+      ]
+    },
+    {
+      "name": "E-commerce",
+      "aliases": [
+        "ecommerce",
+        "e commerce",
+        "online shop",
+        "online shops",
+        "online store",
+        "online stores",
+        "online brand",
+        "online brands",
+        "webshop",
+        "web shop",
+        "d2c",
+        "dtc",
+        "direct to consumer",
+        "shopify brands",
+        "e-commerce brands",
+        "ecommerce brands",
+        "online retail"
+      ]
+    },
+    {
+      "name": "Consumer goods",
+      "aliases": [
+        "consumer brands",
+        "consumer brand",
+        "cpg",
+        "fmcg",
+        "consumer products"
+      ]
+    },
+    {
+      "name": "Consumer apps",
+      "aliases": [
+        "consumer app",
+        "consumer travel app",
+        "mobile app",
+        "b2c app"
+      ]
+    },
+    {
+      "name": "Retail",
+      "aliases": [
+        "retailer",
+        "retailers",
+        "shops",
+        "stores",
+        "food retail",
+        "grocery",
+        "supermarket"
+      ]
+    },
+    {
+      "name": "Wholesale and distribution",
+      "aliases": [
+        "wholesale",
+        "wholesaler",
+        "wholesalers",
+        "distribution",
+        "distributor",
+        "distributors"
+      ]
+    },
+    {
+      "name": "Manufacturing",
+      "aliases": [
+        "manufacturer",
+        "manufacturers",
+        "industrial",
+        "factory"
+      ]
+    },
+    {
+      "name": "Logistics",
+      "aliases": [
+        "transport",
+        "freight",
+        "shipping",
+        "3pl",
+        "warehousing"
+      ]
+    },
+    {
+      "name": "Construction",
+      "aliases": [
+        "building contractors",
+        "contractors",
+        "builders",
+        "construction company",
+        "general contractor"
+      ]
+    },
+    {
+      "name": "Electrical installation",
+      "aliases": [
+        "electricians",
+        "electrical contractors",
+        "electrical installers"
+      ]
+    },
+    {
+      "name": "Dental clinics",
+      "aliases": [
+        "dentists",
+        "dental",
+        "dental practice",
+        "dental practices",
+        "private dental clinics",
+        "dentistry",
+        "dental care"
+      ]
+    },
+    {
+      "name": "Physiotherapy",
+      "aliases": [
+        "physiotherapists",
+        "physio",
+        "physical therapy",
+        "physiotherapy clinics"
+      ]
+    },
+    {
+      "name": "Healthcare",
+      "aliases": [
+        "health",
+        "clinics",
+        "private clinics",
+        "health data",
+        "healthtech",
+        "medtech",
+        "hospitals"
+      ]
+    },
+    {
+      "name": "Marketing agencies",
+      "aliases": [
+        "marketing agency",
+        "creative agencies",
+        "creative agency",
+        "advertising agency",
+        "ad agency",
+        "design agency",
+        "digital agency",
+        "pr agency",
+        "agencies",
+        "agency"
+      ]
+    },
+    {
+      "name": "Professional services",
+      "aliases": [
+        "consultancies",
+        "services firms"
+      ]
+    },
+    {
+      "name": "Consulting",
+      "aliases": [
+        "consultants",
+        "management consulting",
+        "consulting firm"
+      ]
+    },
+    {
+      "name": "Accounting",
+      "aliases": [
+        "accountants",
+        "accounting firm",
+        "bookkeeping",
+        "audit firm"
+      ]
+    },
+    {
+      "name": "Legal services",
+      "aliases": [
+        "law firm",
+        "law firms",
+        "lawyers",
+        "legal"
+      ]
+    },
+    {
+      "name": "Real estate",
+      "aliases": [
+        "property",
+        "proptech",
+        "real estate agency"
+      ]
+    },
+    {
+      "name": "Restaurants",
+      "aliases": [
+        "restaurant",
+        "cafes",
+        "food service"
+      ]
+    },
+    {
+      "name": "Hospitality",
+      "aliases": [
+        "hotels",
+        "hotel",
+        "travel and hospitality"
+      ]
+    },
+    {
+      "name": "Travel",
+      "aliases": [
+        "travel agency",
+        "tour operators"
+      ]
+    },
+    {
+      "name": "Education",
+      "aliases": [
+        "edtech",
+        "schools",
+        "universities",
+        "training"
+      ]
+    },
+    {
+      "name": "Media",
+      "aliases": [
+        "publishing",
+        "publishers",
+        "news"
+      ]
+    },
+    {
+      "name": "Telecom",
+      "aliases": [
+        "telecommunications",
+        "telco"
+      ]
+    },
+    {
+      "name": "Energy",
+      "aliases": [
+        "utilities",
+        "renewables",
+        "cleantech"
+      ]
+    },
+    {
+      "name": "Public sector",
+      "aliases": [
+        "government",
+        "municipality",
+        "municipalities",
+        "public authority"
+      ]
+    },
+    {
+      "name": "Nonprofit",
+      "aliases": [
+        "non-profit",
+        "nonprofits",
+        "ngo",
+        "charity",
+        "charities",
+        "foundation"
+      ]
+    }
+  ]
+}

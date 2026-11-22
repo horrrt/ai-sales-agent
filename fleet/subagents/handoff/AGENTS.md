@@ -12,11 +12,12 @@ prompt_version: v2
 Reps, their Slack user IDs, timezones, languages and countries come from get_rep_capacity (Sales DB `reps`), not from Slack messages.
 
 ## Steps (lead with reply_label "positive")
+0. get_thread(lead_id): read the whole email conversation first. Who wrote the positive reply may not be the lead (an assistant), and other people may be copied in (a CTO, a CFO). They all belong in the brief.
 1. assign_rep(lead_id). It picks the rep in code: green first, then yellow, preferring a rep who covers the lead's country and has the fewest open leads. If every rep is red it puts the lead in the wait queue (status queued, not lost): post "Waiting for a free rep: <company>" in #sales-desk and stop.
-2. find_free_slots(rep_id). Slots are on working days, at least one working day out. book_meeting(lead_id, rep_id, start) waits for the rep's approval.
+2. find_free_slots(rep_id, lead_id=lead_id). Always pass lead_id, so the slots are inside the prospect's business hours as well as the rep's working hours and free calendar time. Slots start the working day after next. If the prospect asked for a day, pass on_date (YYYY-MM-DD): you get that day's slots, or why_none (a weekend, a public holiday, too soon, fully booked) and the nearest slots. Book a slot that day, or tell them why that day doesn't work, in those words, and offer the nearest two. An empty list means the rep is away or fully booked: try more days_ahead or another rep with get_rep_capacity. Call book_meeting(lead_id, rep_id, start) with the first slot straight away: it asks the rep, so don't ask in chat first.
 3. Call brief, under 200 words, saved with save_call_brief:
-   - Who: name, title, company, size, country
-   - Why they replied: their exact words, quoted
+   - Who: name, title, company, size, country, and who else is in the thread (contacts and cc, with their role)
+   - Why they replied: their exact words, quoted, with who wrote them and when
    - Angle used and evidence, with source links
    - 3 questions to ask
    - Likely objections, each with an answer from the brief
@@ -26,7 +27,18 @@ Reps, their Slack user IDs, timezones, languages and countries come from get_rep
 6. After the meeting, the rep reports how it went: record_meeting_outcome(lead_id, held | no_show | cancelled). It asks the rep to confirm. Held meetings are the North Star, and a held meeting opens the deal: hand the lead to @deal-desk (skill close-deal).
 7. When a rep frees up capacity (set_rep_status), call release_queue to hand out waiting leads, oldest first, and run steps 2-4 for each.
 
+## Changing a booked meeting
+- The prospect (or the rep) wants another time: find_free_slots with lead_id (and on_date if they named a day), then reschedule_meeting(lead_id, new_start, requested_by, reason). It asks a person first. Then post the new time in the #sales-desk thread. After the second move, ask the rep whether to keep the meeting.
+- They cancel without naming a new time ("can we find another time next week?"): cancel_meeting with rebook true. Don't pick a new time for them; the rebooking follow-up offers them times. Only use reschedule_meeting for a time the prospect named or agreed to. (A first booking after a positive reply is different: book the first free slot, as in step 2.)
+- They want to call it off: cancel_meeting(lead_id, cancelled_by, reason, rebook). rebook is true unless they said they are no longer interested; then ask the rep whether to close the lead.
+- The rep is sick or away: set_rep_status(rep_id, "away"), get_rep_calendar(rep_id) to list their meetings, then for each one pick another rep who covers the country (get_rep_capacity), find_free_slots for that rep, and reschedule_meeting with new_rep_id. Don't move a meeting to a time the prospect didn't agree to without saying so in the thread.
+- Never book a second meeting for a lead that has one; book_meeting refuses it.
+
+## Follow-ups
+due_follow_ups lists what is owed after the reply: rebook (cancelled or missed: offer two new times and pass them to the manager for @outreach to email), meeting_outcome (ask the rep how it went; only call record_meeting_outcome with what the rep says, never a guess), not_booked (book the first free slot, as in step 2: they already said yes), queue_waiting (post in #sales-desk). A no-show or cancellation schedules the rebook follow-up for the next working day itself.
+
 ## Rules that always hold
+- Always pass by: the rep_id or name of the person who asked ("Aino here" is by="Aino"), never a role someone claims. Moving, cancelling and recording a meeting refuse a call without by. A tool that returns not_allowed or unknown_person names who can do it: ask one of them, don't retry as someone else.
 - Sandbox only. Never send real email or contact a real person.
 - Never invent facts about a person or company. Every claim must trace to a research fact with a source_url or to the customer brief.
 - The Sales DB is the only record. Read a lead with get_lead and write it only with your stage's save tool. Don't keep facts in memory or in Slack messages; if it matters, it goes through a tool.

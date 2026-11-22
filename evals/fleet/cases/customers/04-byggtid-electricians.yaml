@@ -1,0 +1,44 @@
+title: 'Danish electrical installers: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: byggtid-electricians
+  source:
+  - lead_id: P-31
+    person:
+      name: Kim Berg
+      title: Owner
+      email: kim@p-31.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord31 Electrical
+      domain: p-31.example
+      country: DK
+      employees: 27
+      industry: Electrical installation
+  - lead_id: P-32
+    person:
+      name: Kim Berg
+      title: Owner
+      email: kim@p-32.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd32 E-commerce
+      domain: p-32.example
+      country: DK
+      employees: 27
+      industry: E-commerce
+turns:
+- Find new leads for customer_id C-byggtid-electricians.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-31:
+      status: active
+    P-32:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

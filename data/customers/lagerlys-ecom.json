@@ -1,0 +1,82 @@
+{
+  "customer_id": "C-lagerlys-ecom",
+  "_note": "Test customer type: Nordic online brands on several sales channels. Product lagerlys, pricing tiered (self-serve Basic, sales-led Pro, custom Enterprise). Fictional.",
+  "company_name": "Lagerlys AB",
+  "website": "https://www.lagerlys.example",
+  "approvers": {
+    "emails": "rep-1",
+    "payments": "fin-1"
+  },
+  "sender": {
+    "name": "Sales, Lagerlys AB",
+    "email": "sales@lagerlys.sandbox.test",
+    "timezone": "Europe/Copenhagen"
+  },
+  "offer": "Lagerlys stops stock-outs and overselling by keeping every sales channel and the warehouse on one live stock count.",
+  "icp": {
+    "countries": [
+      "SE",
+      "DK"
+    ],
+    "employees_min": 3,
+    "employees_max": 40,
+    "industries": [
+      "E-commerce",
+      "Consumer goods"
+    ],
+    "titles": [
+      "Founder",
+      "COO",
+      "Head of Operations"
+    ],
+    "triggers": [
+      "Opening a second sales channel",
+      "Sold-out products in reviews"
+    ]
+  },
+  "product_info": "Lagerlys is inventory software for brands and wholesalers that sell online and to shops. It syncs stock across Shopify, WooCommerce, Amazon and the warehouse in real time, warns before a product sells out, and suggests reorder quantities from the last 90 days of sales. Set up in a day with no IT team.",
+  "won_deals": [],
+  "exclusions": [
+    "Ongoing WMS"
+  ],
+  "tone": "Plain, short and specific. No hype words and no exclamation marks. One clear ask. Max 120 words for a first email.",
+  "keywords": [
+    "stock",
+    "inventory",
+    "warehouse"
+  ],
+  "auto_close": {
+    "enabled": true,
+    "max_annual_value_eur": 1000,
+    "plans": [
+      "basic"
+    ],
+    "standard_terms": "List price, standard terms, no custom contract",
+    "checkout_url": "https://checkout.sandbox.test/lagerlys"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "plans": {
+      "basic": {
+        "price_per_month": 49,
+        "min_term_months": 1,
+        "max_quantity": 1,
+        "for": "One shop, up to 1,000 orders a month"
+      },
+      "pro": {
+        "price_per_month": 290,
+        "min_term_months": 12,
+        "for": "Several channels and a warehouse"
+      },
+      "enterprise": {
+        "price_per_month": null,
+        "custom": true,
+        "min_term_months": 12,
+        "for": "Custom, with integration work"
+      }
+    },
+    "max_discount_pct_without_approval": 10,
+    "max_discount_pct": 25,
+    "deal_policy": "Enterprise prices are set by a rep. Discounts above 10% need an admin."
+  }
+}

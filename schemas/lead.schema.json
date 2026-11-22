@@ -58,17 +58,56 @@
         "draft_subject": {"type": "string"},
         "draft_body": {"type": "string"},
         "sent_at": {"type": "string", "format": "date-time"},
-        "reply_label": {"enum": ["positive", "negative", "not_now", "wrong_person", "out_of_office", "unsubscribe", null]},
+        "draft_to": {"type": "array", "items": {"type": "string"}, "description": "Who the draft goes to: the lead, or whoever the conversation moved to"},
+        "draft_cc": {"type": "array", "items": {"type": "string"}, "description": "Copied in. The approval covers to, cc, subject and body"},
+        "draft_in_reply_to": {"type": ["string", "null"], "description": "message_id the draft answers, so it stays in the thread"},
+        "thread_id": {"type": "string", "description": "One email thread per lead; every message carries it"},
+        "thread_subject": {"type": "string", "description": "Subject of the first email; later emails use Re: <thread_subject>"},
+        "scheduled_for": {"type": ["string", "null"], "format": "date-time", "description": "Set while an approved email is held until business hours in the lead's country"},
+        "sent_count": {"type": "integer"},
+        "follow_ups": {"type": "integer", "description": "Follow-ups sent since the prospect last wrote. At 2, no more follow-ups"},
+        "reply_label": {"enum": ["positive", "negative", "not_now", "handover", "wrong_person", "out_of_office", "unsubscribe", "meeting_change", null]},
+        "reply_from": {"type": "string", "description": "Who wrote the last reply. Not always the lead (an assistant, a colleague)"},
+        "reply_message_id": {"type": "string"},
+        "reply_body": {"type": "string"},
+        "next_to": {"type": "string", "description": "Who our next email goes to: the last sender (reply to all), or the colleague the lead handed over to"},
+        "next_cc": {"type": "array", "items": {"type": "string"}, "description": "Everyone else in the conversation, kept in cc on the next email"},
+        "handover_to": {"type": "string", "description": "Email of the colleague the lead handed over to"},
         "approval": {"type": "object", "description": "Written by record_approval. send_email only sends the draft this approval covers (draft_hash)", "properties": {"decision": {"enum": ["approve", "edit", "reject"]}, "by": {"type": "string"}, "at": {"type": "string", "format": "date-time"}, "draft_hash": {"type": "string"}, "note": {"type": "string"}}},
         "follow_up_due": {"type": ["string", "null"], "format": "date-time"}
       }
     },
+    "contacts": {
+      "type": "array",
+      "description": "Other people in the conversation, added by read_reply. Never our own sender or reps",
+      "items": {
+        "type": "object",
+        "required": ["email", "role"],
+        "properties": {
+          "name": {"type": ["string", "null"]},
+          "email": {"type": "string"},
+          "role": {"enum": ["cc", "replied_for_lead", "handover", "referral"], "description": "cc: copied in by the prospect; replied_for_lead: wrote instead of the lead (an assistant); handover: the lead passed the conversation to them; referral: named by a wrong_person reply"},
+          "added_at": {"type": "string", "format": "date-time"},
+          "source_message_id": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "needs_person": {"type": "object", "description": "The lead waits for a person's decision; due_follow_ups lists it until the lead moves on", "properties": {"reason": {"type": "string"}, "since": {"type": "string", "format": "date-time"}}},
+    "do_not_contact": {"type": "boolean", "description": "Set by an unsubscribe reply. send_email refuses the lead from then on"},
     "handoff": {
       "type": "object",
       "description": "Stream 3 (Slava)",
       "properties": {
         "rep_id": {"type": "string"},
         "meeting_start": {"type": "string", "format": "date-time"},
+        "meeting_end": {"type": "string", "format": "date-time"},
+        "event_id": {"type": "string", "description": "The meeting in the rep's calendar (store.CALENDARS)"},
+        "meeting_status": {"enum": ["booked", "cancelled", "held", "no_show", null]},
+        "assigned_at": {"type": "string", "format": "date-time"},
+        "reschedules": {"type": "integer"},
+        "no_shows": {"type": "integer"},
+        "follow_up_due": {"type": ["string", "null"], "format": "date-time", "description": "When to email the prospect new times after a cancellation or no-show"},
+        "follow_up_kind": {"enum": ["rebook", "rebook_sent", null]},
         "call_brief": {"type": "string"},
         "meeting_outcome": {"enum": ["held", "no_show", "cancelled", null], "description": "Set by the rep after the meeting with record_meeting_outcome. held counts toward the North Star (qualified meetings held)"},
         "meeting_outcome_at": {"type": ["string", "null"], "format": "date-time"}
@@ -96,6 +135,13 @@
           "quote_hash": {"type": "string"}, "approval": {"type": "object"}, "checkout_url": {"type": "string"}}},
         "contract": {"type": "object", "properties": {"status": {"enum": ["none", "sent", "signed"]}, "signed_at": {"type": ["string", "null"], "format": "date-time"}}},
         "paid": {"type": "boolean"},
+        "payment_status": {"enum": ["unpaid", "paid", "partial", "failed", "refunded", null], "description": "Auto-close checkout. partial and refunded wait for a person (needs_person)"},
+        "paid_at": {"type": ["string", "null"], "format": "date-time"},
+        "payment_retry_due": {"type": ["string", "null"], "format": "date-time", "description": "After a failed payment: when the checkout link goes out again"},
+        "offer_sent_at": {"type": ["string", "null"], "format": "date-time", "description": "When the auto-close offer actually went out (after any hold for business hours)"},
+        "offer_reminders": {"type": "integer", "description": "Reminders sent for an unpaid offer; at most 2, and after 7 working days it goes to a rep"},
+        "last_reminder_at": {"type": ["string", "null"], "format": "date-time"},
+        "refunded": {"type": "boolean", "description": "Refunded after the win: not counted in won revenue"},
         "amount_eur": {"type": ["number", "null"], "description": "Final value of a won deal (Salesforce: Opportunity.Amount)"},
         "closed_at": {"type": ["string", "null"], "format": "date-time"}
       }

@@ -1,0 +1,44 @@
+title: 'German and Dutch wholesalers with a warehouse: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: lagerlys-wholesale
+  source:
+  - lead_id: P-91
+    person:
+      name: Kim Berg
+      title: Head of Logistics
+      email: kim@p-91.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord91 Wholesale
+      domain: p-91.example
+      country: DE
+      employees: 275
+      industry: Wholesale and distribution
+  - lead_id: P-92
+    person:
+      name: Kim Berg
+      title: Head of Logistics
+      email: kim@p-92.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd92 Software
+      domain: p-92.example
+      country: DE
+      employees: 275
+      industry: Software
+turns:
+- Find new leads for customer_id C-lagerlys-wholesale.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-91:
+      status: active
+    P-92:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

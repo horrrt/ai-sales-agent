@@ -1,0 +1,16 @@
+title: 'The customer describes who pays what: price rules are written, checked and saved'
+agent: onboarding
+setup: {}
+turns:
+- Mette (rep-1) here. We want companies over 250 people to pay 15% more, nonprofits to get 25% off, and 3-year contracts
+  15% off.
+- Yes, save those.
+approvals:
+  default: approve
+expect:
+  called:
+  - review_pricing
+  - update_brief
+  brief:
+    pricing.adjustments: ~nonprofit
+  logs_follow_schema: true

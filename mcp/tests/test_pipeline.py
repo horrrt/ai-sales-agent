@@ -16,22 +16,38 @@ class Script:
     """Answers decide() calls in order; a callable entry gets (question, evidence, options)."""
 
     def __init__(self, *answers):
-        self.answers, self.calls = list(answers), []
+        self.answers, self.calls, self.evidence = list(answers), [], []
 
     def __call__(self, question, evidence, options):
         self.calls.append(question)
+        self.evidence.append(evidence)
         a = self.answers.pop(0) if self.answers else True
         if callable(a):
             a = a(question, evidence, options)
         return {"answer": a, "confidence": 0.9, "reason": "stub", "backend": "stub"}
 
 
+IN_HOURS = "2026-11-24T10:00:00+01:00"
+SOURCE_AT_START = json.loads(json.dumps(store.SOURCE))  # tests add candidates; each test starts from these
+
+
+def at(iso: str) -> None:
+    """Move the pinned clock."""
+    store.CLOCK["now"] = iso
+
+
 @pytest.fixture(autouse=True)
 def fresh(monkeypatch):
     for obj in (store.LEADS, store.APPROVALS, store.PROPOSALS):
         obj.clear()
-    for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX):
+    for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX, store.INBOX):
         obj.clear()
+    store.CALENDARS.clear()
+    store.WEBSITES.clear()
+    store.SOURCE.clear()
+    store.SOURCE.update(json.loads(json.dumps(SOURCE_AT_START)))
+    store.CLOCK.clear()
+    store.CLOCK["now"] = IN_HOURS  # a Tuesday morning in Stockholm: inside business hours
     store.REPS.clear()
     store.REPS.update(json.loads((store.DATA / "reps.demo.json").read_text()))
     store.BRIEF.clear()
@@ -55,10 +71,16 @@ def lead_through_research(lead_id="L-001"):
     assert positioning.save_positioning(lead_id, "A real angle for this lead", [fact], 0.7)["ok"]
 
 
+def rcpt(lead_id="L-001") -> dict:
+    """The draft's recipients, as the agent passes them to record_approval."""
+    out = store.LEADS[lead_id]["outreach"]
+    return {"to": out["draft_to"], "cc": out["draft_cc"]}
+
+
 def approved_draft(lead_id="L-001", subject="Subject line", body="Body of the email"):
     lead_through_research(lead_id)
     assert outreach.save_draft(lead_id, subject, body)["ok"]
-    assert outreach.record_approval(lead_id, subject, body)["decision"] == "approve"
+    assert outreach.record_approval(lead_id, subject, body, **rcpt(lead_id))["decision"] == "approve"
 
 
 # --- 1. Find leads ---------------------------------------------------------------------------
@@ -123,7 +145,7 @@ def test_approved_draft_sends_once_and_schedules_a_follow_up():
 def test_rep_edit_becomes_the_draft_and_is_logged():
     lead_through_research()
     outreach.save_draft("L-001", "Subject line", "Body of the email")
-    r = outreach.record_approval("L-001", "Better subject", "Body of the email, shorter")
+    r = outreach.record_approval("L-001", "Better subject", "Body of the email, shorter", **rcpt())
     assert r["decision"] == "edit"
     assert store.LEADS["L-001"]["outreach"]["draft_subject"] == "Better subject"
     ev = store.INTERACTIONS[-1]
@@ -204,7 +226,7 @@ def test_auto_close_small_deal_paid_is_won():
     stub(True)
     assert deals.check_small_deal("L-001", estimated_value_eur=1500)["next"] == "send_offer"
     assert deals.send_offer("L-001")["offer_link"].startswith("https://checkout.sandbox.test")
-    deals.record_payment("L-001", True)
+    deals.record_payment("L-001", True, by="fin-1")
     stub(True)
     assert deals.check_deal_done("L-001")["done"] is True
     assert store.LEADS["L-001"]["status"] == "won"
@@ -221,9 +243,9 @@ def test_auto_close_off_never_sends_an_offer():
 def test_follow_up_due_then_no_reply_after_two():
     sent_lead()
     out = store.LEADS["L-001"]["outreach"]
-    out["follow_up_due"] = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+    out["follow_up_due"] = (store.clock() - timedelta(minutes=1)).isoformat()
     assert outreach.due_follow_ups()[0]["follow_up"] == 1
-    out.update(follow_ups=2, follow_up_due=None, sent_at=(datetime.now(timezone.utc) - timedelta(days=6)).isoformat())
+    out.update(follow_ups=2, follow_up_due=None, sent_at=(store.clock() - timedelta(days=8)).isoformat())
     r = outreach.due_follow_ups()
     assert r[0]["loss_reason"] == "no_reply" and store.LEADS["L-001"]["status"] == "lost"
 
@@ -241,7 +263,7 @@ def test_log_interaction_rejects_values_outside_the_schema():
 def test_event_log_and_proposals():
     lead_through_research()
     outreach.save_draft("L-001", "Subject line", "Body of the email")
-    outreach.record_approval("L-001", "Edited subject", "Body of the email")
+    outreach.record_approval("L-001", "Edited subject", "Body of the email", **rcpt())
     edits = shared.get_event_log(stage="approval")
     assert len(edits) == 1 and edits[0]["edited_to"]
     p = shared.save_proposal("outreach", "old -> new", "3 of 5 drafts had the subject edited", "first-ask approval rate")
@@ -347,10 +369,12 @@ def test_meeting_outcome_counts_toward_the_north_star():
     stub("positive")
     outreach.read_reply("L-001", "Yes, let's talk")
     handoff.assign_rep("L-001")
-    assert handoff.record_meeting_outcome("L-001", "held")["ok"] is False  # nothing booked yet
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["ok"] is False  # nothing booked yet
     handoff.book_meeting("L-001", "rep-1", handoff.find_free_slots("rep-1")[0])
-    assert handoff.record_meeting_outcome("L-001", "maybe")["ok"] is False
-    assert handoff.record_meeting_outcome("L-001", "held")["ok"]
+    assert handoff.record_meeting_outcome("L-001", "maybe", by=owner("L-001"))["ok"] is False
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["error"].startswith("the meeting hasn't started")
+    after_meeting()
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["ok"]
     m = shared.get_funnel_metrics()
     assert m["north_star_meetings_held"] == 1
     assert m["median_hours_reply_to_handoff"] is not None and m["median_hours_reply_to_handoff"] >= 0
@@ -371,7 +395,7 @@ def test_payment_amount_is_kept():
     stub(True)
     deals.check_small_deal("L-001", estimated_value_eur=1500)
     deals.send_offer("L-001")
-    deals.record_payment("L-001", True, amount_eur=1500)
+    deals.record_payment("L-001", True, by="fin-1", amount_eur=1500)
     stub(True)
     deals.check_deal_done("L-001")
     lead = store.LEADS["L-001"]
@@ -381,13 +405,25 @@ def test_payment_amount_is_kept():
 
 # --- 6. Deal closing ---------------------------------------------------------------------------
 
+def owner(lead_id: str) -> str:
+    """The rep who owns the lead's meeting: the person passed as by for meeting changes."""
+    return (store.LEADS[lead_id].get("handoff") or {}).get("rep_id") or "rep-1"
+
+
+def after_meeting(lead_id="L-001"):
+    """Move the clock to an hour after the lead's booked meeting starts."""
+    start = datetime.fromisoformat(store.LEADS[lead_id]["handoff"]["meeting_start"])
+    at((start + timedelta(hours=1)).isoformat())
+
+
 def meeting_held(lead_id="L-001"):
     sent_lead(lead_id)
     stub("positive")
     outreach.read_reply(lead_id, "Yes, let's talk")
     handoff.assign_rep(lead_id)
     handoff.book_meeting(lead_id, store.LEADS[lead_id]["handoff"]["rep_id"], handoff.find_free_slots("rep-1")[0])
-    r = handoff.record_meeting_outcome(lead_id, "held")
+    after_meeting(lead_id)
+    r = handoff.record_meeting_outcome(lead_id, "held", by=owner(lead_id))
     assert r["deal"] == "qualification"
     return store.LEADS[lead_id]["deal"]
 
@@ -472,3 +508,18 @@ def test_pipeline_weights_open_deals_and_flags_quiet_ones():
     store.LEADS["L-001"]["updated_at"] = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
     assert deals.get_pipeline("rep-1")["stale_deals"][0]["lead_id"] == "L-001"
     assert deals.get_pipeline("rep-2")["by_stage"]["quote"]["count"] == 0
+
+
+def test_funnel_metrics_with_a_deal_that_never_set_auto_close():
+    sent_lead()
+    store.LEADS["L-001"]["deal"] = {"stage": "closed_won", "auto_close": None, "amount_eur": 7800}
+    m = shared.get_funnel_metrics()
+    assert m["closed_automatically"] == 0 and m["deals_won"] == 1
+
+
+def test_free_slots_follow_the_clock_and_reach_the_day_asked_for():
+    at("2026-11-24T10:00:00+01:00")  # Tuesday
+    slots = handoff.find_free_slots("rep-1")  # Mette, Copenhagen, 09:00-17:00: a morning and an afternoon slot a day
+    assert slots[:2] == ["2026-11-26T08:00:00+00:00", "2026-11-26T11:00:00+00:00"]  # 09:00 and 12:00 Copenhagen
+    assert {s[:10] for s in slots} == {"2026-11-26", "2026-11-27", "2026-11-30", "2026-12-01"}
+    assert handoff.find_free_slots("rep-1", days_ahead=7)[-1][:10] == "2026-12-03"

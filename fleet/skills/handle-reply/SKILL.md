@@ -8,7 +8,7 @@ description: Use when prospects reply to outreach. Reads each reply, applies its
 # Handle replies
 
 ## Steps
-1. @outreach: get_replies, then read_reply for each. Other replies are handled by read_reply itself (follow up later, or lost with a reason).
+1. @outreach: get_replies, then read_reply for each. Other replies are handled by read_reply itself (follow up later, or lost with a reason). A handover (the lead copied in a colleague to take over) stays with @outreach: it writes to the colleague, the lead in cc, through the normal approval.
 2. Positive, and read_reply says next is check_small_deal (auto-close is on): @deal-desk. If it closes, done. If it hands back, go to step 3.
 3. Positive otherwise: @handoff. assign_rep picks a green rep, then yellow. All red: the lead waits in the queue; say so in #sales-desk.
 4. @handoff books a slot (the rep approves it), saves the call brief and tells the rep in Slack.

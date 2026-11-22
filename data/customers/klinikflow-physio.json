@@ -1,0 +1,70 @@
+{
+  "customer_id": "C-klinikflow-physio",
+  "_note": "Test customer type: Small physiotherapy clinics in Finland. Product klinikflow, pricing setup_retainer (one-off setup fee plus a monthly fee, minimum term). Fictional.",
+  "company_name": "Klinikflow AS",
+  "website": "https://www.klinikflow.example",
+  "approvers": {
+    "emails": "rep-1",
+    "payments": "fin-1"
+  },
+  "sender": {
+    "name": "Sales, Klinikflow AS",
+    "email": "sales@klinikflow.sandbox.test",
+    "timezone": "Europe/Copenhagen"
+  },
+  "offer": "Klinikflow cuts no-shows and phone time for private clinics with online booking, deposits and SMS reminders.",
+  "icp": {
+    "countries": [
+      "FI"
+    ],
+    "employees_min": 2,
+    "employees_max": 20,
+    "industries": [
+      "Physiotherapy"
+    ],
+    "titles": [
+      "Owner",
+      "Clinic manager"
+    ],
+    "triggers": [
+      "Hiring a new physiotherapist",
+      "Phone bookings only"
+    ]
+  },
+  "product_info": "Klinikflow is online booking and patient messaging for private clinics. Patients book and pay a deposit online, get SMS reminders, and can move their own appointment; the clinic sees fewer no-shows and spends less time on the phone. It connects to the clinic's journal system and works on any phone.",
+  "won_deals": [],
+  "exclusions": [],
+  "tone": "Plain, short and specific. No hype words and no exclamation marks. One clear ask. Max 120 words for a first email.",
+  "keywords": [
+    "booking",
+    "no-show",
+    "patients"
+  ],
+  "auto_close": {
+    "enabled": false,
+    "max_annual_value_eur": 0,
+    "plans": [],
+    "standard_terms": "List price, standard terms, no custom contract",
+    "checkout_url": "https://checkout.sandbox.test/klinikflow"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "plans": {
+      "standard": {
+        "price_per_month": 350,
+        "min_term_months": 6,
+        "setup_fee": 500,
+        "for": "Monthly service after a one-off setup"
+      },
+      "plus": {
+        "price_per_month": 600,
+        "min_term_months": 6,
+        "setup_fee": 500,
+        "for": "Adds payroll and monthly reporting"
+      }
+    },
+    "max_discount_pct_without_approval": 0,
+    "max_discount_pct": 10,
+    "deal_policy": "No discount without an admin; the setup fee is never discounted."
+  }
+}

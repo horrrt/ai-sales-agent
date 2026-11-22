@@ -17,7 +17,7 @@ setup:
     stage: handed_off
     handoff:
       rep_id: rep-1
-      meeting_start: '2026-11-24T10:00:00+00:00'
+      meeting_start: '2026-11-23T10:00:00+00:00'
       call_brief: '...'
 turns:
 - 'Mette here: the meeting with L-201 happened today, it went well.'

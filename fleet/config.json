@@ -18,6 +18,7 @@
     "schedules_local": [
       "Monday 08:00: skill find-leads (weekly lead search)",
       "Weekdays 08:30: skill run-outreach-batch",
+      "Weekdays 09:30: skill follow-ups (everything due_follow_ups lists)",
       "Weekdays every 2 hours 09:00-17:00: skill handle-reply",
       "Monday 09:00: skill close-deal (pipeline review, deals that went quiet)",
       "Friday 15:00: skill weekly-review"

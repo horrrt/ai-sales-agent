@@ -14,8 +14,9 @@ import copy
 
 from .. import sim
 from ..app import mcp
+from .. import industries
 from ..decide import decide
-from ..store import BRIEF, LEADS, SOURCE, log_event, now, set_stage
+from ..store import BRIEF, LEADS, SOURCE, ask_person, log_event, now, set_stage
 
 MAX_RESEARCH_RETRIES = 2
 
@@ -61,10 +62,16 @@ def add_lead(lead_id: str) -> dict:
         return {"ok": True, "status": "duplicate", "lead_id": lead_id}
     question = ("Does this company and contact fit the ideal customer profile: country, company size, industry and "
                 "the contact's title all inside the ICP, and the company not on the exclusion list?")
-    evidence = {"icp": _icp_text(), "candidate": {"person": cand.get("person"), "company": cand.get("company")}}
+    found, _ = industries.normalize((cand.get("company") or {}).get("industry") or "")
+    icp_ind = (BRIEF.get("icp") or {}).get("industries") or []
+    evidence = {"icp": _icp_text(), "candidate": {"person": cand.get("person"), "company": cand.get("company")},
+                # the industry on the shared list, and whether it is one of the ICP's (checked in code, not by d1)
+                "industry_on_list": found or None, "industry_in_icp": bool(set(found) & set(icp_ind)) if found else None}
     d = decide(question, evidence)
     lead = copy.deepcopy(cand)
     lead.pop("research", None)
+    if found:
+        lead.setdefault("company", {})["industries"] = found  # the names on the list, next to the source's own wording
     if d["answer"] is None:
         return {"ok": True, "status": "needs_human", "lead_id": lead_id, "decision": d,
                 "next": "Ask a person whether this lead fits the ICP"}
@@ -144,6 +151,7 @@ def check_ready_to_write(lead_id: str) -> dict:
                 "research": {k: v for k, v in research.items() if k != "attempts"}}
     answers = {name: decide(q, evidence) for name, q in REQUIRED_FACTS.items()}
     if any(a["answer"] is None for a in answers.values()):
+        ask_person(lead, "decide whether the research is enough to write")
         return {"ok": True, "ready": None, "answers": answers, "next": "Ask a person whether research is enough"}
     missing = [name for name, a in answers.items() if not a["answer"]]
     if not missing:

@@ -1,0 +1,110 @@
+title: 'Mette is sick: her meeting moves to Jonas, who covers the same country, at the same time'
+agent: handoff
+setup:
+  reps:
+    rep-1:
+      name: Mette Holm
+      email: mette@kvitto.sandbox.test
+      slack_user_id: TODO-U-METTE
+      status: green
+      active_leads: 2
+      max_leads: 8
+      timezone: Europe/Oslo
+      countries:
+      - 'NO'
+      working_hours:
+      - 09:00
+      - '17:00'
+    rep-2:
+      name: Jonas Lind
+      email: jonas@kvitto.sandbox.test
+      slack_user_id: TODO-U-JONAS
+      status: green
+      active_leads: 2
+      max_leads: 8
+      timezone: Europe/Oslo
+      countries:
+      - 'NO'
+      working_hours:
+      - 09:00
+      - '17:00'
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: handed_off
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+    positioning:
+      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital
+        procurement asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
+      evidence:
+      - Announced a pilot with a regional hospital trust in Oslo in September 2026
+      confidence: 0.8
+      variant: research
+    outreach:
+      draft_subject: ISO 27001 before the hospital contract
+      draft_body: Hi, ... (first email)
+      sent_at: '2026-11-18T09:00:00+00:00'
+      follow_ups: 0
+      sent_count: 1
+      reply_label: positive
+    handoff:
+      rep_id: rep-1
+      event_id: E-L-201-1
+      meeting_start: '2026-11-26T09:00:00+00:00'
+      meeting_end: '2026-11-26T09:30:00+00:00'
+      meeting_status: booked
+      meeting_outcome: null
+      assigned_at: '2026-11-20T09:00:00+00:00'
+  calendars:
+    rep-1:
+    - event_id: E-L-201-1
+      kind: meeting
+      status: booked
+      title: Intro call
+      lead_id: L-201
+      start: '2026-11-26T09:00:00+00:00'
+      end: '2026-11-26T09:30:00+00:00'
+turns:
+- Mette (rep-1) is off sick for the rest of the week. Move her meetings to someone who can take them.
+approvals:
+  book_meeting: approve
+  reschedule_meeting: approve
+  cancel_meeting: approve
+  record_meeting_outcome: approve
+  record_approval: approve
+expect:
+  called:
+  - set_rep_status
+  - get_rep_calendar
+  - reschedule_meeting
+  asked_person:
+  - reschedule_meeting
+  lead:
+    L-201:
+      handoff.rep_id: rep-2
+      handoff.meeting_status: booked
+  calendar:
+    rep-2:
+      meetings: 1
+      lead: L-201
+    rep-1:
+      meetings: 0
+  no_double_booking: true
+  logs_follow_schema: true

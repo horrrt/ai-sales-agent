@@ -1,0 +1,90 @@
+title: 'Unpaid after 7 working days and two reminders: it goes to a rep'
+agent: deal-desk
+setup:
+  now: '2026-12-04T10:00:00+01:00'
+  brief:
+    auto_close:
+      enabled: true
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 7
+      industry: B2B SaaS
+    stage: offer_sent
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+    positioning:
+      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital
+        procurement asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
+      evidence:
+      - Announced a pilot with a regional hospital trust in Oslo in September 2026
+      confidence: 0.8
+      variant: research
+    outreach:
+      draft_subject: ISO 27001 before the hospital contract
+      draft_body: Hi Ingrid, ... (first email)
+      sent_at: '2026-11-18T09:00:00+00:00'
+      follow_ups: 0
+      sent_count: 1
+    deal:
+      stage: negotiation
+      owner: null
+      auto_close: true
+      probability: 70
+      call_notes: []
+      bant: {}
+      contract:
+        status: none
+        signed_at: null
+      paid: false
+      amount_eur: null
+      closed_at: null
+      expected_close_date: null
+      stage_times:
+        qualification: '2026-11-23T11:00:00+00:00'
+      small_deal: true
+      estimated_value_eur: 1188
+      quote:
+        plan: starter
+        quantity: 1
+        term_months: 1
+        discount_pct: 0
+        list_total_eur: 99.0
+        total_eur: 99.0
+        needs_admin: false
+        status: sent
+        checkout_url: https://checkout.sandbox.test/kvitto?lead=L-201
+        approval:
+          by: auto_close policy
+        quote_hash: x
+      payment_status: unpaid
+      offer_reminders: 2
+      offer_sent_at: '2026-11-24T09:00:00+00:00'
+      last_reminder_at: '2026-11-30T09:00:00+00:00'
+turns:
+- Has L-201 paid? If not, what happens now?
+approvals:
+  default: approve
+expect:
+  called:
+  - check_deal_done
+  not_called:
+  - send_offer_reminder
+  - send_offer
+  final_mentions:
+  - rep
+  logs_follow_schema: true

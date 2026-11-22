@@ -1,0 +1,44 @@
+title: 'Early startups without a finance person: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: bokfor-startups
+  source:
+  - lead_id: P-11
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-11.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord11 Software
+      domain: p-11.example
+      country: DK
+      employees: 13
+      industry: Software
+  - lead_id: P-12
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-12.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd12 Construction
+      domain: p-12.example
+      country: DK
+      employees: 13
+      industry: Construction
+turns:
+- Find new leads for customer_id C-bokfor-startups.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-11:
+      status: active
+    P-12:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

@@ -1,0 +1,30 @@
+title: 'The customer gives their website: product info comes from its pages, saved once they confirm'
+agent: onboarding
+setup:
+  customer: lagerlys-ecom
+  brief:
+    product_info: 'TODO: what we sell'
+    offer: 'TODO: the offer'
+  websites:
+    lagerlys.example:
+      title: 'Lagerlys: one live stock count'
+      pages:
+      - path: /
+        text: Lagerlys keeps every sales channel and your warehouse on one live stock count. No more overselling.
+      - path: /features
+        text: Syncs Shopify, WooCommerce and Amazon every minute. Low-stock alerts. Reorder suggestions from the
+          last 90 days.
+      - path: /pricing
+        text: 'Basic EUR 49 a month for one shop. Pro EUR 290 a month on a yearly plan. Enterprise: talk to us.'
+turns:
+- Mette here (rep-1, our admin). Our site is www.lagerlys.example. Fill in our product info and offer from it.
+- That's right, nothing to add. Please save it.
+approvals:
+  default: approve
+expect:
+  called:
+  - import_website
+  - update_brief
+  brief:
+    product_info: ~Shopify
+  logs_follow_schema: true

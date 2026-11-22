@@ -24,7 +24,7 @@ import sys
 import tempfile
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -35,10 +35,14 @@ DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Judgement-heavy agents on Sonnet, tool-following ones on Haiku (see the PR #3 runs: on Haiku the manager
 # often skips its subagents).
 DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:claude-sonnet-5-5," \
-                    "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5"
+                    "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5," \
+                    "onboarding=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
                "logs_follow_schema", "final_mentions", "final_must_not_contain", "queue_length", "proposals",
-               "max_tool_calls", "email", "events", "times_called"}
+               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar", "brief"}
+# Every case runs at a pinned time (setup.now overrides it): Tuesday 10:00 in Stockholm, inside business hours.
+DEFAULT_NOW = "2026-11-24T10:00:00+01:00"
+SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now", "calendars", "customer", "websites"}
 AGENTS = {"manager"} | {p.name for p in (REPO / "fleet" / "subagents").iterdir() if p.is_dir()}
 
 
@@ -129,6 +133,7 @@ async def run_turns(agent, turns: list[str], approvals: dict, events: list):
 
     approvals = json.loads(json.dumps(approvals))  # reject_first keeps state per case
     config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 150}
+    seen_calls, seen_msgs = set(), set()  # a message streams again after an interrupt resumes: count it once
     for turn in turns:
         events.append({"event": "user", "text": turn})
         payload = {"messages": [{"role": "user", "content": turn}]}
@@ -142,11 +147,15 @@ async def run_turns(agent, turns: list[str], approvals: dict, events: list):
                         continue
                     for m in (val.get("messages", []) if isinstance(val, dict) else []):
                         um = getattr(m, "usage_metadata", None)
-                        if m.type == "ai" and um:
+                        if m.type == "ai" and um and not (m.id and m.id in seen_msgs):
+                            seen_msgs.add(m.id)
                             d = um.get("input_token_details") or {}
                             events.append({"event": "usage", "input": um.get("input_tokens", 0),
                                            "output": um.get("output_tokens", 0), "cache_read": d.get("cache_read", 0) or 0})
                         for tc in getattr(m, "tool_calls", None) or []:
+                            if tc.get("id") and tc["id"] in seen_calls:
+                                continue
+                            seen_calls.add(tc.get("id"))
                             events.append({"event": "tool_call", "agent": who, "tool": tc["name"], "args": tc["args"]})
                         if m.type == "tool":
                             events.append({"event": "tool_result", "agent": who, "tool": m.name, "result": text_of(m.content)[:1500]})
@@ -168,34 +177,77 @@ async def run_turns(agent, turns: list[str], approvals: dict, events: list):
 
 # --------------------------------------------------------------------------- state and server
 
+def _utc(iso: str) -> str:
+    t = datetime.fromisoformat(str(iso))
+    return (t if t.tzinfo else t.replace(tzinfo=timezone.utc)).astimezone(timezone.utc).isoformat()
+
+
+def _replies(value) -> list[dict]:
+    """setup.replies[lead]: a body, one email {from, cc, subject, body, received_at, attachments}, or a list of them."""
+    items = value if isinstance(value, list) else [value]
+    return [{"body": v} if isinstance(v, str) else dict(v) for v in items]
+
+
 def initial_state(setup: dict) -> dict:
-    """The case's setup as a store snapshot. Leads get defaults; replies become sent emails with a reply waiting."""
-    now = datetime.now().astimezone().isoformat()
+    """The case's setup as a store snapshot. Leads get defaults. A lead with outreach.sent_at gets our email in
+    the outbox; setup.replies become the prospect's emails in the inbox, answering it."""
+    now = _utc(setup.get("now") or DEFAULT_NOW)
+    # every case starts from the demo customer, or from one of the test customer types in data/customers/
+    # customer: blank starts from the empty example brief (a customer who has just signed up)
+    base = (REPO / "data/customer_brief.example.json" if setup.get("customer") == "blank" else
+            REPO / "data/customers" / f"{setup['customer']}.json" if setup.get("customer") else REPO / "data/customer_brief.demo.json")
+    brief = {k: v for k, v in json.loads(base.read_text()).items() if not k.startswith("_")}
+    if setup.get("customer") == "blank":
+        brief["customer_id"] = "C-new"
+    for k, v in (setup.get("brief") or {}).items():
+        brief[k] = {**brief[k], **v} if isinstance(v, dict) and isinstance(brief.get(k), dict) else v
+    sender = brief.get("sender") or {"name": "Kvitto", "email": "outreach@sandbox.test"}
     leads = {}
     for lead in setup.get("leads", []):
-        lead = {"customer_id": "C-demo", "stage": "new", "status": "active", "loss_reason": None,
+        lead = {"customer_id": brief["customer_id"], "stage": "new", "status": "active", "loss_reason": None,
                 "created_at": now, "updated_at": now, **lead}
         lead.setdefault("stage_times", {lead["stage"]: now})
         leads[lead["lead_id"]] = lead
-    outbox = []
-    for lid, body in (setup.get("replies") or {}).items():
+    outbox, inbox = [], []
+    for lid in set(setup.get("replies") or {}) | {l for l, v in leads.items() if (v.get("outreach") or {}).get("sent_at")}:
         lead = leads[lid]
         out = lead.setdefault("outreach", {})
         out.setdefault("draft_subject", "Earlier email")
         out.setdefault("draft_body", "(sent)")
-        out.setdefault("sent_at", now)
-        outbox.append({"lead_id": lid, "to": lead["person"]["email"], "draft_subject": out["draft_subject"],
-                       "draft_body": out["draft_body"], "sent_at": out["sent_at"], "reply": {"body": body}})
-    state = {"leads": leads, "outbox": outbox, "interactions": setup.get("interactions", []),
-             "queue": setup.get("queue", []), "proposals": setup.get("proposals", []), "approvals": {}}
+        out["sent_at"] = _utc(out.get("sent_at") or now)
+        out.setdefault("thread_id", f"T-{lid}")
+        out.setdefault("thread_subject", out["draft_subject"])
+        out.setdefault("sent_count", 1)
+        ours = {"message_id": f"{lid}-out-1", "thread_id": out["thread_id"], "lead_id": lid, "direction": "out",
+                "from": f"{sender['name']} <{sender['email']}>", "to": [lead["person"]["email"]],
+                "cc": list(out.get("draft_cc") or []), "subject": out["draft_subject"], "body": out["draft_body"],
+                "in_reply_to": None, "attachments": [], "status": "sent", "scheduled_for": None,
+                "sent_at": out["sent_at"], "asked": True, "seeded": True}
+        outbox.append(ours)
+        for n, r in enumerate(_replies((setup.get("replies") or {}).get(lid, [])), 1):
+            frm = r.get("from") or lead["person"]["email"]
+            inbox.append({"message_id": f"{lid}-in-{n}", "thread_id": out["thread_id"], "lead_id": lid, "direction": "in",
+                          "from": frm, "to": r.get("to") or [sender["email"]], "cc": list(r.get("cc") or []),
+                          "subject": r.get("subject") or f"Re: {out['draft_subject']}", "body": r["body"],
+                          "received_at": _utc(r.get("received_at") or now), "in_reply_to": ours["message_id"],
+                          "attachments": list(r.get("attachments") or []), "handled": False, "seeded": True,
+                          "from_lead": frm.split("<")[-1].strip(" >").lower() == lead["person"]["email"].lower()})
+    state = {"leads": leads, "outbox": outbox, "inbox": inbox, "interactions": setup.get("interactions", []),
+             "queue": setup.get("queue", []), "proposals": setup.get("proposals", []), "approvals": {},
+             "clock": {"now": now}}
     if "reps" in setup:
         state["reps"] = setup["reps"]
+    # calendars: {rep_id: [{start, end, title?, kind?}]}; busy blocks unless kind says meeting
+    state["calendars"] = {rid: [{"event_id": e.get("event_id") or f"B-{rid}-{i}", "rep_id": rid, "kind": e.get("kind", "busy"),
+                                 "status": e.get("status", "booked"), "title": e.get("title", "Busy"), "lead_id": e.get("lead_id"),
+                                 "start": _utc(e["start"]), "end": _utc(e["end"]), "attendees": e.get("attendees", []),
+                                 "history": []}
+                                for i, e in enumerate(events, 1)]
+                          for rid, events in (setup.get("calendars") or {}).items()}
     if "source" in setup:
-        state["source"] = {c["lead_id"]: {"customer_id": "C-demo", **c} for c in setup["source"]}
-    brief = json.loads((REPO / "data/customer_brief.demo.json").read_text())  # every case starts from the demo customer
-    for k, v in (setup.get("brief") or {}).items():
-        brief[k] = {**brief[k], **v} if isinstance(v, dict) and isinstance(brief.get(k), dict) else v
+        state["source"] = {c["lead_id"]: {"customer_id": brief["customer_id"], **c} for c in setup["source"]}
     state["brief"] = brief
+    state["websites"] = setup.get("websites") or {}
     return state
 
 
@@ -275,11 +327,18 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
         add(f"asked a person before {t}", t in asked, f"asked for: {asked}")
     for t in expect.get("not_asked_person", []):
         add(f"never asked a person about {t}", t not in asked)
-    for lid, fields in (expect.get("lead") or {}).items():
-        lead = state.get("leads", {}).get(lid, {})
+    targets = [(lid, state.get("leads", {}).get(lid, {}), fields) for lid, fields in (expect.get("lead") or {}).items()]
+    if expect.get("brief"):  # the customer brief after the run (onboarding), same rules as lead
+        targets.append(("brief", state.get("brief") or {}, expect["brief"]))
+    for lid, lead, fields in targets:
         for path, want in fields.items():
             got = dig(lead, path)
-            ok = (got is not None) if want == "set" else (got in want) if isinstance(want, list) else got == want
+            # "set": not null. A list against a scalar: one of these values. A list against a list: equal.
+            ok = ((got is not None) if want == "set"
+                  else (want[1:].lower() in json.dumps(got, ensure_ascii=False).lower() if got is not None else False)
+                  if isinstance(want, str) and want.startswith("~")
+                  else (got in want) if isinstance(want, list) and not isinstance(got, list)
+                  else got == want)
             add(f"{lid}.{path} == {want}", ok, f"got {got!r}")
     for name in expect.get("delegated_to", []):
         add(f"manager delegated to @{name}",
@@ -310,6 +369,59 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
                 add(f"email mentions one of {e['mentions_any']}", any(m.lower() in text for m in e["mentions_any"]), body[:200])
             for bad in e.get("must_not_contain", []):
                 add(f"email doesn't contain {bad!r}", bad.lower() not in text, body[:200])
+    if expect.get("sent"):  # the emails the agent sent (or held) during the run, from the saved outbox
+        e = expect["sent"]
+        new = [m for m in state.get("outbox", []) if m["lead_id"] == e["lead"] and not m.get("seeded")]
+        if "count" in e:
+            add(f"{e['count']} email(s) to {e['lead']}", len(new) == e["count"], f"got {len(new)}")
+        add(f"an email to {e['lead']} went into the outbox", bool(new), "nothing in the outbox")
+        if new:
+            m, low = new[-1], lambda xs: [a.lower() for a in xs]
+            if "status" in e:
+                add(f"email status {e['status']}", m["status"] == e["status"], f"got {m['status']}")
+            for a in e.get("to_includes", []):
+                add(f"to includes {a}", any(a.lower() in x for x in low(m["to"])), f"to {m['to']}")
+            for a in e.get("cc_includes", []):
+                add(f"cc includes {a}", any(a.lower() in x for x in low(m["cc"])), f"cc {m['cc']}")
+            for a in e.get("cc_excludes", []):
+                add(f"cc doesn't include {a}", not any(a.lower() in x for x in low(m["cc"] + m["to"][1:])), f"cc {m['cc']}")
+            if "subject_startswith" in e:
+                add(f"subject starts with {e['subject_startswith']!r}", m["subject"].lower().startswith(e["subject_startswith"].lower()),
+                    f"subject {m['subject']!r}")
+            if e.get("same_thread"):
+                first = next((x for x in state.get("outbox", []) if x["lead_id"] == e["lead"]), m)
+                add("same thread as the first email", m["thread_id"] == first["thread_id"] and m.get("in_reply_to"),
+                    f"thread {m['thread_id']}, in_reply_to {m.get('in_reply_to')}")
+            if "scheduled_for" in e:
+                add(f"held until {e['scheduled_for']}", m.get("scheduled_for") == _utc(e["scheduled_for"]), f"got {m.get('scheduled_for')}")
+    if expect.get("no_double_booking"):  # no rep has two live events at the same time
+        clashes = []
+        for rid, evs in (state.get("calendars") or {}).items():
+            live = sorted((e for e in evs if e.get("status") != "cancelled"), key=lambda e: e["start"])
+            clashes += [f"{rid}: {a['event_id']} and {b['event_id']}" for a, b in zip(live, live[1:])
+                        if datetime.fromisoformat(b["start"]) < datetime.fromisoformat(a["end"])]
+        add("no rep is double-booked", not clashes, "; ".join(clashes))
+    for rid, want in (expect.get("calendar") or {}).items():  # {rep-1: {meetings: 1, lead: L-1, status: booked, start: ...}}
+        evs = [e for e in (state.get("calendars") or {}).get(rid, []) if e.get("kind") == "meeting"
+               and (not want.get("lead") or e.get("lead_id") == want["lead"])]
+        if "meetings" in want:
+            add(f"{rid} has {want['meetings']} meeting(s)", len([e for e in evs if e.get("status") != "cancelled"]) == want["meetings"],
+                f"got {[(e['event_id'], e['status']) for e in evs]}")
+        if evs and "status" in want:
+            add(f"{rid} meeting status {want['status']}", evs[-1]["status"] == want["status"], f"got {evs[-1]['status']}")
+        if evs and "start" in want:
+            add(f"{rid} meeting at {want['start']}", evs[-1]["start"] == _utc(want["start"]), f"got {evs[-1]['start']}")
+        if not evs and ("status" in want or "start" in want):
+            add(f"{rid} has a meeting", False, "none")
+    if expect.get("outbox_only_sandbox"):  # nothing we sent or held is addressed outside the .test sandbox
+        outside = [a for m in state.get("outbox", []) for a in m["to"] + m["cc"]
+                   if not a.split("<")[-1].strip(" >").lower().endswith(".test")]
+        add("every recipient is a sandbox address", not outside, f"outside the sandbox: {outside}")
+    for lid, wants in (expect.get("contacts") or {}).items():
+        have = (state.get("leads", {}).get(lid) or {}).get("contacts") or []
+        for w in wants:
+            add(f"{lid} contact {w}", any(all(str(v).lower() in str(c.get(k, "")).lower() for k, v in w.items()) for c in have),
+                f"contacts {[(c['email'], c['role']) for c in have]}")
     for want in expect.get("events", []):  # rows in the saved event log, e.g. {stage: approval, outcome: failure, by: agent}
         rows = state.get("interactions", [])
         add(f"event log has {want}", any(all(str(r.get(k)) == str(v) if not str(v).startswith("~") else str(v)[1:].lower() in str(r.get(k)).lower()
@@ -339,8 +451,16 @@ def load_cases(k: str) -> list[tuple[str, Path, dict]]:
 def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     """Static checks a case must pass before it is worth a model call."""
     problems = []
-    if set(case.get("setup", {})) - {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions"}:
-        problems.append(f"unknown setup keys {sorted(set(case['setup']) - {'brief', 'reps', 'source', 'leads', 'replies', 'interactions', 'queue', 'proposals', 'no_decisions'})}")
+    if set(case.get("setup", {})) - SETUP_KEYS:
+        problems.append(f"unknown setup keys {sorted(set(case['setup']) - SETUP_KEYS)}")
+    for lid, v in (case.get("setup", {}).get("replies") or {}).items():
+        for r in (v if isinstance(v, list) else [v]):
+            if isinstance(r, dict) and (set(r) - {"from", "to", "cc", "subject", "body", "received_at", "attachments"} or "body" not in r):
+                problems.append(f"reply for {lid} needs a body and only from/to/cc/subject/body/received_at/attachments")
+    sent = (case.get("expect") or {}).get("sent")
+    if sent and (set(sent) - {"lead", "status", "to_includes", "cc_includes", "cc_excludes", "subject_startswith",
+                              "same_thread", "scheduled_for", "count"} or "lead" not in sent):
+        problems.append("expect.sent needs a lead and only status/to_includes/cc_includes/cc_excludes/subject_startswith/same_thread/scheduled_for/count")
     if (case.get("expect") or {}).get("email") and "lead" not in case["expect"]["email"]:
         problems.append("expect.email needs a lead")
     for key in ("title", "agent", "turns", "expect"):
@@ -385,29 +505,43 @@ async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaph
                 async def call(tool, args):
                     raw = await tools[tool].ainvoke(args)
                     blocks = raw if isinstance(raw, list) else [raw]
-                    return [json.loads(b["text"]) if isinstance(b, dict) and "text" in b
-                            else json.loads(b) if isinstance(b, str) else b for b in blocks]
+                    def parse(text):
+                        try:
+                            return json.loads(text)
+                        except ValueError:  # a plain string, e.g. one slot from find_free_slots
+                            return text
+                    return [parse(b["text"]) if isinstance(b, dict) and "text" in b
+                            else parse(b) if isinstance(b, str) else b for b in blocks]
                 for lead in setup.get("leads", []):
                     got = (await call("get_lead", {"lead_id": lead["lead_id"]}))[0]
                     if got.get("lead_id") != lead["lead_id"]:
                         problems.append(f"lead {lead['lead_id']} not loaded")
                 replies = await call("get_replies", {}) if setup.get("replies") else []
-                if len(replies) != len(setup.get("replies") or {}):
-                    problems.append(f"{len(replies)} replies in the inbox, expected {len(setup.get('replies') or {})}")
+                want = sum(len(_replies(v)) for v in (setup.get("replies") or {}).values())
+                if len(replies) != want:
+                    problems.append(f"{len(replies)} replies in the inbox, expected {want}")
+                for r in replies:
+                    if not r.get("answers"):
+                        problems.append(f"reply {r.get('message_id')} isn't linked to the email it answers")
+                for rid, evs in (setup.get("calendars") or {}).items():
+                    slots = await call("find_free_slots", {"rep_id": rid, "days_ahead": 10})
+                    if any(any(_utc(e["start"]) <= s < _utc(e["end"]) for e in evs) for s in slots):
+                        problems.append(f"find_free_slots for {rid} offers a time inside a seeded busy block")
                 if "reps" in setup:
                     reps = {r["rep_id"]: r["status"] for r in await call("get_rep_capacity", {})}
                     if reps != {k: v["status"] for k, v in setup["reps"].items()}:
                         problems.append(f"reps loaded as {reps}")
                 if "source" in setup:
-                    found = {c["lead_id"] for c in await call("find_leads", {"customer_id": "C-demo", "limit": 50})}
+                    found = {c["lead_id"] for c in await call("find_leads", {"customer_id": initial_state(setup)["brief"]["customer_id"], "limit": 50})}
                     expected = {c["lead_id"] for c in setup["source"]}
                     known = {(l.get("person") or {}).get("email") for l in setup.get("leads", [])}
                     expected -= {c["lead_id"] for c in setup["source"] if (c.get("person") or {}).get("email") in known}
                     if found != expected:
                         problems.append(f"find_leads returned {sorted(found)}, expected {sorted(expected)}")
-                brief = (await call("get_customer_brief", {"customer_id": "C-demo"}))[0]
-                if brief.get("company_name") != "Kvitto ApS":
-                    problems.append("the demo brief didn't load")
+                want_brief = initial_state(setup)["brief"]
+                brief = (await call("get_customer_brief", {"customer_id": want_brief["customer_id"]}))[0]
+                if brief.get("customer_id") != want_brief["customer_id"] or brief.get("company_name") != want_brief.get("company_name"):
+                    problems.append(f"the brief didn't load (got {brief.get('customer_id')})")
                 for k, v in (setup.get("brief") or {}).items():
                     if isinstance(v, dict) and any(brief.get(k, {}).get(kk) != vv for kk, vv in v.items()):
                         problems.append(f"brief override {k} didn't apply")
@@ -490,7 +624,11 @@ async def main():
     ap.add_argument("--model-map", default=DEFAULT_MODEL_MAP, help="per-agent models; '' for --model everywhere")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--repeat", type=int, default=1, help="run every case this many times (cases can also set repeat)")
+    ap.add_argument("--now", default=None, help="pinned time for cases without setup.now, e.g. 2026-12-24T22:00:00+01:00")
     args = ap.parse_args()
+    if args.now:
+        global DEFAULT_NOW
+        DEFAULT_NOW = args.now
     cases = load_cases(args.k)
     if not cases:
         sys.exit("No cases matched")

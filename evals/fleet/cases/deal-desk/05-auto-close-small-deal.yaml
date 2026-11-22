@@ -4,7 +4,6 @@ setup:
   brief:
     auto_close:
       enabled: true
-      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -16,13 +15,13 @@ setup:
       name: Nordvik Health Data AS
       domain: nordvik.example
       country: 'NO'
-      employees: 22
+      employees: 5
       industry: B2B SaaS
     stage: replied
     outreach:
       sent_at: '2026-11-18T09:00:00+00:00'
       reply_label: positive
-      reply_body: Sounds right for us. How do I sign up for the monthly plan?
+      reply_body: Sounds right for us. How do I sign up for Starter? We are five people.
 turns:
 - L-201 replied positively and auto-close is on for this customer. Handle it.
 expect:

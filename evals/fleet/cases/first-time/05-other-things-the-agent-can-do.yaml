@@ -1,0 +1,16 @@
+title: 'After setup the customer asks what else the agent can do: follow-ups, scheduling, auto-close, weekly review'
+agent: manager
+setup: {}
+turns:
+- Mette (rep-1) here. We're set up. What else can you do for us day to day, and what do you need from us for each?
+approvals:
+  default: approve
+expect:
+  not_called:
+  - update_brief
+  - add_team_member
+  - find_leads
+  - send_email
+  final_mentions:
+  - follow-up
+  logs_follow_schema: true

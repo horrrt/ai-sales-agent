@@ -1,0 +1,97 @@
+{
+  "tools": [
+    {
+      "name": "get_customer_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get customer brief"
+    },
+    {
+      "name": "check_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Check brief"
+    },
+    {
+      "name": "import_website",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Import website"
+    },
+    {
+      "name": "review_pricing",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Review pricing"
+    },
+    {
+      "name": "suggest_icp_from_deals",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Suggest icp from deals"
+    },
+    {
+      "name": "update_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Update brief"
+    },
+    {
+      "name": "get_rep_capacity",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get rep capacity"
+    },
+    {
+      "name": "log_interaction",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Log interaction"
+    },
+    {
+      "name": "add_team_member",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Add team member"
+    },
+    {
+      "name": "update_team_member",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Update team member"
+    },
+    {
+      "name": "get_setup_status",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get setup status"
+    },
+    {
+      "name": "suggest_price",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Suggest price"
+    },
+    {
+      "name": "list_industries",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "List industries"
+    }
+  ],
+  "interrupt_config": {
+    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::check_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::import_website::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::review_pricing::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::suggest_icp_from_deals::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::update_brief::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::add_team_member::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::update_team_member::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_setup_status::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::suggest_price::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::list_industries::Sales tools (sandbox)": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "customer_id": "C-byggtid-electricians",
+  "_note": "Test customer type: Danish electrical installers. Product byggtid, pricing per_seat (per user per month, a minimum number of users). Fictional.",
+  "company_name": "Byggtid AB",
+  "website": "https://www.byggtid.example",
+  "approvers": {
+    "emails": "rep-1",
+    "payments": "fin-1"
+  },
+  "sender": {
+    "name": "Sales, Byggtid AB",
+    "email": "sales@byggtid.sandbox.test",
+    "timezone": "Europe/Copenhagen"
+  },
+  "offer": "Byggtid replaces paper timesheets on building sites: hours and materials logged per job on the phone, ready for payroll and invoicing.",
+  "icp": {
+    "countries": [
+      "DK"
+    ],
+    "employees_min": 5,
+    "employees_max": 50,
+    "industries": [
+      "Electrical installation"
+    ],
+    "titles": [
+      "Owner",
+      "Operations manager"
+    ],
+    "triggers": [
+      "Hiring electricians",
+      "Moving to a new accounting system"
+    ]
+  },
+  "product_info": "Byggtid is a phone app where builders and electricians log hours, materials and photos per job. The office gets timesheets ready for payroll and invoicing the same day, and project managers see each job's hours against the quote. Works offline on site and exports to Fortnox and Visma.",
+  "won_deals": [],
+  "exclusions": [],
+  "tone": "Plain, short and specific. No hype words and no exclamation marks. One clear ask. Max 120 words for a first email.",
+  "keywords": [
+    "timesheet",
+    "hours",
+    "jobs"
+  ],
+  "auto_close": {
+    "enabled": true,
+    "max_annual_value_eur": 1500,
+    "plans": [
+      "team"
+    ],
+    "standard_terms": "List price, standard terms, no custom contract",
+    "checkout_url": "https://checkout.sandbox.test/byggtid"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "plans": {
+      "team": {
+        "price_per_month": 12,
+        "min_term_months": 1,
+        "min_quantity": 5,
+        "for": "per user; at least 5 users"
+      },
+      "annual": {
+        "price_per_month": 10,
+        "min_term_months": 12,
+        "min_quantity": 5,
+        "for": "per user on a 12-month plan; at least 5 users"
+      }
+    },
+    "max_discount_pct_without_approval": 5,
+    "max_discount_pct": 15,
+    "deal_policy": "Per user. Discounts above 5% need an admin."
+  }
+}

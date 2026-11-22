@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Message",
+  "description": "One email, ours (OUTBOX, direction out) or the prospect's (INBOX, direction in). Addresses can be \"Name <a@b.test>\" or bare. Sandbox only: every recipient of ours is on a .test domain.",
+  "type": "object",
+  "required": [
+    "message_id",
+    "thread_id",
+    "lead_id",
+    "direction",
+    "from",
+    "to",
+    "cc",
+    "subject",
+    "body"
+  ],
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "description": "<lead_id>-out-<n> or <lead_id>-in-<n>"
+    },
+    "thread_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "T-<lead_id>: one thread per lead"
+    },
+    "lead_id": {
+      "type": "string"
+    },
+    "direction": {
+      "enum": [
+        "out",
+        "in"
+      ]
+    },
+    "from": {
+      "type": "string"
+    },
+    "to": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cc": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subject": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "in_reply_to": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "message_id this one answers"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "File names only"
+    },
+    "status": {
+      "enum": [
+        "scheduled",
+        "sent"
+      ],
+      "description": "Ours only. scheduled: held until 08:00 on the next working day in the lead's country"
+    },
+    "scheduled_for": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "sent_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "Ours: when it actually went out"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Theirs: when it arrived"
+    },
+    "from_lead": {
+      "type": "boolean",
+      "description": "Theirs: false when someone other than the lead wrote"
+    },
+    "handled": {
+      "type": "boolean",
+      "description": "Theirs: read_reply has read it"
+    }
+  }
+}

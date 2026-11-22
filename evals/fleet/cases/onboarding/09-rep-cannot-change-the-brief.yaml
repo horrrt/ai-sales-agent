@@ -1,0 +1,11 @@
+title: 'A rep asks to change the pricing: only an admin may, so nothing changes'
+agent: onboarding
+setup: {}
+turns:
+- Jonas here (rep-2). Change our monthly plan to EUR 590 a month.
+approvals:
+  default: approve
+expect:
+  brief:
+    pricing.plans.monthly.price_per_month: 790
+  logs_follow_schema: true

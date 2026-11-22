@@ -1,0 +1,16 @@
+title: 'The customer describes their industry in their own words: it''s saved as the list name'
+agent: onboarding
+setup:
+  customer: lagerlys-ecom
+turns:
+- Mette here (rep-1, our admin). Our customers are online brands, basically webshops and D2C brands. Update the
+  industries in our ICP to just that.
+approvals:
+  default: approve
+expect:
+  called:
+  - update_brief
+  brief:
+    icp.industries:
+    - E-commerce
+  logs_follow_schema: true

@@ -1,0 +1,44 @@
+title: 'Swedish building contractors: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: byggtid-contractors
+  source:
+  - lead_id: P-21
+    person:
+      name: Kim Berg
+      title: CEO
+      email: kim@p-21.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord21 Construction
+      domain: p-21.example
+      country: SE
+      employees: 105
+      industry: Construction
+  - lead_id: P-22
+    person:
+      name: Kim Berg
+      title: CEO
+      email: kim@p-22.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd22 Marketing
+      domain: p-22.example
+      country: SE
+      employees: 105
+      industry: Marketing agencies
+turns:
+- Find new leads for customer_id C-byggtid-contractors.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-21:
+      status: active
+    P-22:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

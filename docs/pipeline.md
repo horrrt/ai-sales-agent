@@ -142,7 +142,7 @@ Every gate and tool writes a row to the event log, not only the three dotted "lo
 | Rep approves, edits or rejects | `record_approval` (Fleet asks a person and shows the whole email). `send_email` refuses any draft without an approval for that exact text | `mcp/sales_tools/tools/outreach.py` |
 | Rejected: redraft | the approval note goes back to @outreach | same |
 | **5. Reply and hand-off** | | |
-| Send, d1 reads the reply | `send_email`, `get_replies`, `read_reply` (one label, then its exit) | same |
+| Send, d1 reads the reply | `send_email` (business hours in the lead's country, one thread per lead, the approved to and cc), `get_replies` (sender, cc, time, attachments, the email it answers), `read_reply` (one label read next to our email, then its exit; new people become contacts; a handover moves the next email to the colleague), `get_thread` | same |
 | Other replies: stop or follow up | not_now and out_of_office: follow-up date, not lost. negative: lost with has_competitor, price or negative. wrong_person: lost. unsubscribe: lost, never contacted again | same |
 | d1: small, standard deal? | `check_small_deal` (only if the brief's `auto_close.enabled`; over the price cap is always no) | `mcp/sales_tools/tools/deals.py` |
 | Auto-close agent: offer + checkout link | @deal-desk, `send_offer` (standard quote at list price, sandbox link) | `fleet/subagents/deal-desk/` |
@@ -180,6 +180,8 @@ Every gate records which backend answered and how confident it was (d1 only), in
 - A real lead source (Clay, Salesforce or web search) and real research. Both are stubs, or the simulated prospects with `SALES_LEADS=personas`.
 - Google Sheets for the lead sheet and event log. State is in memory, with an optional local JSON snapshot (`SALES_STATE=path`). A deployed server still needs a database.
 - A payment provider in test mode. `record_payment` is set by a person.
+- Regional public holidays (German states, for example). National ones are in `mcp/sales_tools/workdays.py`.
+- Google Calendar. Rep calendars live in the store (`calendars` in the snapshot); invites aren't sent anywhere.
 - Slack approval inside Slack itself. The approval is Fleet's, on `record_approval`; once Slack is connected to Fleet, approvals can be answered there.
 
 ## Run it

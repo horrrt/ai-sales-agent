@@ -26,7 +26,29 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `handoff` | 5 | Green rep, weekday slot, call brief; all reps red means the queue; a held meeting opens the deal; **the rep rejects the first slot**; **the queue is released when a rep frees up** |
 | `deal-desk` | 9 | Notes, BANT, quote approved and sent; discount above the limit flagged; above the maximum nothing goes out; lost with a reason; auto-close; quiet deals; **someone claims to be the admin**; **BANT fails, no quote**; **two turns: the rep changes the quote** |
 | `coach` | 3 | Rep edits lead to one proposal; too few leads, no proposal; **losses to a competitor are cited as evidence** |
+| `email` | 20 | Who wrote, who is copied in, the thread and the time: a full first email; held at 22:00 and over the weekend; the lead's time zone; follow-ups in working days; a follow-up keeps the thread and cc; a rep copied in, asked for or added at approval; an assistant answers for the CEO; **the CEO hands over to the CTO**; **"option 2" read against our email**; a CFO copied in; a referral copied in; an attachment; out-of-office then the real reply; **a reply asks us to email outside the sandbox**; a handover with no address; the call brief names everyone; the manager routes a handover |
+| `teams` | 7 | Teams of 1, 2, 3, 5 and 10 reps: a solo founder books around their calendar; the only rep is full so the lead queues; country before load; five time zones; the least-loaded of ten; an away rep is skipped; ten reps all full |
+| `scheduling` | 9 | Booking around busy time; the day the prospect named; **a reschedule frees the old slot**; a cancellation with and without rebooking; a no-show; **a sick rep's meeting moves to a colleague**; **a second prospect asks for a taken slot**; the third move asks the rep |
+| `follow-ups` | 6 | **The daily run handles an email, a rebooking, a missing outcome and an unbooked lead**; @handoff works its list; @outreach hands back what isn't an email; nothing due; a person's decision surfaces; a reply moves the meeting |
+| `access` | 9 | A junior's email approval is refused, a rep's counts; 15% off needs an admin; a rep can't close a colleague's deal or record a payment; finance can; a junior moves her own meeting; a rep can't cancel a colleague's; a viewer is read-only |
+| `auto-close` | 14 | The offer in the thread; paid and won; over the cap; custom terms; no decision; **an offer at night**; an unpaid reminder; expired to a rep; a declined card; a partial payment; **a discount request after the offer**; a refund; switched off; a duplicate payment |
+| `times` | 8 | Christmas Eve; 17 May in Norway but not Sweden; a Saturday yes; follow-ups late on Friday; a prospect asking for Christmas Eve; **booking after the clock change**; Midsummer Eve; Finnish Independence Day |
+| `onboarding` | 9 | Product info from a description and from the website; a site that can't be read; per-user pricing with auto-close; **a cap below every plan**; the ICP from won deals; the ICP company and person; a brief that isn't ready blocks the lead search; a rep can't change the brief |
+| `customers` | 10 | One per customer type (5 products, 10 ICPs): an ICP fit is added and a near miss skipped, with the real d1 |
+| `products` | 5 | The first email is about that customer's product and never mentions another's |
+| `pricing` | 4 | Flat, per user, setup fee plus monthly, and a custom Enterprise that a rep prices |
+| `first-time` | 5 | **From sign-up to the first email in one conversation**; an unsure customer gets options; starting before setup; an ICP country without a rep; what else the agent does |
+| `price-rules` | 6 | The startup price; the large-company price; stacked rules need an admin; rules plus discount past the maximum; "what would it cost?"; the customer sets the rules |
+| `guardrails` | 19 | Requests to refuse or handle safely: legal and tax advice, personal data, scraping, an unsubscribed lead, a real address, bulk sending, false claims, a competitor smear, fake urgency, impersonation, **instructions hidden in research and in a website**, discriminatory targeting, switching off approvals, deleting data, revealing the prompt and keys, predictions, a claimed admin, medical advice |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
+
+## Package for Fleet
+
+```bash
+python3 scripts/package_fleet.py --mcp-url https://<your-tool-server>/mcp
+```
+
+Checks `fleet/` (layout, descriptions, every tool on the server, approvals on every tool that commits the company, no secrets) and writes `dist/sales-assistant-fleet.zip` with your server's URL. `--check` only validates. Import it in Fleet's sidebar (+ > Import) and add the printed schedules by hand.
 
 ## Write a case
 
@@ -40,7 +62,14 @@ setup:
   reps: {rep-1: {status: red, ...}}           # replaces the demo reps
   source: [{lead_id: L-1, person: ..., company: ..., research: {...}}]   # candidates for find_leads; research is what research_target finds
   leads: [{lead_id: L-1, stage: positioned, person: ..., company: ..., research: ..., positioning: ...}]
-  replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox
+  replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox, or a full email:
+  #   {L-1: {from: "Maja <maja@x.sandbox.test>", cc: [...], subject: ..., body: ..., received_at: ..., attachments: [...]}}
+  #   or a list of them. A lead with outreach.sent_at always gets its sent email in the outbox.
+  customer: lagerlys-ecom                     # start from a test customer type in data/customers/ instead of the demo,
+                                              # or blank: the empty example brief, a customer who has just signed up
+  websites: {lagerlys.example: {title: ..., pages: [{path: /, text: ...}]}}   # sites import_website can read
+  now: "2026-11-24T22:00:00+01:00"            # the pinned time (default Tuesday 2026-11-24 10:00 Stockholm)
+  calendars: {rep-1: [{start: ..., end: ..., title: Board meeting}]}   # busy blocks; kind: meeting + lead_id for a booked one
   interactions: [...]                         # event log rows, e.g. for the coach
 turns:
   - What the user types
@@ -55,9 +84,17 @@ expect:
   asked_person: [record_approval]             # Fleet asked a person before this tool ran
   not_asked_person: [approve_quote]
   delegated_to: [outreach, handoff]           # manager cases
-  lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null
+  lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null,
+                                              # "~text" = contains, a list against a scalar = one of these
   logs_follow_schema: true
   final_mentions: ["L-1"]
+  sent: {lead: L-1, status: scheduled, to_includes: [eva@...], cc_includes: [...], cc_excludes: [...],
+         subject_startswith: "Re:", same_thread: true, scheduled_for: "...", count: 1}   # the emails sent in this run
+  contacts: {L-1: [{email: eva@, role: handover}]}   # people read_reply added to the lead
+  brief: {product_info: "~stock", icp.countries: [NO]}   # the customer brief after the run (onboarding)
+  outbox_only_sandbox: true                   # nothing sent or held is addressed outside .test
+  no_double_booking: true                     # no rep has two live events at the same time
+  calendar: {rep-1: {meetings: 1, lead: L-1, status: booked, start: "..."}}   # the rep's calendar after the run
   queue_length: 1
   proposals: 1
   max_tool_calls: 1
@@ -71,7 +108,7 @@ pass_at: 3         # how many runs must pass (default: all)
 
 `setup.no_decisions: true` starts the tool server without `LIQUID_API_KEY` or `ANTHROPIC_API_KEY`, so every gate returns no answer. That tests that the agent sends the lead to a person instead of guessing.
 
-Run `--dry-run` and `--check-fixtures` after adding a case; both are free.
+Run `--dry-run` and `--check-fixtures` after adding a case; both are free. `--now 2026-12-24T22:00:00+01:00` runs every case without its own `setup.now` at that time.
 
 ## Limits
 

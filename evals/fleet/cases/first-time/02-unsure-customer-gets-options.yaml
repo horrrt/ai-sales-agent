@@ -1,0 +1,48 @@
+title: A customer unsure about ICP and pricing gets options, picks one, and sees what's left
+agent: manager
+setup:
+  customer: blank
+  reps:
+    rep-1:
+      name: Mette Holm
+      email: mette@lagerlys.sandbox.test
+      role: admin
+      status: green
+      active_leads: 0
+      max_leads: 6
+      timezone: Europe/Stockholm
+      countries:
+      - SE
+      working_hours:
+      - 09:00
+      - '17:00'
+      languages:
+      - en
+      - sv
+turns:
+- 'Hi, I''m Mette (rep-1). We just signed up. We''re Bokfør: we do the bookkeeping, VAT and payroll for small companies,
+  with a named accountant. I honestly don''t know who our best customers are, or whether our pricing makes sense.
+  Where do we start?'
+- We charge EUR 350 a month with a minimum of 6 months, plus a one-off EUR 500 setup. Is that a sensible structure?
+- OK, save that pricing as it is, no auto-close for now.
+- For the ICP, suggest two or three options for a bookkeeping service like ours, covering the company and the person.
+- Go with your first option. Save it.
+- Where are we now, what's still missing?
+approvals:
+  default: approve
+expect:
+  delegated_to:
+  - onboarding
+  called:
+  - review_pricing
+  - update_brief
+  - get_setup_status
+  not_called:
+  - find_leads
+  brief:
+    pricing.plans: ~350
+    pricing: ~setup_fee
+    icp.titles: set
+    icp.industries: set
+    auto_close.enabled: false
+  logs_follow_schema: true

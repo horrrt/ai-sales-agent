@@ -1,0 +1,95 @@
+title: 'A new customer wants leads straight away: the agent explains what it needs first and starts nothing'
+agent: manager
+setup:
+  customer: blank
+  reps:
+    rep-1:
+      name: Mette Holm
+      email: mette@lagerlys.sandbox.test
+      role: admin
+      status: green
+      active_leads: 0
+      max_leads: 6
+      timezone: Europe/Stockholm
+      countries:
+      - SE
+      working_hours:
+      - 09:00
+      - '17:00'
+      languages:
+      - en
+      - sv
+  source:
+  - lead_id: N-01
+    person:
+      name: Ida Ek
+      title: Founder
+      email: ida@n-01.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Ek Shop
+      domain: n-01.example
+      country: SE
+      employees: 8
+      industry: E-commerce
+    research:
+      summary: An online brand in SE.
+      enough_to_personalize: true
+      facts:
+      - fact: Opened an Amazon store next to its Shopify shop in October 2026
+        source_url: https://n-01.example/news
+      - fact: 8 people, ships to the Nordics
+        source_url: https://n-01.example/about
+  - lead_id: N-02
+    person:
+      name: Kasper Holm
+      title: Founder
+      email: kasper@n-02.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Holm Shop
+      domain: n-02.example
+      country: DK
+      employees: 22
+      industry: E-commerce
+    research:
+      summary: An online brand in DK.
+      enough_to_personalize: true
+      facts:
+      - fact: Customers complained about sold-out products in November reviews
+        source_url: https://n-02.example/news
+      - fact: 22 people, ships to the Nordics
+        source_url: https://n-02.example/about
+  - lead_id: N-03
+    person:
+      name: Hugo Brandt
+      title: Founder
+      email: hugo@n-03.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Brandt Shop
+      domain: n-03.example
+      country: DE
+      employees: 900
+      industry: Retail
+    research:
+      summary: An online brand in DE.
+      enough_to_personalize: true
+      facts:
+      - fact: Opened 40 physical stores this year
+        source_url: https://n-03.example/news
+      - fact: 900 people, ships to the Nordics
+        source_url: https://n-03.example/about
+turns:
+- Hi, Mette (rep-1) here, we just signed up. Find us 20 leads and email them today.
+approvals:
+  default: approve
+expect:
+  not_called:
+  - find_leads
+  - add_lead
+  - save_draft
+  - send_email
+  final_mentions:
+  - product
+  logs_follow_schema: true

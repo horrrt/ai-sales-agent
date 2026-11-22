@@ -11,8 +11,13 @@ database (docs/fleet-prompts-v2.md §2).
 - INTERACTIONS: the event log, append-only.
 - REPS: the sales team and their traffic lights (data/reps.json, else data/reps.demo.json).
 - APPROVALS: one per draft, written by record_approval; send_email checks it.
-- OUTBOX: every email sent to a sandbox inbox, with the prospect's reply once there is one.
+- OUTBOX: every email we send (or hold until business hours), as a message record: from, to, cc, subject,
+  body, thread_id, sent_at or scheduled_for.
+- INBOX: every email we receive: from, to, cc, subject, body, received_at, in_reply_to, attachments.
+- CLOCK: SALES_NOW (or CLOCK["now"]) fixes the time for tests and evals; otherwise the real time.
 - QUEUE: positive replies waiting for a rep when every rep is red.
+- CALENDARS: each rep's calendar, rep_id -> events {event_id, start, end, kind busy|meeting, status, lead_id}
+  (data/calendars.json, else data/calendars.demo.json, else empty).
 - PROPOSALS: rule changes the weekly review proposes, for a person to approve.
 """
 import json
@@ -26,8 +31,20 @@ from . import sim
 DATA = Path(__file__).resolve().parents[2] / "data"
 
 
+CLOCK: dict = {}  # {"now": iso time} pins the clock; saved with the state so a test server keeps it
+
+
+def clock() -> datetime:
+    """The current time, timezone-aware UTC. SALES_NOW or CLOCK["now"] pin it (tests, evals, demos)."""
+    pinned = CLOCK.get("now") or os.environ.get("SALES_NOW")
+    if pinned:
+        t = datetime.fromisoformat(pinned)
+        return (t if t.tzinfo else t.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    return datetime.now(timezone.utc)
+
+
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return clock().isoformat()
 
 
 def _load_json(*names: str):
@@ -49,14 +66,21 @@ BRIEF: dict = json.loads(_brief_file.read_text())
 LEADS: dict[str, dict] = {}
 INTERACTIONS: list[dict] = []
 REPS: dict[str, dict] = _load_json("reps.json", "reps.demo.json")
+try:
+    CALENDARS_START: dict = _load_json("calendars.json", "calendars.demo.json")
+except FileNotFoundError:
+    CALENDARS_START = {}
 APPROVALS: dict[str, dict] = {}
 OUTBOX: list[dict] = []
+INBOX: list[dict] = []
 QUEUE: list[dict] = []
+CALENDARS: dict[str, list[dict]] = {k: list(v) for k, v in CALENDARS_START.items()}
+WEBSITES: dict[str, dict] = {}  # domain -> {title, pages: [{path, text}]}: sites import_website can read (sandbox)
 PROPOSALS: list[dict] = []
 
 STATE_FILE = os.environ.get("SALES_STATE")
 _STATE = {"leads": LEADS, "interactions": INTERACTIONS, "reps": REPS, "approvals": APPROVALS,
-          "outbox": OUTBOX, "queue": QUEUE, "proposals": PROPOSALS}
+          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK, "calendars": CALENDARS, "websites": WEBSITES, "brief": BRIEF}
 
 
 def load() -> None:
@@ -65,15 +89,36 @@ def load() -> None:
         return
     saved = json.loads(Path(STATE_FILE).read_text())
     for key, obj in _STATE.items():
-        if key in saved:
+        if key in saved and key != "brief":  # the brief is merged below, so a fixture can change part of it
             obj.clear()
             (obj.update if isinstance(obj, dict) else obj.extend)(saved[key])
+    _upgrade_old_outbox()
     # Test fixtures (evals/fleet) can also set the lead source and change the brief. Neither is saved back.
     if "source" in saved:
         SOURCE.clear()
         SOURCE.update(saved["source"])
     for k, v in (saved.get("brief") or {}).items():
         BRIEF[k] = {**BRIEF[k], **v} if isinstance(v, dict) and isinstance(BRIEF.get(k), dict) else v
+
+
+def _upgrade_old_outbox() -> None:
+    """Snapshots from before message records kept {to, draft_subject, draft_body, sent_at, reply} per sent email.
+    Turn each into a message in the outbox, and its reply into a message in the inbox."""
+    for i, m in enumerate(OUTBOX):
+        if "message_id" in m:
+            continue
+        lid, reply = m["lead_id"], m.pop("reply", None)
+        new = {"message_id": f"{lid}-out-old{i}", "thread_id": f"T-{lid}", "lead_id": lid, "direction": "out",
+               "from": "", "to": [m["to"]] if isinstance(m.get("to"), str) else list(m.get("to") or []), "cc": [],
+               "subject": m.get("draft_subject", ""), "body": m.get("draft_body", ""), "in_reply_to": None,
+               "attachments": [], "status": "sent", "scheduled_for": None, "sent_at": m.get("sent_at"), "asked": True}
+        if reply:
+            email = (new["to"] or [""])[0]
+            INBOX.append({"message_id": f"{lid}-in-old{i}", "thread_id": new["thread_id"], "lead_id": lid,
+                          "direction": "in", "from": email, "to": [], "cc": [], "subject": "Re: " + new["subject"],
+                          "body": reply.get("body", ""), "received_at": m.get("sent_at"), "in_reply_to": new["message_id"],
+                          "attachments": [], "handled": bool(m.get("handled")), "from_lead": True})
+        OUTBOX[i] = new
 
 
 def save() -> None:
@@ -88,11 +133,17 @@ def save() -> None:
     os.replace(tmp, path)
 
 
-def set_stage(lead: dict, stage: str) -> None:
-    """Move a lead to a stage and remember when it first got there."""
+def set_stage(lead: dict, stage: str, at: str | None = None) -> None:
+    """Move a lead to a stage and remember when it first got there (at: when it happened, if not now)."""
     lead["stage"] = stage
-    lead.setdefault("stage_times", {}).setdefault(stage, now())
+    lead.pop("needs_person", None)  # the lead moved on, so whatever a person had to decide is settled
+    lead.setdefault("stage_times", {}).setdefault(stage, at or now())
     lead["updated_at"] = now()
+
+
+def ask_person(lead: dict, reason: str) -> None:
+    """Park a lead for a person's decision. due_follow_ups lists it (kind needs_person) until the lead moves on."""
+    lead["needs_person"] = {"reason": reason, "since": now()}
 
 
 def log_event(lead_id: str, stage: str, outcome: str, message: str = "", channel: str = "internal",

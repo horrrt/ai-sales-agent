@@ -1,0 +1,63 @@
+title: 'Lagerlys AB: the first email is about their product, not another customer''s'
+agent: outreach
+setup:
+  customer: lagerlys-ecom
+  leads:
+  - lead_id: P-E1
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-e1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: NordE1 E-commerce
+      domain: p-e1.example
+      country: SE
+      employees: 21
+      industry: E-commerce
+    stage: positioned
+    research:
+      summary: A E-commerce company in SE.
+      enough_to_personalize: true
+      facts:
+      - fact: 'Opening a second sales channel: announced in November 2026'
+        source_url: https://p-e1.example/news
+      - fact: About 21 people, growing
+        source_url: https://p-e1.example/about
+    positioning:
+      angle: 'Opening a second sales channel: announced in November 2026; Lagerlys stops stock-outs and overselling
+        by keeping every sales channel and the warehouse on one live stock count.'
+      evidence:
+      - 'Opening a second sales channel: announced in November 2026'
+      confidence: 0.75
+      variant: research
+turns:
+- Write and send the first email to lead P-E1 (customer_id C-lagerlys-ecom).
+approvals:
+  default: approve
+expect:
+  called:
+  - save_draft
+  - record_approval
+  - send_email
+  email:
+    lead: P-E1
+    max_words: 130
+    mentions_any:
+    - stock
+    - inventory
+    - warehouse
+    - Lagerlys
+    must_not_contain:
+    - '!'
+    - Bokfør
+    - Byggtid
+    - ISO 27001
+    - Klinikflow
+    - Kvitto
+    - SOC 2
+    - VAT return
+    - bookkeeping
+    - no-show
+    - timesheet
+  logs_follow_schema: true

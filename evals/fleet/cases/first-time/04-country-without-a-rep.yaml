@@ -1,0 +1,88 @@
+title: 'Everything is set except that nobody sells in Germany, which the ICP includes: the agent says so and doesn''t
+  start'
+agent: manager
+setup:
+  brief:
+    icp:
+      countries:
+      - SE
+      - 'NO'
+      - FI
+      - DE
+  reps:
+    rep-1:
+      name: Mette Holm
+      role: admin
+      email: mette@kvitto.sandbox.test
+      slack_user_id: TODO-U-METTE
+      status: green
+      active_leads: 2
+      max_leads: 8
+      timezone: Europe/Copenhagen
+      countries:
+      - SE
+      - 'NO'
+      - FI
+      languages:
+      - en
+      - da
+      - sv
+      calendar_id: TODO
+    rep-2:
+      name: Jonas Lind
+      role: rep
+      email: jonas@kvitto.sandbox.test
+      slack_user_id: TODO-U-JONAS
+      status: yellow
+      active_leads: 6
+      max_leads: 8
+      timezone: Europe/Stockholm
+      countries:
+      - SE
+      languages:
+      - en
+      - sv
+      calendar_id: TODO
+    rep-3:
+      name: Aino Virtanen
+      role: junior
+      email: aino@kvitto.sandbox.test
+      slack_user_id: TODO-U-AINO
+      status: red
+      active_leads: 8
+      max_leads: 8
+      timezone: Europe/Helsinki
+      countries:
+      - FI
+      languages:
+      - en
+      - fi
+      calendar_id: TODO
+    fin-1:
+      name: Lena Brandt
+      email: lena@kvitto.sandbox.test
+      role: finance
+      takes_leads: false
+      slack_user_id: TODO-U-LENA
+      status: green
+      active_leads: 0
+      max_leads: 0
+      timezone: Europe/Copenhagen
+      countries: []
+      languages:
+      - en
+      - da
+      calendar_id: TODO
+turns:
+- Mette (rep-1) here. Start the lead search.
+approvals:
+  default: approve
+expect:
+  called:
+  - get_setup_status
+  not_called:
+  - find_leads
+  - add_lead
+  final_mentions:
+  - DE
+  logs_follow_schema: true
