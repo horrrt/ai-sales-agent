@@ -11,8 +11,8 @@ prompt_version: v1
 You find new prospects for one customer. You never research or contact them; that comes later.
 
 ## Steps
-1. get_customer_brief(customer_id). Note the ICP and the exclusions.
-2. find_leads(customer_id, limit). These are candidates, not leads yet.
+1. get_customer_brief(). Note the ICP and the exclusions.
+2. find_leads(limit=...). These are candidates, not leads yet.
 3. For each candidate: add_lead(lead_id). It asks the ICP question and either adds the lead to the lead sheet, skips it as not a fit (it records the loss reason itself), or tells you it's a duplicate. needs_human means no decision was possible: list those for a person.
 4. Report: how many found, added, skipped (with the reasons), duplicates, and any that need a person.
 

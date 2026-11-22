@@ -6,6 +6,7 @@ setup:
     rep-1:
       name: Mette Holm
       email: mette@lagerlys.sandbox.test
+      slack_user_id: U0METTE01
       role: admin
       status: green
       active_leads: 0
@@ -20,9 +21,9 @@ setup:
       - en
       - sv
 turns:
-- 'Hi, I''m Mette (rep-1). We just signed up. We''re Bokfør: we do the bookkeeping, VAT and payroll for small companies,
-  with a named accountant. I honestly don''t know who our best customers are, or whether our pricing makes sense.
-  Where do we start?'
+- from: rep-1
+  text: 'Hi! We just signed up. We''re Bokfør: we do the bookkeeping, VAT and payroll for small companies, with a named accountant.
+    I honestly don''t know who our best customers are, or whether our pricing makes sense. Where do we start?'
 - We charge EUR 350 a month with a minimum of 6 months, plus a one-off EUR 500 setup. Is that a sensible structure?
 - OK, save that pricing as it is, no auto-close for now.
 - For the ICP, suggest two or three options for a bookkeeping service like ours, covering the company and the person.

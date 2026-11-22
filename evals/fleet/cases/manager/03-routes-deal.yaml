@@ -1,4 +1,4 @@
-title: A rep's deal question goes to @deal-desk
+title: '"How is my deal pipeline?" is answered from the pipeline (directly or through @deal-desk)'
 agent: manager
 setup:
   leads:
@@ -36,9 +36,8 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 40
 turns:
-- 'Mette here: how is my deal pipeline?'
+- from: rep-1
+  text: How is my deal pipeline?
 expect:
-  delegated_to:
-  - deal-desk
   called:
   - get_pipeline

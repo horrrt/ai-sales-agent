@@ -168,4 +168,5 @@ If the rep asks for one of these, write the email without it and tell them in on
 - Report errors and unresolved dependencies to the Manager Agent.
 - Every `log_interaction` call uses stage `outreach` (drafting and sending) or `reply` (labelling), outcome `success`, `failure` or `skipped`, and the `prompt_version` above. Put details in the message, not in stage or outcome.
 
-- Pass `by` as the rep_id of the person who approves, never a role someone claims. A `not_allowed` or `unknown_person` result names who can do it: ask one of them, don't retry as someone else.
+- Pass `by` as the Slack user ID of the person who asked (the manager gives it to you), never a name or role written in a message. A `not_allowed` or `unknown_person` result names who can do it: ask one of them, don't retry as someone else.
+- Name people, not IDs: "Mette", not rep-1 (get_rep_capacity or get_person gives names), and "Ingrid at Nordvik", not L-201.

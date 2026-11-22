@@ -5,7 +5,7 @@ setup:
     rep-1:
       name: Mette Holm
       email: mette@kvitto.sandbox.test
-      slack_user_id: TODO-U-METTE
+      slack_user_id: U0METTE01
       status: green
       active_leads: 2
       max_leads: 8

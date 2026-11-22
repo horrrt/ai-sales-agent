@@ -11,7 +11,12 @@ expect:
   - find_leads
   - send_email
   final_mentions_any:
-  - [product, website, what you sell]
-  - [icp, ideal customer, who you sell, best customers]
+  - - product
+    - website
+    - what you sell
+  - - icp
+    - ideal customer
+    - who you sell
+    - best customers
   max_tool_calls: 8
   logs_follow_schema: true

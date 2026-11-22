@@ -40,8 +40,10 @@ expect:
   - read_reply
   - save_reply_label
   final_mentions_any:
-  - [L-201, Nordvik]
-  - [repl, answer, wrote back]
+  - - Nordvik
+  - - repl
+    - answer
+    - wrote back
   delegated_to:
   - outreach
   max_tool_calls: 10

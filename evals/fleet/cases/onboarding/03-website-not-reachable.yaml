@@ -6,7 +6,8 @@ setup:
     product_info: 'TODO: what we sell'
     offer: 'TODO: the offer'
 turns:
-- Mette here (rep-1, our admin). Our site is www.lagerlys-shop.example. Fill in our product info from it.
+- from: rep-1
+  text: Our site is www.lagerlys-shop.example. Fill in our product info from it.
 approvals:
   default: approve
 expect:

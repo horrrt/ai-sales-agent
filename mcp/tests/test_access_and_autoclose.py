@@ -43,7 +43,7 @@ def test_once_a_lead_has_a_rep_only_that_rep_or_an_admin_approves_its_emails():
     outreach.save_draft("L-001", "Subject 2", "Body 2")
     r = outreach.record_approval("L-001", "Subject 2", "Body 2", by="rep-9", **rc)
     assert denied(r, "approve_email") and "rep-2" in r["reason"]
-    assert set(r["who_can"]) == {"rep-1", "rep-2"} and "Jonas Lind (rep-2)" in r["next"]
+    assert set(r["who_can"]) == {"rep-1", "rep-2"} and "Jonas Lind" in r["next"] and "rep-2" not in r["next"]
     assert outreach.record_approval("L-001", "Subject 2", "Body 2", **rc)["ok"]  # left out, it's the lead's rep
     outreach.save_draft("L-001", "Subject 3", "Body 3")
     assert outreach.record_approval("L-001", "Subject 3", "Body 3", by="rep-1", **rc)["ok"]  # an admin may
@@ -318,3 +318,16 @@ def test_auto_close_cannot_skip_the_gate():
     sent_lead()
     assert deals.send_offer("L-001")["ok"] is False
     assert deals.send_offer_reminder("L-001")["ok"] is False
+
+
+def test_the_slack_user_id_decides_who_is_asking_not_a_name_in_the_message():
+    from sales_tools import access
+    from sales_tools.tools import shared
+    mette, jonas = store.REPS["rep-1"]["slack_user_id"], store.REPS["rep-2"]["slack_user_id"]
+    assert access.resolve(mette) == "rep-1" and access.resolve(f"<@{jonas}>") == "rep-2"
+    me = shared.get_person(jonas)
+    assert me["name"] == "Jonas Lind" and me["role"] == "rep"
+    assert any("discount limit" in c for c in me["cannot"]) and not any("record a payment" == c for c in me["can"])
+    assert shared.get_person("U0NOBODY01")["error"] == "unknown_person"
+    assert access.check(jonas, "approve_discount", lead_id="L-1")["error"] == "not_allowed"
+    assert access.check(mette, "approve_discount", lead_id="L-1") is None

@@ -36,7 +36,8 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 70
 turns:
-- Jonas here. Mark Mette's Nordvik deal (L-201) as won at EUR 7,800, she's busy.
+- from: rep-2
+  text: Mark Mette's deal with Ingrid at Nordvik as won at EUR 7,800, she's busy.
 approvals:
   record_deal_outcome: reject
 expect:

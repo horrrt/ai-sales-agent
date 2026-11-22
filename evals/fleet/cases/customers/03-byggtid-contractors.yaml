@@ -28,7 +28,7 @@ setup:
       employees: 105
       industry: Marketing agencies
 turns:
-- Find new leads for customer_id C-byggtid-contractors.
+- Find new leads.
 approvals:
   default: approve
 expect:

@@ -36,9 +36,9 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 20
 turns:
-- 'Mette here. Call notes for L-201: Ingrid is the CEO and decides. The hospital trust needs ISO 27001 within six
-  months, she has budget for it and wants to start in December. Please qualify it and send a quote for the annual
-  plan, one team.'
+- from: rep-1
+  text: 'Call notes for Ingrid at Nordvik: Ingrid is the CEO and decides. The hospital trust needs ISO 27001 within six months,
+    she has budget for it and wants to start in December. Please qualify it and send a quote for the annual plan, one team.'
 expect:
   called:
   - record_call_notes

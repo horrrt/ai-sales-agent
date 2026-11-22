@@ -36,8 +36,9 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 20
 turns:
-- 'Mette here. Notes for L-201: Ingrid liked it, but there''s no budget until next autumn and it isn''t a priority
-  this year. Qualify it.'
+- from: rep-1
+  text: 'Notes for Ingrid at Nordvik: Ingrid liked it, but there''s no budget until next autumn and it isn''t a priority this
+    year. Qualify it.'
 expect:
   called:
   - record_call_notes

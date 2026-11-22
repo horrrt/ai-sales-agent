@@ -10,6 +10,6 @@ expect:
   - send_email
   - update_brief
   final_mentions_any:
-  - [lead]
+  - - lead
   max_tool_calls: 8
   logs_follow_schema: true

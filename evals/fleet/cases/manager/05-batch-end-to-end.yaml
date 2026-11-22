@@ -23,7 +23,7 @@ setup:
       - fact: Job post for an Information Security Officer, first hire in that role
         source_url: https://nordvik.example/careers/security-officer
 turns:
-- Find new leads for customer_id C-demo, then run an outreach batch with batch size 1.
+- Find new leads, then run an outreach batch with batch size 1.
 expect:
   delegated_to:
   - lead-search

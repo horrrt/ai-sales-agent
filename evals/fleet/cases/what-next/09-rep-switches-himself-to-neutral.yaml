@@ -2,7 +2,8 @@ title: '"Just give me the options from now on": saved on Jonas only, not the tea
 agent: manager
 setup: {}
 turns:
-- Jonas here (rep-2). From now on just give me the options, don't pick for me.
+- from: rep-2
+  text: From now on just give me the options, don't pick for me.
 expect:
   not_called:
   - send_email

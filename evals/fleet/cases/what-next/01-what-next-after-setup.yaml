@@ -2,7 +2,7 @@ title: '"What next?" after setup with nothing running: one pick (find leads or a
 agent: manager
 setup: {}
 turns:
-- Mette (rep-1) here. What next?
+- What next?
 expect:
   not_called:
   - send_email

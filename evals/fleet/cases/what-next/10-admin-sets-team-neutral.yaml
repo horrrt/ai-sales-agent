@@ -2,7 +2,7 @@ title: 'Mette (admin) sets the whole team to neutral: saved in the brief'
 agent: manager
 setup: {}
 turns:
-- 'Mette (rep-1) here. For the whole team: show options neutrally, don''t recommend one.'
+- 'For the whole team: show options neutrally, don''t recommend one.'
 expect:
   not_called:
   - send_email

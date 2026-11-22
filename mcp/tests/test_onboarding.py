@@ -165,3 +165,5 @@ def test_rep_capacity_gives_each_persons_resolved_question_mode():
     store.BRIEF["question_mode"] = "neutral"
     store.REPS["rep-2"]["question_mode"] = "recommend"
     assert modes()["rep-1"] == "neutral" and modes()["rep-2"] == "recommend"
+    from sales_tools import access
+    assert access.describe("rep-1")["question_mode"] == "neutral" and access.describe("rep-2")["question_mode"] == "recommend"

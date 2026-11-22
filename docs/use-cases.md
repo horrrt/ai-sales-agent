@@ -101,7 +101,7 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | S1 | Slots skip busy time and meetings already booked | `test_slots_skip_busy_time_and_booked_meetings` | `scheduling/01-busy-calendar` |
 | S2 | Booking refuses a clash, a time that has passed, a time outside working hours, and a second meeting for the same lead | `test_booking_refuses_a_clash_a_past_time_after_hours_and_a_second_meeting` | `scheduling/08-asked-for-a-taken-slot` |
 | S3 | The invite includes the people in the thread: the lead, an assistant or colleague who wrote, anyone copied in | `test_meeting_invite_includes_the_people_in_the_thread` | `teams/01-solo-rep-books` |
-| S4 | The prospect names a day and time, even weeks out, and that time is booked. A day with nothing free says why (weekend, holiday, too soon, fully booked) and offers the nearest | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out`, `test_an_empty_day_says_why_and_offers_the_nearest` | `scheduling/02-prospect-names-a-day` |
+| S4 | The prospect names a day and time, even weeks out, and that time is booked. A day with nothing free says why (weekend, holiday, too soon, fully booked) and offers the nearest | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out`, `test_an_empty_day_says_why_and_offers_the_nearest`, `test_find_free_slots_for_a_date_works_through_the_server` | `scheduling/02-prospect-names-a-day` |
 | S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
 | S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
 | S7 | A rep is sick. Their meetings are listed from their calendar and a colleague takes them over. The owner can hand a meeting over too, and anyone else needs an admin | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_the_owner_can_hand_a_meeting_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
@@ -275,9 +275,20 @@ ICP industries come from one list, `data/industries.json` (33 names with aliases
 | I5 | A price rule on an industry matches its aliases ("Charity" gets the Nonprofit price) | `test_a_price_rule_on_an_industry_matches_its_aliases` | unit only |
 | I6 | Every industry in the briefs is a list name, and every prospect in the data and the Fleet cases maps onto the list | `test_every_industry_in_the_briefs_is_a_list_name_and_every_prospect_maps` | unit only |
 
+## Plain language
+
+Salespeople write the way they'd message a colleague: "Ingrid wants to move Thursday", "find us a few leads", "the nordvik ceo". Nobody types a lead ID, a rep ID, a customer ID or a tool name, and the agent never asks for one or answers with one. People don't say who they are either: who is asking is the sender's Slack user ID, which sets their name, role and permissions. In the Fleet cases a turn's `from` is the sender (Mette when it's left out). Every Fleet case is written that way. Every manager case also checks that the answer has no IDs or tool names in it (`plain_answer`, on by default for the manager).
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| N1 | A prospect named by first name, full name, company, both, email or "the nordvik ceo" is found, the tools that need the customer work without its ID, and a lead says who owns it by name | `test_find_lead_from_how_people_name_it`, `test_a_lead_says_who_owns_it_by_name` | `plain-language/01-first-name-only`, `plain-language/04-company-only-question`, `plain-language/05-casual-lead-search`, `plain-language/06-typos-and-a-title` |
+| N2 | Two prospects with the same first name: it asks which one, by name and company, and changes nothing until told | agent only | `plain-language/02-two-people-same-name` |
+| N3 | Someone who isn't a lead: it says so and changes nothing | agent only | `plain-language/03-nobody-by-that-name` |
+| N4 | Who is asking comes from the Slack user ID, not from the message: no introduction needed, "Mette here" from Jonas is still Jonas, and someone not on the team changes nothing | `test_the_slack_user_id_decides_who_is_asking_not_a_name_in_the_message` | `plain-language/07-no-introduction`, `plain-language/08-claims-to-be-someone-else`, `plain-language/09-not-on-the-team`, `plain-language/10-owner-without-introduction`, `plain-language/11-typed-someone-elses-slack-id`, `plain-language/12-who-am-i` |
+
 ## Saying hello
 
-A bare "hey" is the most common first message. The agent works out who is asking (role, traffic light, load) and where things stand, then offers what it can do for that person next, by lead_id and company. It offers and stops: nothing is sent, booked, released or changed until they say so.
+A bare "hey" is the most common first message. The agent works out who is asking (role, traffic light, load) and where things stand, then offers what it can do for that person next, by person and company name. It offers and stops: nothing is sent, booked, released or changed until they say so.
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
@@ -296,11 +307,11 @@ A bare "hey" is the most common first message. The agent works out who is asking
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
-| N1 | "What next?" after setup gets one pick and why | agent only | `what-next/01-what-next-after-setup` |
-| N2 | "What should I do?" from a rep picks among their own meeting and quiet deal | agent only | `what-next/02-what-should-i-do-rep` |
-| N3 | "What is the best thing to do here?" puts the waiting prospect first, without handling the reply | agent only | `what-next/03-best-thing-with-a-reply-waiting` |
-| N4 | Finance's pick is the unpaid offer, never lead work | agent only | `what-next/04-what-next-finance` |
-| N5 | Neutral mode, from the team or the person, lists options without a pick; a person's recommend beats a neutral team | `test_rep_capacity_gives_each_persons_resolved_question_mode` | `what-next/05-neutral-team-greeting`, `what-next/06-neutral-person-overrides-team`, `what-next/07-recommend-person-in-a-neutral-team` |
-| N6 | Asked directly, the agent picks even in neutral mode | agent only | `what-next/08-neutral-but-asked-directly` |
-| N7 | The team default is the brief's question_mode, admin only, and only "recommend" or "neutral" | `test_question_mode_is_a_team_default_an_admin_sets` | `what-next/10-admin-sets-team-neutral` |
-| N8 | Anyone sets their own question_mode, not a colleague's, and it doesn't open up the rest of their record | `test_anyone_sets_their_own_question_mode_but_not_a_colleagues` | `what-next/09-rep-switches-himself-to-neutral` |
+| D1 | "What next?" after setup gets one pick and why | agent only | `what-next/01-what-next-after-setup` |
+| D2 | "What should I do?" from a rep picks among their own meeting and quiet deal | agent only | `what-next/02-what-should-i-do-rep` |
+| D3 | "What is the best thing to do here?" puts the waiting prospect first, without handling the reply | agent only | `what-next/03-best-thing-with-a-reply-waiting` |
+| D4 | Finance's pick is the unpaid offer, never lead work | agent only | `what-next/04-what-next-finance` |
+| D5 | Neutral mode, from the team or the person, lists options without a pick; a person's recommend beats a neutral team | `test_rep_capacity_gives_each_persons_resolved_question_mode` | `what-next/05-neutral-team-greeting`, `what-next/06-neutral-person-overrides-team`, `what-next/07-recommend-person-in-a-neutral-team` |
+| D6 | Asked directly, the agent picks even in neutral mode | agent only | `what-next/08-neutral-but-asked-directly` |
+| D7 | The team default is the brief's question_mode, admin only, and only "recommend" or "neutral" | `test_question_mode_is_a_team_default_an_admin_sets` | `what-next/10-admin-sets-team-neutral` |
+| D8 | Anyone sets their own question_mode, not a colleague's, and it doesn't open up the rest of their record | `test_anyone_sets_their_own_question_mode_but_not_a_colleagues` | `what-next/09-rep-switches-himself-to-neutral` |

@@ -36,7 +36,8 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 20
 turns:
-- Mette here. Draft the annual plan for L-201, one team, and send it once approved.
+- from: rep-1
+  text: Draft the annual plan for Ingrid at Nordvik, one team, and send it once approved.
 - 'Change of plan: they want two teams. Redo the quote and send that one instead.'
 expect:
   times_called:

@@ -1,10 +1,22 @@
 {
   "tools": [
     {
+      "name": "get_person",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "sales_tools",
+      "display_name": "Get person"
+    },
+    {
       "name": "get_customer_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Get customer brief"
+    },
+    {
+      "name": "find_lead",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "sales_tools",
+      "display_name": "Find lead"
     },
     {
       "name": "get_lead",
@@ -428,6 +440,8 @@
     "https://sales-tools.invalid/mcp::update_team_member::sales_tools": true,
     "https://sales-tools.invalid/mcp::get_setup_status::sales_tools": false,
     "https://sales-tools.invalid/mcp::suggest_price::sales_tools": false,
-    "https://sales-tools.invalid/mcp::list_industries::sales_tools": false
+    "https://sales-tools.invalid/mcp::list_industries::sales_tools": false,
+    "https://sales-tools.invalid/mcp::find_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_person::sales_tools": false
   }
 }

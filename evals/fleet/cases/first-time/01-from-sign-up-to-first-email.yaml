@@ -6,6 +6,7 @@ setup:
     rep-1:
       name: Mette Holm
       email: mette@lagerlys.sandbox.test
+      slack_user_id: U0METTE01
       role: admin
       status: green
       active_leads: 0
@@ -26,8 +27,8 @@ setup:
       - path: /
         text: Lagerlys keeps every sales channel and your warehouse on one live stock count. No more overselling.
       - path: /features
-        text: Syncs Shopify, WooCommerce and Amazon every minute. Low-stock alerts. Reorder suggestions from the
-          last 90 days. Set up in a day.
+        text: Syncs Shopify, WooCommerce and Amazon every minute. Low-stock alerts. Reorder suggestions from the last 90 days.
+          Set up in a day.
   source:
   - lead_id: N-01
     person:
@@ -90,19 +91,20 @@ setup:
       - fact: 900 people, ships to the Nordics
         source_url: https://n-03.example/about
 turns:
-- Hi, I'm Mette (rep-1), we just signed up. What can you do for us, and what do you need from me?
+- from: rep-1
+  text: Hi! We just signed up. What can you do for us, and what do you need from me?
 - We sell Lagerlys, inventory software for online shops. Our website is www.lagerlys.example.
 - Yes, that's right. Save it.
-- 'Pricing: Basic is EUR 49 a month for one shop, cancel any month. Pro is EUR 290 a month on a yearly plan. Reps
-  can give 10% off, never more than 20%. Startups under 10 people get 10% off. Small Basic deals can close on their
-  own, under EUR 1,000 a year; the checkout link is https://checkout.sandbox.test/lagerlys.'
+- 'Pricing: Basic is EUR 49 a month for one shop, cancel any month. Pro is EUR 290 a month on a yearly plan. Reps can give
+  10% off, never more than 20%. Startups under 10 people get 10% off. Small Basic deals can close on their own, under EUR
+  1,000 a year; the checkout link is https://checkout.sandbox.test/lagerlys.'
 - Looks good, save it.
-- We sell to online brands in Sweden and Denmark, 3 to 40 people. The founder or the COO decides. A good moment
-  is when they open a second sales channel, or customers complain about sold-out products.
+- We sell to online brands in Sweden and Denmark, 3 to 40 people. The founder or the COO decides. A good moment is when they
+  open a second sales channel, or customers complain about sold-out products.
 - Save it.
 - 'The team: I sell in Sweden. Jonas Lind (jonas@lagerlys.sandbox.test) sells in Denmark, up to 8 leads, Europe/Copenhagen
-  time. Lena Brandt (lena@lagerlys.sandbox.test) is our finance person and records payments. Emails come from me,
-  mette@lagerlys.sandbox.test, and I approve them. Tone: plain and short, no exclamation marks.'
+  time. Lena Brandt (lena@lagerlys.sandbox.test) is our finance person and records payments. Emails come from me, mette@lagerlys.sandbox.test,
+  and I approve them. Tone: plain and short, no exclamation marks.'
 - 'Is everything set? If so, start: find leads and run the first outreach batch.'
 - Use your suggestions for anything that's still missing and save them. Then start.
 approvals:
@@ -138,5 +140,5 @@ expect:
     N-03:
       status: lost
   final_mentions:
-  - N-0
+  - Shop
   logs_follow_schema: true

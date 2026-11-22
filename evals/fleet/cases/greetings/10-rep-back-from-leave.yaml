@@ -6,7 +6,7 @@ setup:
       name: Mette Holm
       role: admin
       email: mette@kvitto.sandbox.test
-      slack_user_id: TODO-U-METTE
+      slack_user_id: U0METTE01
       status: green
       active_leads: 2
       max_leads: 8
@@ -24,7 +24,7 @@ setup:
       name: Jonas Lind
       role: rep
       email: jonas@kvitto.sandbox.test
-      slack_user_id: TODO-U-JONAS
+      slack_user_id: U0JONAS01
       status: away
       active_leads: 6
       max_leads: 8
@@ -39,7 +39,7 @@ setup:
       name: Aino Virtanen
       role: junior
       email: aino@kvitto.sandbox.test
-      slack_user_id: TODO-U-AINO
+      slack_user_id: U0AINO01
       status: red
       active_leads: 8
       max_leads: 8
@@ -55,7 +55,7 @@ setup:
       email: lena@kvitto.sandbox.test
       role: finance
       takes_leads: false
-      slack_user_id: TODO-U-LENA
+      slack_user_id: U0LENA01
       status: green
       active_leads: 0
       max_leads: 0
@@ -66,10 +66,11 @@ setup:
       - da
       calendar_id: TODO
 turns:
-- hey, Jonas (rep-2), back from sick leave today
+- from: rep-2
+  text: hey, back from sick leave today
 expect:
   called:
-  - get_rep_capacity
+  - get_person
   not_called:
   - send_email
   - book_meeting

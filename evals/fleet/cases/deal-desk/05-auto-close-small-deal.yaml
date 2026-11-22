@@ -23,7 +23,7 @@ setup:
       reply_label: positive
       reply_body: Sounds right for us. How do I sign up for Starter? We are five people.
 turns:
-- L-201 replied positively and auto-close is on for this customer. Handle it.
+- Ingrid at Nordvik replied positively and auto-close is on for this customer. Handle it.
 expect:
   called:
   - check_small_deal

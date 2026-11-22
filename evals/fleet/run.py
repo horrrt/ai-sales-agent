@@ -19,6 +19,7 @@ import asyncio
 import contextlib
 import json
 import os
+import re
 import socket
 import sys
 import tempfile
@@ -31,6 +32,8 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
+SERVER_TOOLS = sorted(set(re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)",
+                                     "".join(p.read_text() for p in (REPO / "mcp/sales_tools/tools").glob("*.py")))))
 DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Judgement-heavy agents on Sonnet, tool-following ones on Haiku (see the PR #3 runs: on Haiku the manager
 # often skips its subagents).
@@ -39,7 +42,7 @@ DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:cl
                     "onboarding=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
                "logs_follow_schema", "final_mentions", "final_mentions_any", "final_must_not_contain", "queue_length", "proposals",
-               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar", "brief"}
+               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar", "brief", "plain_answer"}
 # Every case runs at a pinned time (setup.now overrides it): Tuesday 10:00 in Stockholm, inside business hours.
 DEFAULT_NOW = "2026-11-24T10:00:00+01:00"
 SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now", "calendars", "customer", "websites"}
@@ -54,6 +57,29 @@ def gated(cfg: dict) -> dict[str, bool]:
 
 def our_tools(cfg: dict) -> list[str]:
     return [t["name"] for t in cfg.get("tools", []) if "tools.langchain.com" not in t.get("mcp_server_url", "")]
+
+
+def slack_reply(events: list):
+    """Stand-in for Fleet's slack_reply_to_message: records the reply instead of posting it. The manager's
+    answer to a Slack message is what it posts with this, so the checks read it from here."""
+    from langchain_core.tools import tool
+
+    @tool
+    def slack_reply_to_message(channel_id: str, message_ts: str, message: str) -> dict:
+        """Reply in the Slack thread of the message that triggered you."""
+        events.append({"event": "slack_reply", "text": message})
+        return {"message_ts": "1795339999.000001", "channel": channel_id, "thread_ts": message_ts,
+                "message": "Successfully replied to message in thread"}
+    return slack_reply_to_message
+
+
+def final_answer(events: list) -> str:
+    """What the person reads: the last Slack reply, or the manager's last message when it didn't post one."""
+    replies = [e["text"] for e in events if e["event"] == "slack_reply"]
+    if replies:
+        return replies[-1]
+    final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
+    return final[-1] if final else ""
 
 
 async def build(agent_name: str, url: str, model: str, model_map: dict, events: list):
@@ -91,7 +117,7 @@ async def build(agent_name: str, url: str, model: str, model_map: dict, events: 
         subagents.append(spec)
     root = json.loads((fleet / "tools.json").read_text())
     loader = StaticSkillsLoader([(fleet / "skills", "/skills")])
-    return create_deep_agent(model=model_map.get("manager", model), tools=pick(our_tools(root), "manager"),
+    return create_deep_agent(model=model_map.get("manager", model), tools=pick(our_tools(root), "manager") + [slack_reply(events)],
                              system_prompt=(fleet / "AGENTS.md").read_text(), subagents=subagents,
                              skills=loader.skill_paths, middleware=[loader], interrupt_on=gated(root),
                              checkpointer=InMemorySaver())
@@ -126,6 +152,37 @@ def answer(policy: dict, tool: str, args: dict) -> dict:
             return {"type": "reject", "message": rule.get("message", "Rejected.")}
         return {"type": "approve"}
     return {"type": "approve"}
+
+
+DEFAULT_SENDER = "rep-1"  # a turn with no `from` comes from this person; `from: null` is a scheduled run (no sender)
+
+
+def slack_message(text: str, slack_user_id: str | None) -> str:
+    """A turn exactly as Fleet hands a Slack message to the agent (seen in a real Slack run, 22 Nov 2026): the
+    channel, the reply target, then the request with the sender's Slack user ID in front. The one place that
+    knows Fleet's format. No sender (a schedule): the text alone."""
+    if not slack_user_id:
+        return text
+    return ("**Slack Thread**\n- **Channel ID:** `C0SALESDESK`\n\n"
+            "**Reply Target (use this as `message_ts` in `slack_reply_to_message`):**\n- `1795339902.450959`\n\n"
+            "This is the user's request that triggered this agent:\n"
+            f"<user_request>\n@{slack_user_id}: {text}\n</user_request>")
+
+
+def turn_messages(case: dict) -> list[str]:
+    """Each turn's text with its sender. People don't say who they are: a turn names its sender with `from`."""
+    setup = case.get("setup") or {}
+    reps = setup.get("reps") or json.loads((REPO / "data/reps.demo.json").read_text())
+    out = []
+    for t in case["turns"]:
+        sender = DEFAULT_SENDER if isinstance(t, str) else t.get("from", DEFAULT_SENDER)
+        text = t if isinstance(t, str) else t["text"]
+        slack_id = (reps.get(sender) or {}).get("slack_user_id") or sender if sender else None  # or a raw Slack ID
+        if case.get("agent") != "manager":  # a subagent gets the task from the manager, with who asked in Slack
+            out.append(f"{text}\n\n(Asked in Slack by <@{slack_id}>.)" if slack_id else text)
+        else:
+            out.append(slack_message(text, slack_id))
+    return out
 
 
 async def run_turns(agent, turns: list[str], approvals: dict, events: list):
@@ -333,8 +390,9 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
     for lid, lead, fields in targets:
         for path, want in fields.items():
             got = dig(lead, path)
-            # "set": not null. A list against a scalar: one of these values. A list against a list: equal.
+            # "set": not null. "!x": anything but x. A list against a scalar: one of these values. A list against a list: equal.
             ok = ((got is not None) if want == "set"
+                  else (got != want[1:]) if isinstance(want, str) and want.startswith("!")
                   else (want[1:].lower() in json.dumps(got, ensure_ascii=False).lower() if got is not None else False)
                   if isinstance(want, str) and want.startswith("~")
                   else (got in want) if isinstance(want, list) and not isinstance(got, list)
@@ -348,18 +406,22 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
         bad = [c["args"] for c in calls if c["tool"] == "log_interaction"
                and (c["args"].get("stage") not in enums["stage"] or c["args"].get("outcome") not in enums["outcome"])]
         add("log_interaction calls use schema values", not bad, str(bad[:2]))
+    answer = final_answer(events)
     for phrase in expect.get("final_mentions", []):
-        final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
-        add(f"final message mentions {phrase!r}", final and phrase.lower() in final[-1].lower())
+        add(f"final message mentions {phrase!r}", phrase.lower() in answer.lower())
     for group in expect.get("final_mentions_any", []):
         # a list of phrases (one must appear), or a list of such lists (one from every list must appear)
         group = group if isinstance(group, list) else [group]
-        final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
-        add(f"final message mentions one of {group!r}",
-            bool(final) and any(str(ph).lower() in final[-1].lower() for ph in group))
+        add(f"final message mentions one of {group!r}", any(str(ph).lower() in answer.lower() for ph in group))
     for phrase in expect.get("final_must_not_contain", []):
-        final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
-        add(f"final message doesn't contain {phrase!r}", not final or phrase.lower() not in final[-1].lower(), "it does")
+        add(f"final message doesn't contain {phrase!r}", phrase.lower() not in answer.lower(), "it does")
+    if expect.get("plain_answer"):
+        text = final_answer(events)
+        ids = set(state.get("leads", {})) | {(state.get("brief") or {}).get("customer_id") or ""}
+        found = [i for i in ids if i and re.search(rf"(?<![\w-]){re.escape(i)}(?![\w-])", text)]
+        found += re.findall(r"\b(?:rep|fin|view|adm)-\d+\b", text)
+        found += [t for t in SERVER_TOOLS if re.search(rf"\b{t}\b", text)]
+        add("the answer is in plain words (no IDs or tool names)", not found, f"contains {sorted(set(found))}")
     for t, n in (expect.get("times_called") or {}).items():
         add(f"{t} called {n}x", called.count(t) == n, f"called {called.count(t)}x")
     if expect.get("email"):
@@ -472,6 +534,14 @@ def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     for key in ("title", "agent", "turns", "expect"):
         if key not in case:
             problems.append(f"missing {key}")
+    reps = (case.get("setup") or {}).get("reps") or json.loads((REPO / "data/reps.demo.json").read_text())
+    for t in case.get("turns") or []:
+        if isinstance(t, dict):
+            if set(t) - {"from", "text"} or not isinstance(t.get("text"), str):
+                problems.append("a turn is a string or {from, text}")
+            elif t.get("from") is not None and not (reps.get(t["from"]) or {}).get("slack_user_id") \
+                    and not str(t["from"]).startswith("U"):
+                problems.append(f"turn from {t['from']!r}: not a rep with a slack_user_id, nor a Slack ID (U...)")
     if case.get("agent") not in AGENTS:
         problems.append(f"agent {case.get('agent')!r} is not manager or a subagent in fleet/subagents/")
     unknown = set(case.get("expect", {})) - EXPECT_KEYS
@@ -575,9 +645,12 @@ async def run_once(name: str, case: dict, args, enums: dict, logdir: Path, sem: 
             async with tool_server(initial_state(case.get("setup", {})), logdir, safe,
                                    no_decisions=case.get("setup", {}).get("no_decisions", False)) as (url, state_file):
                 agent = await build(case["agent"], url, args.model, args.model_map, events)
-                await run_turns(agent, case["turns"], case.get("approvals", {}), events)
+                await run_turns(agent, turn_messages(case), case.get("approvals", {}), events)
             state = json.loads(state_file.read_text())
-            checks, error = check(case["expect"], events, state, enums), None
+            expect = dict(case["expect"])
+            if case["agent"] == "manager":  # people read the manager's answers: plain words unless the case says otherwise
+                expect.setdefault("plain_answer", True)
+            checks, error = check(expect, events, state, enums), None
         except Exception as e:  # noqa: BLE001  one failing case doesn't stop the others
             checks, error = [], f"{type(e).__name__}: {e}"
     (logdir / f"{safe}.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in events))
@@ -587,7 +660,7 @@ async def run_once(name: str, case: dict, args, enums: dict, logdir: Path, sem: 
             "passed": not error and all(c["ok"] for c in checks), "checks": checks,
             "tools": [e["tool"] for e in events if e["event"] == "tool_call"],
             "asked_person": [e["tool"] for e in events if e["event"] == "asked_person"],
-            "final_message": final[-1][:800] if final else "",
+            "final_message": final_answer(events)[:800],
             "tokens": {k: sum(u[k] for u in usage) for k in ("input", "cache_read", "output")},
             "seconds": round(time.time() - started)}
 

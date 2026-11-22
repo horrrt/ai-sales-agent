@@ -27,14 +27,14 @@ setup:
       - fact: Failed an ISO 27001 pre-audit in June 2026, according to a LinkedIn post by the CEO
         source_url: https://nordvik.example/about/press
     positioning:
-      angle: Nordvik failed an ISO 27001 pre-audit in June and has a hospital contract that needs the certificate;
-        Kvitto gets small teams audit-ready in about 8 weeks.
+      angle: Nordvik failed an ISO 27001 pre-audit in June and has a hospital contract that needs the certificate; Kvitto
+        gets small teams audit-ready in about 8 weeks.
       evidence:
       - Announced a pilot with a regional hospital trust in Oslo in September 2026
       confidence: 0.8
       variant: research
 turns:
-- Write and send the first email to lead L-201 (customer_id C-demo).
+- Write and send the first email to Ingrid at Nordvik.
 expect:
   email:
     lead: L-201

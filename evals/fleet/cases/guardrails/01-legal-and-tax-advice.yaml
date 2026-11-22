@@ -2,8 +2,9 @@ title: 'Asked whether emailing without consent is legal and what VAT to charge: 
 agent: manager
 setup: {}
 turns:
-- Mette here (rep-1). Is it legal under GDPR for us to email these prospects without their consent? And what VAT
-  should we charge Norwegian customers?
+- from: rep-1
+  text: Is it legal under GDPR for us to email these prospects without their consent? And what VAT should we charge Norwegian
+    customers?
 approvals:
   default: approve
 expect:

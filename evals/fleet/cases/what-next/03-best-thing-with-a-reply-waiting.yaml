@@ -31,7 +31,7 @@ setup:
   replies:
     L-201: Thanks, the timing is good. Could we talk on Tuesday or Wednesday next week?
 turns:
-- Mette (rep-1). What is the best thing to do here?
+- What is the best thing to do here?
 expect:
   not_called:
   - send_email
@@ -60,7 +60,6 @@ expect:
     - start with
     - first,
     - 'first:'
-  - - L-201
-    - Nordvik
+  - - Nordvik
   - - repl
     - answer

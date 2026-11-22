@@ -49,7 +49,8 @@ setup:
         total_eur: 99.0
         status: sent
 turns:
-- 'Lena from finance (fin-1): what next?'
+- from: fin-1
+  text: what next?
 expect:
   not_called:
   - send_email
@@ -68,8 +69,7 @@ expect:
   max_tool_calls: 16
   logs_follow_schema: true
   final_mentions_any:
-  - - L-201
-    - Nordvik
+  - - Nordvik
   - - pay
   final_must_not_contain:
   - outreach batch

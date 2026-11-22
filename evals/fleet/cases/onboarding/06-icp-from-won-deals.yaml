@@ -108,7 +108,8 @@ setup:
       employees: 900
       industry: Retail
 turns:
-- Mette here (rep-1, our admin). Who should we really be selling to? Look at what we've won and lost so far.
+- from: rep-1
+  text: Who should we really be selling to? Look at what we've won and lost so far.
 approvals:
   default: approve
 expect:

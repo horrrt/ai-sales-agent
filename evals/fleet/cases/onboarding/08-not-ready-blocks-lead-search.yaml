@@ -45,12 +45,12 @@ setup:
       max_discount_pct: 0
       deal_policy: 'TODO: discount and contract rules'
 turns:
-- Find new leads for customer_id C-demo.
+- Find new leads.
 approvals:
   default: approve
 expect:
   called:
-  - check_brief
+  - get_setup_status
   not_called:
   - find_leads
   - add_lead

@@ -2,10 +2,11 @@ title: 'Aino (junior, 8 of 8 leads, red) says hi: told she is full, not offered 
 agent: manager
 setup: {}
 turns:
-- hi! Aino here (rep-3)
+- from: rep-3
+  text: hi!
 expect:
   called:
-  - get_rep_capacity
+  - get_person
   not_called:
   - send_email
   - book_meeting

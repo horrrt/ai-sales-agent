@@ -347,10 +347,12 @@ def _member_problems(m: dict) -> list[str]:
 @mcp.tool()
 def add_team_member(rep_id: str, name: str, email: str, role: str = "rep", countries: list[str] | None = None,
                     timezone: str = "Europe/Copenhagen", max_leads: int = 8, working_hours: list[str] | None = None,
-                    takes_leads: bool = True, languages: list[str] | None = None, by: str = "") -> dict:
+                    takes_leads: bool = True, languages: list[str] | None = None, slack_user_id: str = "",
+                    by: str = "") -> dict:
     """Add someone to the team: a rep who takes leads (countries, capacity, time zone, working hours), or
     someone who doesn't (finance, a viewer). This tool always asks a person first; only an admin may change
-    the team. The first person added to an empty team must be an admin, and adds themself."""
+    the team. The first person added to an empty team must be an admin, and adds themself. slack_user_id is
+    how the agent knows who is asking in Slack: pass the sender's own ID when someone adds themself."""
     from ..store import REPS
     from .handoff import _traffic_light
     if rep_id in REPS:
@@ -363,6 +365,8 @@ def add_team_member(rep_id: str, name: str, email: str, role: str = "rep", count
     m = {"name": name, "email": email, "role": role, "countries": [c.upper() for c in countries or []], "timezone": timezone,
          "max_leads": max_leads if takes_leads else 0, "working_hours": working_hours or ["09:00", "17:00"],
          "takes_leads": takes_leads, "languages": languages or ["en"], "active_leads": 0}
+    if slack_user_id:
+        m["slack_user_id"] = slack_user_id.strip("<>@")
     problems = _member_problems(m)
     if problems:
         return {"ok": False, "error": "missing_or_wrong", "needs": problems}

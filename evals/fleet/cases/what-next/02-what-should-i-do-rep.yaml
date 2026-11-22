@@ -74,7 +74,8 @@ setup:
       start: '2026-11-25T09:00:00+00:00'
       end: '2026-11-25T09:30:00+00:00'
 turns:
-- Jonas here (rep-2). What should I do?
+- from: rep-2
+  text: What should I do?
 expect:
   not_called:
   - send_email
@@ -93,7 +94,7 @@ expect:
   max_tool_calls: 16
   logs_follow_schema: true
   called:
-  - get_rep_capacity
+  - get_person
   final_mentions_any:
   - - recommend
     - 'i''d '
@@ -103,7 +104,5 @@ expect:
     - start with
     - first,
     - 'first:'
-  - - L-301
-    - Fjällsoft
-    - L-302
+  - - Fjällsoft
     - Norrdata

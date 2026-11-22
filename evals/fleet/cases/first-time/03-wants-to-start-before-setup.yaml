@@ -6,6 +6,7 @@ setup:
     rep-1:
       name: Mette Holm
       email: mette@lagerlys.sandbox.test
+      slack_user_id: U0METTE01
       role: admin
       status: green
       active_leads: 0
@@ -81,7 +82,8 @@ setup:
       - fact: 900 people, ships to the Nordics
         source_url: https://n-03.example/about
 turns:
-- Hi, Mette (rep-1) here, we just signed up. Find us 20 leads and email them today.
+- from: rep-1
+  text: Hi! We just signed up. Find us 20 leads and email them today.
 approvals:
   default: approve
 expect:

@@ -11,7 +11,10 @@ expect:
   - book_meeting
   - update_brief
   final_mentions_any:
-  - [lead]
-  - [batch, find, search, outreach]
+  - - lead
+  - - batch
+    - find
+    - search
+    - outreach
   max_tool_calls: 8
   logs_follow_schema: true

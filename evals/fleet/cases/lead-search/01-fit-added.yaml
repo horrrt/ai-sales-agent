@@ -17,7 +17,7 @@ setup:
     source: salesforce
     source_id: 00Q-NORDVIK
 turns:
-- Find new leads for customer_id C-demo, look at up to 5 candidates.
+- Find new leads, look at up to 5 candidates.
 expect:
   called:
   - find_leads

@@ -4,7 +4,7 @@ setup:
   reps:
     rep-1:
       name: Mette Holm
-      slack_user_id: TODO-U-METTE
+      slack_user_id: U0METTE01
       status: red
       active_leads: 8
       max_leads: 8
@@ -14,7 +14,7 @@ setup:
       - FI
     rep-2:
       name: Jonas Lind
-      slack_user_id: TODO-U-JONAS
+      slack_user_id: U0JONAS01
       status: red
       active_leads: 8
       max_leads: 8

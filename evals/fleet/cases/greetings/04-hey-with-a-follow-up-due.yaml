@@ -43,7 +43,8 @@ expect:
   - record_approval
   - find_leads
   final_mentions_any:
-  - [follow-up, follow up]
-  - [L-201, Nordvik]
+  - - follow-up
+    - follow up
+  - - Nordvik
   max_tool_calls: 10
   logs_follow_schema: true

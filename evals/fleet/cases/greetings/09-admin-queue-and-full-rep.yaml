@@ -7,9 +7,9 @@ setup:
   leads:
   - lead_id: L-401
     person:
-      name: Aino Laine
+      name: Eero Laine
       title: CEO
-      email: aino@sisu.sandbox.test
+      email: eero@sisu.sandbox.test
       linkedin_url: ''
     company:
       name: Sisu Learning Oy
@@ -23,10 +23,10 @@ setup:
       sent_at: '2026-11-18T09:00:00+00:00'
       reply_label: positive
 turns:
-- Good morning! Mette (rep-1) here
+- Good morning!
 expect:
   called:
-  - get_rep_capacity
+  - get_person
   not_called:
   - send_email
   - book_meeting
@@ -44,9 +44,8 @@ expect:
   - - queue
     - waiting for a rep
     - waiting
-  - - L-401
-    - Sisu
+  - - Sisu
   - - Aino
-    - rep-3
+    - Aino Virtanen
   max_tool_calls: 16
   logs_follow_schema: true

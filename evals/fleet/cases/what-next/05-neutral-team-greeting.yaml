@@ -76,7 +76,8 @@ setup:
   brief:
     question_mode: neutral
 turns:
-- hey, Jonas here (rep-2)
+- from: rep-2
+  text: hey
 expect:
   not_called:
   - send_email
@@ -95,10 +96,8 @@ expect:
   max_tool_calls: 16
   logs_follow_schema: true
   final_mentions_any:
-  - - L-301
-    - Fjällsoft
-  - - L-302
-    - Norrdata
+  - - Fjällsoft
+  - - Norrdata
   final_must_not_contain:
   - i recommend
   - i'd suggest

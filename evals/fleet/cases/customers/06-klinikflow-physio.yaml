@@ -28,7 +28,7 @@ setup:
       employees: 11
       industry: Fintech
 turns:
-- Find new leads for customer_id C-klinikflow-physio.
+- Find new leads.
 approvals:
   default: approve
 expect:

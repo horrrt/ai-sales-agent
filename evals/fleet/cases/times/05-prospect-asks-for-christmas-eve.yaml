@@ -25,8 +25,8 @@ setup:
       - fact: Job post for an Information Security Officer, first hire in that role
         source_url: https://nordvik.example/careers/security-officer
     positioning:
-      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital
-        procurement asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
+      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital procurement
+        asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
       evidence:
       - Announced a pilot with a regional hospital trust in Oslo in September 2026
       confidence: 0.8
@@ -39,7 +39,7 @@ setup:
       sent_count: 1
       reply_label: positive
 turns:
-- 'L-201 replied: "Yes! Could we talk on 24 December at 10:00?" Hand it to a rep and book it.'
+- 'Ingrid at Nordvik replied: "Yes! Could we talk on 24 December at 10:00?" Hand it to a rep and book it.'
 approvals:
   default: approve
 expect:

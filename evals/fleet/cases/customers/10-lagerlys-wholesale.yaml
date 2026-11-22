@@ -28,7 +28,7 @@ setup:
       employees: 275
       industry: Software
 turns:
-- Find new leads for customer_id C-lagerlys-wholesale.
+- Find new leads.
 approvals:
   default: approve
 expect:

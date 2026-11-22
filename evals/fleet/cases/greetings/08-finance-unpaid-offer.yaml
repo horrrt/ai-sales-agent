@@ -49,10 +49,11 @@ setup:
         total_eur: 99.0
         status: sent
 turns:
-- hey, Lena from finance (fin-1)
+- from: fin-1
+  text: hey
 expect:
   called:
-  - get_rep_capacity
+  - get_person
   not_called:
   - send_email
   - book_meeting
@@ -67,8 +68,7 @@ expect:
   - find_leads
   - update_brief
   final_mentions_any:
-  - - L-201
-    - Nordvik
+  - - Nordvik
   - - pay
     - paid
   max_tool_calls: 16
