@@ -80,7 +80,48 @@ def _quote_hash(q: dict) -> str:
     return hashlib.sha256(json.dumps({k: q.get(k) for k in keys}, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def _price(plan: str, quantity: int, term_months: int | None, discount_pct: float) -> dict:
+MAX_SURCHARGE_PCT = 30
+RULE_KEYS = {"employees_min", "employees_max", "country_in", "country_not_in", "industry_in", "quantity_min",
+             "term_months_min", "plan_in"}
+
+
+def _matches(cond: dict, lead: dict | None, plan: str, quantity: int, term: int) -> bool:
+    c = (lead or {}).get("company") or {}
+    emp, country, industry = c.get("employees"), (c.get("country") or "").upper(), (c.get("industry") or "").lower()
+    for k, v in cond.items():
+        if k == "employees_min" and not (isinstance(emp, int) and emp >= v):
+            return False
+        if k == "employees_max" and not (isinstance(emp, int) and emp <= v):
+            return False
+        if k == "country_in" and country not in [x.upper() for x in v]:
+            return False
+        if k == "country_not_in" and country in [x.upper() for x in v]:
+            return False
+        if k == "industry_in" and industry not in [x.lower() for x in v]:
+            return False
+        if k == "quantity_min" and quantity < v:
+            return False
+        if k == "term_months_min" and term < v:
+            return False
+        if k == "plan_in" and plan not in v:
+            return False
+    return True
+
+
+def price_rules(lead: dict | None, plan: str, quantity: int, term: int) -> tuple[list[dict], float]:
+    """The brief's price rules that match this prospect and deal, and their total (negative: cheaper).
+
+    A rule: {"label": "Startup", "if": {"employees_max": 9}, "pct": -10}. Every condition must hold.
+    Discounts from rules together never go past the brief's max_discount_pct; surcharges stop at 30%."""
+    p = _pricing()
+    hits = [{"label": r.get("label", "rule"), "pct": float(r.get("pct", 0))} for r in p.get("adjustments") or []
+            if isinstance(r.get("if"), dict) and _matches(r["if"], lead, plan, quantity, term)]
+    total = sum(h["pct"] for h in hits)
+    return hits, max(-float(p.get("max_discount_pct", 0)), min(MAX_SURCHARGE_PCT, total))
+
+
+def _price(plan: str, quantity: int, term_months: int | None, discount_pct: float, lead: dict | None = None,
+           use_rules: bool = True) -> dict:
     p = _pricing()
     plans = p.get("plans") or {}
     if plan not in plans:
@@ -99,13 +140,20 @@ def _price(plan: str, quantity: int, term_months: int | None, discount_pct: floa
         return {"error": f"{plan} is for at most {spec['max_quantity']}; use a bigger plan"}
     if discount_pct < 0 or discount_pct > p.get("max_discount_pct", 0):
         return {"error": f"discount must be between 0 and {p.get('max_discount_pct', 0)}%"}
+    rules, rules_pct = price_rules(lead, plan, quantity, term) if use_rules else ([], 0.0)
+    adjustment = rules_pct - discount_pct          # what the prospect pays against the list price, in %
+    effective_discount = max(0.0, -adjustment)
+    if effective_discount > p.get("max_discount_pct", 0) + 1e-9:
+        return {"error": f"the price rules ({rules_pct:+g}%) and the discount ({discount_pct:g}%) together are more than "
+                         f"the maximum discount of {p.get('max_discount_pct', 0)}%"}
     recurring = round(spec["price_per_month"] * quantity * term, 2)
-    setup = float(spec.get("setup_fee") or 0)  # one-off; discounts apply to the recurring part only
+    setup = float(spec.get("setup_fee") or 0)  # one-off; discounts and rules apply to the recurring part only
     list_total = round(recurring + setup, 2)
     return {"plan": plan, "quantity": quantity, "term_months": term, "list_total_eur": list_total,
-            "setup_fee_eur": setup, "recurring_eur": recurring,
-            "discount_pct": discount_pct, "total_eur": round(recurring * (1 - discount_pct / 100) + setup, 2),
-            "needs_admin": discount_pct > p.get("max_discount_pct_without_approval", 0)}
+            "setup_fee_eur": setup, "recurring_eur": recurring, "price_rules": rules, "rules_pct": rules_pct,
+            "discount_pct": discount_pct, "adjustment_pct": round(adjustment, 2),
+            "total_eur": round(recurring * (1 + adjustment / 100) + setup, 2),
+            "needs_admin": effective_discount > p.get("max_discount_pct_without_approval", 0)}
 
 
 # --- Rep-driven closing -----------------------------------------------------------------------
@@ -146,14 +194,34 @@ def qualify_deal(lead_id: str) -> dict:
 
 
 @mcp.tool()
-def draft_quote(lead_id: str, plan: str, quantity: int = 1, term_months: int | None = None, discount_pct: float = 0) -> dict:
-    """Draft a quote from the brief's price list. Totals are computed here. Every quote needs approve_quote before send_quote."""
+def suggest_price(lead_id: str, plan: str, quantity: int | None = None, term_months: int | None = None) -> dict:
+    """What this prospect would pay on a plan, from the brief's price list and price rules, with each rule that
+    applied. Nothing is saved; use it to answer "what would it cost us?" or before draft_quote."""
+    lead = LEADS.get(lead_id)
+    if lead is None:
+        return {"ok": False, "error": f"unknown lead {lead_id}"}
+    spec = (_pricing().get("plans") or {}).get(plan) or {}
+    q = _price(plan, quantity or spec.get("min_quantity", 1), term_months, 0, lead)
+    if "error" in q:
+        return {"ok": False, "error": q["error"]}
+    return {"ok": True, **{k: q[k] for k in ("plan", "quantity", "term_months", "list_total_eur", "price_rules", "rules_pct",
+                                             "total_eur", "needs_admin", "setup_fee_eur")}}
+
+
+@mcp.tool()
+def draft_quote(lead_id: str, plan: str, quantity: int = 1, term_months: int | None = None, discount_pct: float = 0,
+                apply_price_rules: bool = True) -> dict:
+    """Draft a quote from the brief's price list. Totals are computed here. Every quote needs approve_quote before send_quote.
+
+    The brief's price rules (pricing.adjustments) set this prospect's price from their size, country, industry,
+    the quantity and the term; the quote lists which rules applied. discount_pct is the rep's extra discount on
+    top. Rules plus discount past the no-approval limit need an admin; past the maximum they're refused."""
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
     if deal["stage"] in ("closed_won", "closed_lost"):
         return {"ok": False, "error": "the deal is closed"}
-    q = _price(plan, quantity, term_months, discount_pct)
+    q = _price(plan, quantity, term_months, discount_pct, lead, apply_price_rules)
     if "error" in q:
         return {"ok": False, "error": q["error"]}
     q.update(status="draft", approval=None)
@@ -162,8 +230,9 @@ def draft_quote(lead_id: str, plan: str, quantity: int = 1, term_months: int | N
     deal["estimated_value_eur"] = round(q["total_eur"] * 12 / q["term_months"], 2) if q["term_months"] else q["total_eur"]
     if deal["stage"] == "qualification":
         _set_deal_stage(lead, "quote")
+    rules = ", ".join(f"{r['label']} {r['pct']:+g}%" for r in q["price_rules"])
     log_event(lead_id, "deal", "success", f"quote drafted: {plan} x{quantity}, {q['term_months']} months, "
-              f"{discount_pct:g}% off, EUR {q['total_eur']:,.2f}")
+              f"{discount_pct:g}% off" + (f", rules: {rules}" if rules else "") + f", EUR {q['total_eur']:,.2f}")
     return {"ok": True, "quote": q, "next": "approve_quote" + (" (an admin: the discount is above the policy limit)" if q["needs_admin"] else "")}
 
 
@@ -348,9 +417,12 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
     plan = plan or (allowed[0] if allowed else None)
     if plan and plan not in allowed:
         return {"ok": False, "error": f"{plan} isn't an auto-close plan (the brief allows {allowed}); a rep sells it"}
-    q = _price(plan, plans[plan].get("min_quantity", 1), None, 0) if plan else {"error": "the brief has no pricing"}
+    q = _price(plan, plans[plan].get("min_quantity", 1), None, 0, lead) if plan else {"error": "the brief has no pricing"}
     if "error" in q:
         return {"ok": False, "error": q["error"]}
+    if q["needs_admin"]:  # the price rules for this prospect go past what may be given without an admin
+        return {"ok": False, "error": "the price rules for this prospect need an admin's approval: a rep sells it",
+                "next": "assign_rep"}
     if (deal.get("quote") or {}).get("checkout_url"):
         return {"ok": False, "error": "offer_already_sent", "offer_link": deal["quote"]["checkout_url"],
                 "next": "wait for the payment; due_follow_ups sends the reminders"}

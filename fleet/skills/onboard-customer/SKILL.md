@@ -12,3 +12,7 @@ description: Use when a new customer sets up the agent, or wants to change what 
 3. When check_brief says ready: post the five-line summary, and say the weekly lead search can start.
    Don't run find-leads in the same turn unless they ask.
 4. While check_brief isn't ready, don't run find-leads or an outreach batch: say what's missing instead.
+5. The rest of the setup: the team (add_team_member, with roles, countries and capacity), who approves
+   emails and payments, the sender and tone, price rules if they charge some prospects differently.
+   get_setup_status is the checklist. When it's ready and they say start: skill find-leads, then skill
+   run-outreach-batch with a first batch of 3.

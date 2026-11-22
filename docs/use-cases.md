@@ -212,3 +212,31 @@ The customer who buys the agent gives three things: their product or service (in
 | C4 | Quotes follow each pricing model: per user with a minimum, a custom Enterprise left to a rep, a setup fee that's never discounted | `test_quotes_follow_each_pricing_model` | `pricing/flat-quote`, `pricing/per-seat-quote`, `pricing/setup-retainer-quote`, `pricing/tiered-enterprise-is-custom` |
 | C5 | One customer's brief never drafts for another customer's lead | `test_a_brief_for_one_customer_never_drafts_for_another_customers_lead` | unit only |
 | C6 | The first email is about this customer's product, never another customer's | agent only | `products/bokfor-first-email`, `products/byggtid-first-email`, `products/klinikflow-first-email`, `products/kvitto-first-email`, `products/lagerlys-first-email` |
+
+## A first-time customer
+
+Someone who has just bought the agent finds out what it does, builds the setup together with it (product, offer and pricing, ICP, team, sender and approvers), and starts the pipeline. `get_setup_status` is the checklist, and the lead search waits for it.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| J1 | From sign-up to the first email: product from the website, pricing with a price rule and auto-close, ICP, team, sender and approvers, then the lead search and a first draft | `test_a_first_time_customer_goes_from_nothing_to_the_first_draft` | `first-time/01-from-sign-up-to-first-email` |
+| J2 | A customer unsure about ICP and pricing gets options, picks one, and sees what's left | agent only | `first-time/02-unsure-customer-gets-options` |
+| J3 | A new customer wants leads straight away: nothing starts until the setup is done | `test_setup_status_lists_what_is_left_until_it_is_ready` | `first-time/03-wants-to-start-before-setup` |
+| J4 | The brief is ready but an ICP country has no rep: the lead search doesn't start | `test_setup_status_lists_what_is_left_until_it_is_ready` | `first-time/04-country-without-a-rep` |
+| J5 | The first person on an empty team is an admin, and only admins change the team after that | `test_the_first_person_on_an_empty_team_is_an_admin_who_adds_themself`, `test_the_last_admin_cannot_be_removed_and_only_admins_change_the_team` | `first-time/01-from-sign-up-to-first-email` |
+| J6 | A team member needs what the pipeline uses: a sandbox email, a role, a time zone, working hours, countries and capacity | `test_a_team_member_needs_what_the_pipeline_uses` | unit only |
+| J7 | After setup, what else the agent does day to day (follow-ups, scheduling, auto-close, the weekly review) and what it needs for each | agent only | `first-time/05-other-things-the-agent-can-do` |
+
+## Prices per prospect
+
+The customer sets price rules in `pricing.adjustments`: a label, conditions (employees_min, employees_max, country_in, country_not_in, industry_in, quantity_min, term_months_min, plan_in) and a percentage, negative for a discount. Quotes, `suggest_price` and auto-close offers apply every rule that matches the prospect and the deal. Rule discounts never pass the maximum on their own, rules plus the rep's discount past the no-approval limit need an admin, and auto-close never sells past that limit.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| Q1 | A small startup gets the startup price, and the quote says which rule applied | `test_a_small_startup_gets_the_startup_price_and_the_quote_says_why` | `price-rules/01-startup-price` |
+| Q2 | A large company pays more, and a two-year contract pays less | `test_a_large_company_pays_more_and_a_two_year_contract_pays_less` | `price-rules/02-large-company-pays-more` |
+| Q3 | Rules and a rep's discount add up: past the rep limit an admin approves, past the maximum it's refused | `test_rules_and_a_reps_discount_add_up_and_the_limits_still_hold` | `price-rules/03-stacked-rules-need-an-admin`, `price-rules/04-rules-plus-discount-past-the-maximum` |
+| Q4 | Rules on their own stop at the maximum discount, and the review warns how far they could go | `test_rules_never_go_past_the_maximum_discount_on_their_own` | unit only |
+| Q5 | "What would they pay?" is answered without saving a quote | `test_suggest_price_answers_without_saving_anything` | `price-rules/05-what-would-it-cost` |
+| Q6 | Auto-close offers apply the rules, but a rep sells anything that would need an admin | `test_auto_close_applies_the_rules_but_never_past_what_needs_an_admin` | unit only |
+| Q7 | The customer describes who pays what, and the rules are checked before they're saved | `test_a_broken_price_rule_is_caught_before_saving` | `price-rules/06-customer-sets-price-rules` |

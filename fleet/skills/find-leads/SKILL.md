@@ -12,6 +12,6 @@ description: Use on the weekly schedule or when someone asks for new leads. Sear
 - How many candidates to look at (default 20)
 
 ## Steps
-0. check_brief. If it isn't ready, stop and say what's missing (skill onboard-customer fixes it).
+0. get_setup_status (it includes check_brief). If it isn't ready, stop and say what's missing, item by item (skill onboard-customer fixes it). A brief that's ready is not enough: every ICP country needs a rep, and someone has to approve the emails.
 1. @lead-search with the customer ID and the number. It runs find_leads, then add_lead for each candidate (the ICP check and the duplicate check happen inside add_lead).
 2. Post one line in #sales-desk: found, added, skipped as not a fit, duplicates, and any that need a person to decide.

@@ -35,7 +35,7 @@ PLACEHOLDER = "https://sales-tools.invalid/mcp"
 SERVER_NAME = "Sales tools (sandbox)"
 APPROVAL_TOOLS = {"record_approval", "book_meeting", "reschedule_meeting", "cancel_meeting", "record_meeting_outcome",
                   "approve_quote", "record_contract", "record_deal_outcome", "record_payment", "decide_proposal",
-                  "update_brief"}
+                  "update_brief", "add_team_member", "update_team_member"}
 SECRET_PATTERNS = [r"sk-ant-[A-Za-z0-9_-]{10,}", r"lsv2_[a-z]{2}_[A-Za-z0-9]{10,}", r"xox[baprs]-[A-Za-z0-9-]{10,}",
                    r"AKIA[0-9A-Z]{16}", r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]"]
 

@@ -60,6 +60,18 @@ def _pricing_findings(pricing: dict, auto_close: dict) -> tuple[list[dict], dict
         if spec.get("min_quantity") and spec.get("max_quantity") and spec["min_quantity"] > spec["max_quantity"]:
             findings.append({"severity": "error", "text": f"{name}: min_quantity is above max_quantity"})
         values[name] = _plan_year(spec)
+    from .deals import RULE_KEYS
+    for i, r in enumerate((pricing or {}).get("adjustments") or []):
+        cond = r.get("if") if isinstance(r, dict) else None
+        if not isinstance(cond, dict) or not cond or not isinstance(r.get("pct"), (int, float)):
+            findings.append({"severity": "error", "text": f"price rule {i + 1}: needs a label, an 'if' with conditions and a pct"})
+        elif set(cond) - RULE_KEYS:
+            findings.append({"severity": "error", "text": f"price rule {r.get('label', i + 1)}: unknown conditions {sorted(set(cond) - RULE_KEYS)}; "
+                                                          f"use {sorted(RULE_KEYS)}"})
+    neg = sum(r["pct"] for r in (pricing or {}).get("adjustments") or [] if isinstance(r, dict) and isinstance(r.get("pct"), (int, float)) and r["pct"] < 0)
+    if neg and -neg > (pricing or {}).get("max_discount_pct", 0):
+        findings.append({"severity": "warning", "text": f"the price rules together can reach {-neg:g}% off; quotes stop at the "
+                                                        f"maximum of {(pricing or {}).get('max_discount_pct', 0)}%"})
     lim, top = (pricing or {}).get("max_discount_pct_without_approval", 0), (pricing or {}).get("max_discount_pct", 0)
     if lim > top:
         findings.append({"severity": "error", "text": f"the discount a rep may give alone ({lim}%) is above the maximum ({top}%)"})
@@ -134,7 +146,9 @@ def check_brief() -> dict:
         if access.resolve(who) is None:
             warnings.append(f"approvers.{kind}: {who} is not in the team roster")
     todo = [p for p in _todos(b) if not any(p.startswith(m.split(":")[0].split(" ")[0]) for m in missing)]
-    missing += [f"{p}: still TODO" for p in todo]
+    optional = ("won_deals", "exclusions", "website")  # a new customer may have none yet
+    missing += [f"{p}: still TODO" for p in todo if not p.startswith(optional)]
+    warnings += [f"{p}: still the example placeholder (optional)" for p in todo if p.startswith(optional)]
     return {"ok": True, "ready": not missing, "missing": missing, "warnings": warnings,
             "plan_first_year_eur": values, "customer_id": b.get("customer_id"),
             "next": "ask the customer for what's missing, one section at a time" if missing else "ready: find-leads can run"}
@@ -236,3 +250,126 @@ def update_brief(section: str, value, by: str = "") -> dict:
     log_event("brief", "onboarding", "success", f"brief.{section} updated", by=access.resolve(by),
               before=old, after=BRIEF[section])
     return {"ok": True, "section": section, "value": BRIEF[section], "check": check_brief()}
+
+
+# --------------------------------------------------------------------------- the team and the rest of the setup
+
+ROLES_ALLOWED = ("admin", "rep", "junior", "finance", "viewer")
+MEMBER_FIELDS = {"name", "email", "role", "countries", "languages", "timezone", "working_hours", "max_leads", "takes_leads",
+                 "slack_user_id", "status", "allow", "deny"}
+
+
+def _member_problems(m: dict) -> list[str]:
+    from zoneinfo import ZoneInfo
+    out = []
+    if not m.get("name"):
+        out.append("a name")
+    if not str(m.get("email", "")).endswith(".test"):
+        out.append("a sandbox .test email")
+    if m.get("role", "rep") not in ROLES_ALLOWED:
+        out.append(f"a role from {list(ROLES_ALLOWED)}")
+    try:
+        ZoneInfo(m.get("timezone") or "")
+    except Exception:
+        out.append("a time zone like Europe/Oslo")
+    wh = m.get("working_hours")
+    if wh is not None and (not isinstance(wh, list) or len(wh) != 2 or not all(re.fullmatch(r"\d\d:\d\d", str(x)) for x in wh) or wh[0] >= wh[1]):
+        out.append("working_hours like [\"09:00\", \"17:00\"]")
+    if m.get("takes_leads", True) and m.get("role", "rep") not in ("finance", "viewer"):
+        if not m.get("countries"):
+            out.append("the countries they sell to")
+        if not isinstance(m.get("max_leads"), int) or m["max_leads"] < 1:
+            out.append("max_leads: how many open leads they can take")
+    return out
+
+
+@mcp.tool()
+def add_team_member(rep_id: str, name: str, email: str, role: str = "rep", countries: list[str] | None = None,
+                    timezone: str = "Europe/Copenhagen", max_leads: int = 8, working_hours: list[str] | None = None,
+                    takes_leads: bool = True, languages: list[str] | None = None, by: str = "") -> dict:
+    """Add someone to the team: a rep who takes leads (countries, capacity, time zone, working hours), or
+    someone who doesn't (finance, a viewer). This tool always asks a person first; only an admin may change
+    the team. The first person added to an empty team must be an admin, and adds themself."""
+    from ..store import REPS
+    from .handoff import _traffic_light
+    if rep_id in REPS:
+        return {"ok": False, "error": f"{rep_id} already exists; use update_team_member"}
+    if not re.fullmatch(r"[a-z0-9-]{2,20}", rep_id):
+        return {"ok": False, "error": "rep_id: 2-20 lower-case letters, digits or dashes, like rep-4"}
+    first = not REPS
+    if first and role != "admin":
+        return {"ok": False, "error": "the first person on the team must be an admin"}
+    m = {"name": name, "email": email, "role": role, "countries": [c.upper() for c in countries or []], "timezone": timezone,
+         "max_leads": max_leads if takes_leads else 0, "working_hours": working_hours or ["09:00", "17:00"],
+         "takes_leads": takes_leads, "languages": languages or ["en"], "active_leads": 0}
+    problems = _member_problems(m)
+    if problems:
+        return {"ok": False, "error": "missing_or_wrong", "needs": problems}
+    if not first:
+        denied = access.check(by, "manage_team")
+        if denied:
+            return denied
+    m["status"] = _traffic_light(m) if takes_leads else "green"
+    REPS[rep_id] = m
+    log_event("team", "onboarding", "success", f"{rep_id} ({name}, {role}) added", by=access.resolve(by) or rep_id)
+    return {"ok": True, "rep_id": rep_id, "member": m, "setup": get_setup_status()}
+
+
+@mcp.tool()
+def update_team_member(rep_id: str, fields: dict, by: str = "") -> dict:
+    """Change a team member: role, countries, capacity (max_leads), time zone, working hours, whether they
+    take leads, or their own allow/deny actions. Asks a person first; only an admin may do it. An admin
+    can't take away the last admin."""
+    from ..store import REPS
+    if rep_id not in REPS:
+        return {"ok": False, "error": f"unknown team member {rep_id}"}
+    bad = set(fields) - MEMBER_FIELDS
+    if bad:
+        return {"ok": False, "error": f"unknown fields {sorted(bad)}", "allowed": sorted(MEMBER_FIELDS)}
+    denied = access.check(by, "manage_team")
+    if denied:
+        return denied
+    new = {**REPS[rep_id], **fields}
+    problems = _member_problems(new)
+    if problems:
+        return {"ok": False, "error": "missing_or_wrong", "needs": problems}
+    if REPS[rep_id].get("role") == "admin" and new.get("role") != "admin" and \
+            sum(1 for r in REPS.values() if r.get("role") == "admin") == 1:
+        return {"ok": False, "error": "this is the only admin; add another admin first"}
+    REPS[rep_id] = new
+    log_event("team", "onboarding", "success", f"{rep_id} updated: {sorted(fields)}", by=access.resolve(by))
+    return {"ok": True, "rep_id": rep_id, "member": new}
+
+
+@mcp.tool()
+def get_setup_status() -> dict:
+    """Everything that has to be in place before the agent runs on its own, as a checklist: the brief
+    (check_brief), the team (an admin, reps who take leads, every ICP country covered), who approves
+    emails and payments, auto-close, the sender. Each item is done or says what's needed next."""
+    from ..store import REPS
+    brief = check_brief()
+    takes = {rid: r for rid, r in REPS.items() if r.get("takes_leads", True) and r.get("role", "rep") not in ("finance", "viewer")}
+    admins = [rid for rid, r in REPS.items() if r.get("role") == "admin"]
+    countries = set((BRIEF.get("icp") or {}).get("countries") or [])
+    covered = {c for r in takes.values() for c in r.get("countries") or []}
+    ac = BRIEF.get("auto_close") or {}
+    appr = BRIEF.get("approvers") or {}
+    items = [
+        {"item": "brief (product, offer, pricing, ICP)", "done": brief["ready"], "needs": brief["missing"]},
+        {"item": "an admin on the team", "done": bool(admins), "needs": [] if admins else ["add_team_member with role admin"]},
+        {"item": "reps who take leads", "done": bool(takes), "needs": [] if takes else ["add at least one rep with countries and max_leads"]},
+        {"item": "every ICP country has a rep", "done": countries <= covered,
+         "needs": [f"no rep covers {sorted(countries - covered)}"] if countries - covered else []},
+        {"item": "who approves emails", "done": bool(appr.get("emails")) and access.resolve(appr.get("emails")) is not None,
+         "needs": [] if access.resolve(appr.get("emails")) else ["update_brief approvers {emails: <a rep or admin>}"]},
+        {"item": "auto-close", "done": not ac.get("enabled") or (access.resolve(appr.get("payments")) is not None),
+         "needs": [] if not ac.get("enabled") or access.resolve(appr.get("payments")) else
+                  ["auto-close is on: add a finance person or admin and set approvers.payments"]},
+        {"item": "sender (who the emails come from)", "done": str((BRIEF.get("sender") or {}).get("email", "")).endswith(".test"),
+         "needs": [] if str((BRIEF.get("sender") or {}).get("email", "")).endswith(".test") else ["update_brief sender {name, email}"]},
+    ]
+    ready = all(i["done"] for i in items)
+    return {"ok": True, "ready": ready, "items": items, "warnings": brief["warnings"],
+            "in_fleet": ["the #sales-desk Slack channel ID in the handoff prompt", "the schedules (python3 scripts/package_fleet.py prints them)"],
+            "next": "everything is set: the lead search and the first outreach batch can start" if ready else
+                    "work through the items that aren't done, one at a time"}

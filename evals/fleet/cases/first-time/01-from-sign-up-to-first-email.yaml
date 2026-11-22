@@ -1,0 +1,183 @@
+title: A new customer finds out what the agent does, builds product, pricing, ICP and team with it, and starts
+agent: manager
+setup:
+  brief:
+    customer_id: C-new
+    sender:
+      name: 'TODO: who the emails come from'
+      email: TODO@yourcompany.sandbox.test
+      timezone: Europe/Copenhagen
+    offer: 'TODO: what the customer sells, price and deal terms'
+    icp:
+      countries:
+      - SE
+      - FI
+      - 'NO'
+      employees_min: 10
+      employees_max: 50
+      industries:
+      - B2B SaaS
+      - IT services
+      titles:
+      - CEO
+      - Founder
+      - Head of Sales
+    product_info: 'TODO: product or service description, proof points, case studies'
+    won_deals:
+    - 'TODO: 3-5 past won deals and why they were won'
+    exclusions:
+    - 'TODO: current customers, competitors, partners'
+    tone: 'TODO: approved tone and claims'
+    auto_close:
+      enabled: false
+      max_annual_value_eur: 'TODO: price cap (EUR per year) for deals the agent may close itself'
+      plans:
+      - 'TODO: the plans the agent may sell by itself, e.g. a self-serve tier under the cap'
+      standard_terms: 'TODO: what counts as a standard deal'
+      checkout_url: 'TODO: payment link, test mode during the course'
+    pricing:
+      currency: EUR
+      plans:
+        TODO-plan:
+          price_per_month: 0
+          min_term_months: 1
+      max_discount_pct_without_approval: 0
+      max_discount_pct: 0
+      deal_policy: 'TODO: discount and contract rules'
+  reps:
+    rep-1:
+      name: Mette Holm
+      email: mette@lagerlys.sandbox.test
+      role: admin
+      status: green
+      active_leads: 0
+      max_leads: 6
+      timezone: Europe/Stockholm
+      countries:
+      - SE
+      working_hours:
+      - 09:00
+      - '17:00'
+      languages:
+      - en
+      - sv
+  websites:
+    lagerlys.example:
+      title: 'Lagerlys: one live stock count'
+      pages:
+      - path: /
+        text: Lagerlys keeps every sales channel and your warehouse on one live stock count. No more overselling.
+      - path: /features
+        text: Syncs Shopify, WooCommerce and Amazon every minute. Low-stock alerts. Reorder suggestions from the
+          last 90 days. Set up in a day.
+  source:
+  - lead_id: N-01
+    person:
+      name: Ida Ek
+      title: Founder
+      email: ida@n-01.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Ek Shop
+      domain: n-01.example
+      country: SE
+      employees: 8
+      industry: E-commerce
+    research:
+      summary: An online brand in SE.
+      enough_to_personalize: true
+      facts:
+      - fact: Opened an Amazon store next to its Shopify shop in October 2026
+        source_url: https://n-01.example/news
+      - fact: 8 people, ships to the Nordics
+        source_url: https://n-01.example/about
+  - lead_id: N-02
+    person:
+      name: Kasper Holm
+      title: Founder
+      email: kasper@n-02.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Holm Shop
+      domain: n-02.example
+      country: DK
+      employees: 22
+      industry: E-commerce
+    research:
+      summary: An online brand in DK.
+      enough_to_personalize: true
+      facts:
+      - fact: Customers complained about sold-out products in November reviews
+        source_url: https://n-02.example/news
+      - fact: 22 people, ships to the Nordics
+        source_url: https://n-02.example/about
+  - lead_id: N-03
+    person:
+      name: Hugo Brandt
+      title: Founder
+      email: hugo@n-03.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Brandt Shop
+      domain: n-03.example
+      country: DE
+      employees: 900
+      industry: Retail
+    research:
+      summary: An online brand in DE.
+      enough_to_personalize: true
+      facts:
+      - fact: Opened 40 physical stores this year
+        source_url: https://n-03.example/news
+      - fact: 900 people, ships to the Nordics
+        source_url: https://n-03.example/about
+turns:
+- Hi, I'm Mette (rep-1), we just signed up. What can you do for us, and what do you need from me?
+- We sell Lagerlys, inventory software for online shops. Our website is www.lagerlys.example.
+- Yes, that's right. Save it.
+- 'Pricing: Basic is EUR 49 a month for one shop, cancel any month. Pro is EUR 290 a month on a yearly plan. Reps
+  can give 10% off, never more than 20%. Startups under 10 people get 10% off. Small Basic deals can close on their
+  own, under EUR 1,000 a year; the checkout link is https://checkout.sandbox.test/lagerlys.'
+- Looks good, save it.
+- We sell to online brands in Sweden and Denmark, 3 to 40 people. The founder or the COO decides. A good moment
+  is when they open a second sales channel, or customers complain about sold-out products.
+- Save it.
+- 'The team: I sell in Sweden. Jonas Lind (jonas@lagerlys.sandbox.test) sells in Denmark, up to 8 leads, Europe/Copenhagen
+  time. Lena Brandt (lena@lagerlys.sandbox.test) is our finance person and records payments. Emails come from me,
+  mette@lagerlys.sandbox.test, and I approve them. Tone: plain and short, no exclamation marks.'
+- 'Is everything set? If so, start: find leads and run the first outreach batch.'
+approvals:
+  default: approve
+expect:
+  delegated_to:
+  - onboarding
+  - lead-search
+  called:
+  - import_website
+  - update_brief
+  - review_pricing
+  - add_team_member
+  - get_setup_status
+  - find_leads
+  - add_lead
+  - save_draft
+  asked_person:
+  - update_brief
+  - add_team_member
+  - record_approval
+  brief:
+    product_info: ~stock
+    pricing.plans: ~290
+    pricing.adjustments: ~employees_max
+    auto_close.enabled: true
+    icp.countries: ~DK
+    icp.titles: ~COO
+    sender.email: mette@lagerlys.sandbox.test
+  lead:
+    N-01:
+      status: active
+    N-03:
+      status: lost
+  final_mentions:
+  - N-0
+  logs_follow_schema: true

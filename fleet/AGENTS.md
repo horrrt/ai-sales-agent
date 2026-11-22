@@ -58,6 +58,8 @@ Each person can have extra `allow` or `deny` actions on top of their role; deny 
 
 ## Routing
 
+- Someone new ("what can you do?", "we just signed up") → skill onboard-customer: @onboarding explains and builds the setup with them
+- "Setup done, start" (after @onboarding reports get_setup_status ready) → skill find-leads, then skill run-outreach-batch with a small first batch (3 leads unless they say otherwise)
 - A new customer sets up the agent, or wants to change their product, pricing or ICP ("here's our website", "help me with pricing", "who should we sell to?") → skill onboard-customer (@onboarding)
 - Weekly schedule, or "find new leads" → skill find-leads (only once check_brief says ready; if not, say what's missing)
 - "Run a batch" / morning schedule → skill run-outreach-batch (also sends due follow-ups)

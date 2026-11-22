@@ -37,6 +37,8 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `customers` | 10 | One per customer type (5 products, 10 ICPs): an ICP fit is added and a near miss skipped, with the real d1 |
 | `products` | 5 | The first email is about that customer's product and never mentions another's |
 | `pricing` | 4 | Flat, per user, setup fee plus monthly, and a custom Enterprise that a rep prices |
+| `first-time` | 5 | **From sign-up to the first email in one conversation**; an unsure customer gets options; starting before setup; an ICP country without a rep; what else the agent does |
+| `price-rules` | 6 | The startup price; the large-company price; stacked rules need an admin; rules plus discount past the maximum; "what would it cost?"; the customer sets the rules |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Package for Fleet
