@@ -416,16 +416,27 @@ def test_an_empty_day_says_why_and_offers_the_nearest():
     assert "too soon" in handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-11-25")["why_none"]
     busy("rep-1", "2026-11-26T09:00:00+01:00", "2026-11-26T17:00:00+01:00")
     assert "no free time" in handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-11-26")["why_none"]
+    # through the MCP server too: its output check once refused the on_date answer, so the agent never saw it
+    import asyncio
+    from sales_tools.app import mcp
+    _, out = asyncio.run(mcp.call_tool("find_free_slots", {"rep_id": "rep-1", "lead_id": lid, "on_date": "2026-11-28"}))
+    assert out["result"]["why_none"] == "it is a weekend"
 
 
-def test_moving_cancelling_or_recording_a_meeting_needs_a_named_person():
-    team(1)
+def test_a_prospects_move_or_cancel_is_approved_by_the_meetings_rep_and_an_outcome_needs_a_named_person():
+    team(2, countries=["SE", "SE"])
     lid = positive_lead(1)
     r = booked(lid)
-    assert handoff.reschedule_meeting(lid, r["start"])["error"] == "unknown_person"
-    assert handoff.cancel_meeting(lid)["error"] == "unknown_person"
-    at((datetime.fromisoformat(r["start"]) + timedelta(hours=1)).isoformat())
-    assert handoff.record_meeting_outcome(lid, "held")["error"] == "unknown_person"
+    rep = store.LEADS[lid]["handoff"]["rep_id"]
+    slot = [s for s in handoff.find_free_slots(rep, lead_id=lid) if s != r["start"]][0]
+    moved = handoff.reschedule_meeting(lid, slot, requested_by="prospect")  # nobody named: the meeting's rep
+    assert moved["ok"] and moved["rep_id"] == rep
+    assert handoff.reschedule_meeting(lid, r["start"], by="Ingrid")["error"] == "unknown_person"  # the prospect isn't on the team
+    assert handoff.cancel_meeting(lid, rebook=True)["ok"]
+    lid2 = positive_lead(2)
+    r2 = booked(lid2)
+    at((datetime.fromisoformat(r2["start"]) + timedelta(hours=1)).isoformat())
+    assert handoff.record_meeting_outcome(lid2, "held")["error"] == "unknown_person"
 
 
 def test_a_reps_calendar_lists_their_meetings_and_busy_time():

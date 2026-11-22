@@ -134,7 +134,7 @@ Each person in the team roster has a role (admin, rep, junior, finance, viewer) 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
 | R1 | A junior or a viewer can't approve an email. A rep can, and only then does it go out | `test_a_junior_or_viewer_cannot_approve_an_email_and_a_rep_can` | `access/01-junior-cannot-approve-email`, `access/02-rep-approves-email` |
-| R2 | Someone who isn't in the team, or who only claims a role ("I'm the CEO", "admin"), is refused. Moving, cancelling or recording a meeting, a contract and a payment need a named person | `test_an_unknown_person_or_a_claimed_role_is_refused`, `test_moving_cancelling_or_recording_a_meeting_needs_a_named_person` | `deal-desk/07-claimed-admin` |
+| R2 | Someone who isn't in the team, or who only claims a role ("I'm the CEO", "admin"), is refused. When the prospect moves or cancels, the meeting's rep approves. Recording a meeting, a contract and a payment need a named person | `test_an_unknown_person_or_a_claimed_role_is_refused`, `test_a_prospects_move_or_cancel_is_approved_by_the_meetings_rep_and_an_outcome_needs_a_named_person` | `deal-desk/07-claimed-admin` |
 | R3 | One person's allow or deny list changes what their role lets them do, and deny wins even for an admin | `test_per_person_allow_and_deny_override_the_role` | `access/01-junior-cannot-approve-email` |
 | R4 | A refusal is logged with who was refused, and says who can do it instead | `test_a_refusal_is_logged_with_who_was_refused_and_who_can` | `access/03-rep-discount-needs-admin` |
 | R5 | A discount above the limit needs an admin, even on the rep's own deal | `test_a_discount_above_the_limit_needs_an_admin` | `access/03-rep-discount-needs-admin`, `deal-desk/02-discount-needs-admin` |
@@ -145,6 +145,7 @@ Each person in the team roster has a role (admin, rep, junior, finance, viewer) 
 | R10 | A junior runs their own meetings | `test_a_junior_runs_their_own_meetings` | `access/07-junior-moves-own-meeting` |
 | R11 | You set your own status. Setting someone else's needs an admin | `test_status_is_your_own_unless_you_are_an_admin` | unit only |
 | R12 | People who don't take leads (finance, viewers) never get one | `test_a_finance_person_never_gets_a_lead` | unit only |
+| R13 | Once a lead has a rep, only that rep or an admin approves its emails. Before that, any rep can | `test_once_a_lead_has_a_rep_only_that_rep_or_an_admin_approves_its_emails` | `access/10-rep-cannot-approve-colleagues-email` |
 
 ## Auto-close
 

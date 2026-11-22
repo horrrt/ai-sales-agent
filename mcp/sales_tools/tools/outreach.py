@@ -339,8 +339,8 @@ def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None 
     the subject, body, to or cc before accepting, or reject it. An edited email is saved as the new draft
     and counts as approved. The original and the edit are kept in the event log, so the weekly review can
     learn from them. send_email only sends a draft that has an approval, to exactly the approved recipients.
-    by: who decided (rep_id, email or name). Juniors and viewers may not approve emails; left out, it is the
-    lead's rep, or the brief's email approver.
+    by: who decided (rep_id, email or name). Juniors and viewers may not approve emails. Once a lead has a rep,
+    only that rep or an admin may; before that, any rep. Left out, it is the lead's rep, or the brief's email approver.
     """
     lead = LEADS.get(lead_id)
     if lead is None:
@@ -350,8 +350,9 @@ def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None 
         return {"ok": False, "error": "no_draft_to_approve"}
     if decision not in ("approve", "edit", "reject"):
         return {"ok": False, "error": "decision must be approve, edit or reject"}
-    by = by or (lead.get("handoff") or {}).get("rep_id") or access.default_approver("emails")
-    denied = access.check(by, "approve_email", lead_id=lead_id)
+    owner = (lead.get("handoff") or {}).get("rep_id") or (lead.get("deal") or {}).get("owner")
+    by = by or owner or access.default_approver("emails")
+    denied = access.check(by, "approve_email", owner=owner, lead_id=lead_id)
     if denied:
         return denied
     by = access.resolve(by)

@@ -203,7 +203,7 @@ def _slot_problem(rep_id: str, lead: dict | None, start: datetime, minutes: int,
 
 @mcp.tool()
 def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None,
-                    duration_minutes: int = MEETING_MINUTES, on_date: str | None = None) -> list[str]:
+                    duration_minutes: int = MEETING_MINUTES, on_date: str | None = None) -> list[str] | dict:
     """Free slots in a rep's calendar: up to two a day (the first free morning slot and the first free
     afternoon slot), on working days up to days_ahead working days out, skipping the next working day so the
     rep gets a day's notice. With lead_id, only times inside the prospect's business hours too.
@@ -347,9 +347,7 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
         return {"ok": False, "error": "new_start must be an ISO date-time from find_free_slots"}
     minutes = int((_parse(e["end"]) - _parse(e["start"])).total_seconds() // 60)
     to_rep = new_rep_id or h["rep_id"]
-    if not by:
-        return {"ok": False, "error": "unknown_person", "next": "pass by: who is asking (rep_id or name)"}
-    approver = by
+    approver = by or h["rep_id"]  # a prospect's request: the meeting's rep approves it
     who, owner = access.resolve(approver), h["rep_id"]
     if to_rep == owner or who == owner:
         # the same rep, or the owner handing their own meeting to a colleague
@@ -397,14 +395,15 @@ def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "
     """Cancel a booked meeting and free the rep's slot. This tool always asks a person first.
 
     rebook true (the prospect still wants to talk): a follow-up to offer new times is due the next working
-    day and shows up in due_follow_ups. rebook false: no follow-up; a person decides whether the lead is lost."""
+    day and shows up in due_follow_ups. rebook false: no follow-up; a person decides whether the lead is lost.
+    by: who approves (default: the meeting's rep, as when the prospect asks to cancel)."""
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": f"unknown lead {lead_id}"}
     h, e = lead.get("handoff") or {}, _meeting(lead)
     if h.get("meeting_status") != "booked":
         return {"ok": False, "error": "no booked meeting to cancel"}
-    denied = access.check(by, "change_meeting", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
+    denied = access.check(by or h.get("rep_id"), "change_meeting", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
     if denied:
         return denied
     if e is not None:
