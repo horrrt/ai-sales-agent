@@ -10,7 +10,7 @@ setup:
       email: kim@p-e1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordE1 Software
+      name: Nordbit Software
       domain: p-e1.example
       country: DK
       employees: 13
@@ -25,14 +25,14 @@ setup:
       - fact: About 13 people, growing
         source_url: https://p-e1.example/about
     positioning:
-      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off
-        a founder''s desk with a named accountant for a fixed monthly fee.'
+      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off a founder''s
+        desk with a named accountant for a fixed monthly fee.'
       evidence:
       - 'Just raised a seed round: announced in November 2026'
       confidence: 0.75
       variant: research
 turns:
-- Write and send the first email to lead P-E1 (customer_id C-bokfor-startups).
+- Write and send the first email to Kim at Nordbit.
 approvals:
   default: approve
 expect:

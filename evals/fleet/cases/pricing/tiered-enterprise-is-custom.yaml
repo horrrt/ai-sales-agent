@@ -10,7 +10,7 @@ setup:
       email: kim@p-q1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordQ1 Wholesale
+      name: Nordkvist Wholesale
       domain: p-q1.example
       country: DE
       employees: 275
@@ -25,8 +25,8 @@ setup:
       - fact: About 275 people, growing
         source_url: https://p-q1.example/about
     positioning:
-      angle: 'Moving to a new warehouse: announced in November 2026; Lagerlys stops stock-outs and overselling by
-        keeping every sales channel and the warehouse on one live stock count.'
+      angle: 'Moving to a new warehouse: announced in November 2026; Lagerlys stops stock-outs and overselling by keeping
+        every sales channel and the warehouse on one live stock count.'
       evidence:
       - 'Moving to a new warehouse: announced in November 2026'
       confidence: 0.75
@@ -51,7 +51,8 @@ setup:
       closed_at: null
       expected_close_date: null
 turns:
-- Mette here (rep-1, our admin). P-Q1 needs Enterprise with the custom integration. Send them a quote.
+- from: rep-1
+  text: Kim at Nordkvist needs Enterprise with the custom integration. Send them a quote.
 approvals:
   default: approve
 expect:

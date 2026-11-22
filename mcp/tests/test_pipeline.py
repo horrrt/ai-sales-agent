@@ -523,3 +523,18 @@ def test_free_slots_follow_the_clock_and_reach_the_day_asked_for():
     assert slots[:2] == ["2026-11-26T08:00:00+00:00", "2026-11-26T11:00:00+00:00"]  # 09:00 and 12:00 Copenhagen
     assert {s[:10] for s in slots} == {"2026-11-26", "2026-11-27", "2026-11-30", "2026-12-01"}
     assert handoff.find_free_slots("rep-1", days_ahead=7)[-1][:10] == "2026-12-03"
+
+
+def test_find_lead_from_how_people_name_it():
+    from sales_tools.tools import shared
+    lid = next(iter(store.SOURCE))
+    store.LEADS[lid] = {**store.SOURCE[lid], "stage": "new", "status": "active"}
+    lead = store.LEADS[lid]
+    name, company = lead["person"]["name"], lead["company"]["name"]
+    first = name.split()[0]
+    title = (lead["person"].get("title") or "CEO").lower()
+    for q in (first, name, company.split()[0], f"{first} at {company.split()[0]}", lead["person"]["email"], lid,
+              f"the {company.split()[0].lower()} {title}"):
+        assert shared.find_lead(q).get("match", {}).get("lead_id") == lid, q
+    assert shared.find_lead("Nobody Anywhere") == {"matches": []}
+    assert research.next_lead()["lead_id"] and shared.get_customer_brief() is store.BRIEF

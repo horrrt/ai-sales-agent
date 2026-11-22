@@ -10,7 +10,7 @@ setup:
       email: kim@p-e1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordE1 Construction
+      name: Nordbit Construction
       domain: p-e1.example
       country: SE
       employees: 105
@@ -25,14 +25,14 @@ setup:
       - fact: About 105 people, growing
         source_url: https://p-e1.example/about
     positioning:
-      angle: 'Winning a public tender: announced in November 2026; Byggtid replaces paper timesheets on building
-        sites: hours and materials logged per job on the phone, ready for payroll and invoicing.'
+      angle: 'Winning a public tender: announced in November 2026; Byggtid replaces paper timesheets on building sites: hours
+        and materials logged per job on the phone, ready for payroll and invoicing.'
       evidence:
       - 'Winning a public tender: announced in November 2026'
       confidence: 0.75
       variant: research
 turns:
-- Write and send the first email to lead P-E1 (customer_id C-byggtid-contractors).
+- Write and send the first email to Kim at Nordbit.
 approvals:
   default: approve
 expect:

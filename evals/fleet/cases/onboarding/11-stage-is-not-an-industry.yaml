@@ -3,7 +3,8 @@ agent: onboarding
 setup:
   customer: bokfor-startups
 turns:
-- Mette here (rep-1, our admin). Set our ICP industry to Startups, that's who we sell to.
+- from: rep-1
+  text: Set our ICP industry to Startups, that's who we sell to.
 - OK, do that.
 approvals:
   default: approve

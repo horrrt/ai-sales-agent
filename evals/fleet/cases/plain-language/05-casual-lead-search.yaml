@@ -1,0 +1,15 @@
+title: '"Find us a few companies to reach out to": runs the lead search without a customer ID'
+agent: manager
+setup: {}
+turns:
+- can you find us a few new companies to reach out to? 2 is enough for now
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  delegated_to:
+  - lead-search
+  plain_answer: true
+  logs_follow_schema: true

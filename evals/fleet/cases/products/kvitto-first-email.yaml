@@ -10,7 +10,7 @@ setup:
       email: kim@p-e1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordE1 B2B
+      name: Nordbit B2B
       domain: p-e1.example
       country: SE
       employees: 30
@@ -25,15 +25,14 @@ setup:
       - fact: About 30 people, growing
         source_url: https://p-e1.example/about
     positioning:
-      angle: 'Selling to banks, insurers or the public sector: announced in November 2026; Kvitto gets small B2B
-        software companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks, without hiring a compliance
-        person.'
+      angle: 'Selling to banks, insurers or the public sector: announced in November 2026; Kvitto gets small B2B software
+        companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks, without hiring a compliance person.'
       evidence:
       - 'Selling to banks, insurers or the public sector: announced in November 2026'
       confidence: 0.75
       variant: research
 turns:
-- Write and send the first email to lead P-E1 (customer_id C-kvitto-nordic).
+- Write and send the first email to Kim at Nordbit.
 approvals:
   default: approve
 expect:

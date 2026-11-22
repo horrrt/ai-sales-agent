@@ -28,7 +28,7 @@ setup:
       employees: 13
       industry: Construction
 turns:
-- Find new leads for customer_id C-bokfor-startups.
+- Find new leads.
 approvals:
   default: approve
 expect:

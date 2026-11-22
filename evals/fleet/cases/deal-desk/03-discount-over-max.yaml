@@ -36,7 +36,8 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 20
 turns:
-- Mette here. Give L-201 the annual plan at 30% off and send it.
+- from: rep-1
+  text: Give Ingrid at Nordvik the annual plan at 30% off and send it.
 expect:
   not_called:
   - send_quote

@@ -32,11 +32,12 @@ def _icp_text() -> dict:
 
 
 @mcp.tool()
-def find_leads(customer_id: str, limit: int = 10) -> list[dict]:
+def find_leads(customer_id: str | None = None, limit: int = 10) -> list[dict]:
     """Search the lead source for candidates for this customer that aren't in the lead sheet yet.
 
     Pass each one to add_lead; nothing is saved until then.
     """
+    customer_id = customer_id or BRIEF.get("customer_id")
     known = {k for lead in LEADS.values() for k in _key(lead) if k}
     out = []
     for cand in SOURCE.values():
@@ -91,8 +92,9 @@ def add_lead(lead_id: str) -> dict:
 
 
 @mcp.tool()
-def next_lead(customer_id: str) -> dict:
+def next_lead(customer_id: str | None = None) -> dict:
     """The next lead to work on: the oldest active lead in the sheet that hasn't been drafted yet."""
+    customer_id = customer_id or BRIEF.get("customer_id")
     for lead in LEADS.values():
         if lead.get("customer_id") == customer_id and lead.get("status") == "active" and lead.get("stage") in ("new", "researched", "positioned"):
             return {"lead_id": lead["lead_id"], "stage": lead["stage"],
@@ -101,8 +103,9 @@ def next_lead(customer_id: str) -> dict:
 
 
 @mcp.tool()
-def get_targets_from_clay(customer_id: str, limit: int = 10) -> list[dict]:
+def get_targets_from_clay(customer_id: str | None = None, limit: int = 10) -> list[dict]:
     """Leads in the lead sheet for this customer that still need research (stage new, status active)."""
+    customer_id = customer_id or BRIEF.get("customer_id")
     return [l for l in LEADS.values() if l["customer_id"] == customer_id and l.get("stage") == "new"
             and l.get("status") == "active"][:limit]
 

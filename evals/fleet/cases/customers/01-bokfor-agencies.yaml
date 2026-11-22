@@ -28,7 +28,7 @@ setup:
       employees: 35
       industry: Dental clinics
 turns:
-- Find new leads for customer_id C-bokfor-agencies.
+- Find new leads.
 approvals:
   default: approve
 expect:

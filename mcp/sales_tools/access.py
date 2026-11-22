@@ -14,8 +14,9 @@ Roles:
 
 Actions marked own work on the person's own leads (the lead's rep, the deal's owner). A lead nobody owns yet
 (no rep before the handoff) is open to anyone with the action, so any rep can approve a first email. Doing them for
-someone else's lead needs any_lead (admins). The agent passes the person as `by` (rep_id, email or name);
-`by` is never taken from what a message claims about someone's role.
+someone else's lead needs any_lead (admins). The agent passes the person as `by`: in Slack, the sender's
+Slack user ID, which Slack sets and nobody can type. Outside Slack (the Fleet chat) a rep_id, email or name.
+`by` is never taken from what a message claims about someone's name or role.
 """
 from .store import BRIEF, REPS, log_event
 
@@ -47,20 +48,18 @@ OWN = {"approve_email", "book_meeting", "change_meeting", "record_meeting_outcom
 
 
 def resolve(by: str | None) -> str | None:
-    """The rep_id for a rep_id, email or name, case-insensitive. None if nobody matches."""
+    """The rep_id for a Slack user ID (also as <@U...>), rep_id, email or name, case-insensitive. None if nobody matches."""
     if not by:
         return None
-    b = str(by).strip().lower()
+    b = str(by).strip().strip("<>@").lower()
+    for rid, r in REPS.items():
+        if b in ((r.get("slack_user_id") or "").lower(),) and b:
+            return rid
     for rid, r in REPS.items():
         if b in (rid.lower(), (r.get("email") or "").lower(), (r.get("name") or "").lower(),
                  (r.get("name") or "").split(" ")[0].lower()):
             return rid
     return None
-
-
-def _named(rep_id: str) -> str:
-    """'Mette Holm (rep-1)', so a refusal says who to ask by name."""
-    return f"{REPS[rep_id].get('name') or rep_id} ({rep_id})"
 
 
 def default_approver(kind: str) -> str | None:
@@ -93,5 +92,16 @@ def check(by: str | None, action: str, owner: str | None = None, lead_id: str | 
     if lead_id:
         log_event(lead_id, stage, "failure", f"denied: {reason}", by=rid)
     who_can = sorted(x for x in REPS if allowed(x, action) and (action not in OWN or not owner or x == owner or allowed(x, "any_lead")))
+    names = [REPS[x].get("name") or x for x in who_can]
     return {"ok": False, "error": "not_allowed", "by": rid, "action": action, "reason": reason, "who_can": who_can,
-            "next": f"ask {' or '.join(_named(x) for x in who_can) or 'an admin'} to do it"}
+            "who_can_names": names, "next": f"ask {' or '.join(names) or 'an admin'} to do it (say their names, not IDs)"}
+
+
+def describe(rep_id: str) -> dict:
+    """Who someone is and what they may do, for the agent to tailor what it offers."""
+    r = REPS[rep_id]
+    can = sorted(a for a in ACTIONS if allowed(rep_id, a))
+    return {"rep_id": rep_id, "name": r.get("name"), "role": r.get("role", "rep"), "email": r.get("email"),
+            "status": r.get("status"), "takes_leads": r.get("takes_leads", True),
+            "can": [ACTIONS[a] + (" (own leads only)" if a in OWN and "any_lead" not in can else "") for a in can],
+            "cannot": [ACTIONS[a] for a in ACTIONS if a not in can]}

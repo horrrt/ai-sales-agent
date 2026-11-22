@@ -9,9 +9,9 @@ setup:
       titles: []
       triggers: []
 turns:
-- Mette here (rep-1, our admin). We sell to private dental clinics in Norway, usually 3 to 30 people. The clinic
-  owner or the practice manager decides. They buy when they open a new clinic or have a lot of no-shows. Set that
-  up as our ICP.
+- from: rep-1
+  text: We sell to private dental clinics in Norway, usually 3 to 30 people. The clinic owner or the practice manager decides.
+    They buy when they open a new clinic or have a lot of no-shows. Set that up as our ICP.
 approvals:
   default: approve
 expect:

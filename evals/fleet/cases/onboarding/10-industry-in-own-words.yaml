@@ -3,8 +3,8 @@ agent: onboarding
 setup:
   customer: lagerlys-ecom
 turns:
-- Mette here (rep-1, our admin). Our customers are online brands, basically webshops and D2C brands. Update the
-  industries in our ICP to just that.
+- from: rep-1
+  text: Our customers are online brands, basically webshops and D2C brands. Update the industries in our ICP to just that.
 approvals:
   default: approve
 expect:

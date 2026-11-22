@@ -10,7 +10,7 @@ setup:
       email: kim@p-q1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordQ1 B2B
+      name: Nordkvist B2B
       domain: p-q1.example
       country: SE
       employees: 30
@@ -25,9 +25,8 @@ setup:
       - fact: About 30 people, growing
         source_url: https://p-q1.example/about
     positioning:
-      angle: 'Selling to banks, insurers or the public sector: announced in November 2026; Kvitto gets small B2B
-        software companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks, without hiring a compliance
-        person.'
+      angle: 'Selling to banks, insurers or the public sector: announced in November 2026; Kvitto gets small B2B software
+        companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks, without hiring a compliance person.'
       evidence:
       - 'Selling to banks, insurers or the public sector: announced in November 2026'
       confidence: 0.75
@@ -52,8 +51,8 @@ setup:
       closed_at: null
       expected_close_date: null
 turns:
-- Mette here (rep-1, our admin). P-Q1's meeting went well. Draft and send a quote for the annual plan, one company,
-  no discount.
+- from: rep-1
+  text: Kim at Nordkvist's meeting went well. Draft and send a quote for the annual plan, one company, no discount.
 approvals:
   default: approve
 expect:

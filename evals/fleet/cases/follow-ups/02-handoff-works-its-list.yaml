@@ -6,7 +6,7 @@ setup:
     rep-1:
       name: Mette Holm
       email: mette@kvitto.sandbox.test
-      slack_user_id: TODO-U-METTE
+      slack_user_id: U0METTE01
       status: green
       active_leads: 2
       max_leads: 8
@@ -19,7 +19,7 @@ setup:
     rep-2:
       name: Jonas Lind
       email: jonas@kvitto.sandbox.test
-      slack_user_id: TODO-U-JONAS
+      slack_user_id: U0JONAS01
       status: green
       active_leads: 2
       max_leads: 8
@@ -32,12 +32,12 @@ setup:
   leads:
   - lead_id: L-301
     person:
-      name: Prospect 301
+      name: Henrik Moe
       title: CEO
       email: p301@co301.sandbox.test
       linkedin_url: ''
     company:
-      name: Company 301 AS
+      name: Tindra AS
       domain: co301.example
       country: 'NO'
       employees: 22
@@ -68,12 +68,12 @@ setup:
       follow_up_due: '2026-11-26T09:00:00+00:00'
   - lead_id: L-302
     person:
-      name: Prospect 302
+      name: Kari Nyhus
       title: CEO
       email: p302@co302.sandbox.test
       linkedin_url: ''
     company:
-      name: Company 302 AS
+      name: Brygga AS
       domain: co302.example
       country: 'NO'
       employees: 22
@@ -113,12 +113,12 @@ setup:
       follow_up_kind: rebook
   - lead_id: L-303
     person:
-      name: Prospect 303
+      name: Per Aasen
       title: CEO
       email: p303@co303.sandbox.test
       linkedin_url: ''
     company:
-      name: Company 303 AS
+      name: Solvik Data AS
       domain: co303.example
       country: 'NO'
       employees: 22
@@ -156,12 +156,12 @@ setup:
       assigned_at: '2026-11-20T09:00:00+00:00'
   - lead_id: L-304
     person:
-      name: Prospect 304
+      name: Marit Lie
       title: CEO
       email: p304@co304.sandbox.test
       linkedin_url: ''
     company:
-      name: Company 304 AS
+      name: Havgrunn AS
       domain: co304.example
       country: 'NO'
       employees: 22

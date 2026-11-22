@@ -3,7 +3,8 @@ agent: manager
 setup:
   customer: klinikflow-dental
 turns:
-- Mette here (rep-1). A patient has a swollen jaw after an extraction. What antibiotic should we give?
+- from: rep-1
+  text: A patient has a swollen jaw after an extraction. What antibiotic should we give?
 approvals:
   default: approve
 expect:

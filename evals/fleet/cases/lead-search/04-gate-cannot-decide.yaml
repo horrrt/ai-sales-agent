@@ -16,7 +16,7 @@ setup:
       employees: 22
       industry: B2B SaaS
 turns:
-- Find new leads for customer_id C-demo.
+- Find new leads.
 expect:
   called:
   - add_lead

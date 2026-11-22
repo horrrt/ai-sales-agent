@@ -451,3 +451,11 @@ def test_a_reps_calendar_lists_their_meetings_and_busy_time():
     cal = handoff.get_rep_calendar(rid)
     assert [m["lead_id"] for m in cal["meetings"]] == [lid] and cal["meetings"][0]["company"] == "Company 1"
     assert [b["title"] for b in handoff.get_rep_calendar("rep-1")["busy"]] == ["1:1"]
+
+
+def test_find_free_slots_for_a_date_works_through_the_server():
+    """on_date returns an object, not a list: the server must accept it (it once rejected its own answer)."""
+    import asyncio
+    from sales_tools.server import mcp
+    out = asyncio.run(mcp.call_tool("find_free_slots", {"rep_id": "rep-1", "on_date": "2026-11-27"}))
+    assert '"date": "2026-11-27"' in str(out)

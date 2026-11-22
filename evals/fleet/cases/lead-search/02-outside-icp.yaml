@@ -15,7 +15,7 @@ setup:
       employees: 4000
       industry: Retail
 turns:
-- Find new leads for customer_id C-demo.
+- Find new leads.
 expect:
   called:
   - add_lead

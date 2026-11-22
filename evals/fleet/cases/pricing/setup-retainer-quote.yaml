@@ -10,7 +10,7 @@ setup:
       email: kim@p-q1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordQ1 Software
+      name: Nordkvist Software
       domain: p-q1.example
       country: DK
       employees: 13
@@ -25,8 +25,8 @@ setup:
       - fact: About 13 people, growing
         source_url: https://p-q1.example/about
     positioning:
-      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off
-        a founder''s desk with a named accountant for a fixed monthly fee.'
+      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off a founder''s
+        desk with a named accountant for a fixed monthly fee.'
       evidence:
       - 'Just raised a seed round: announced in November 2026'
       confidence: 0.75
@@ -51,8 +51,8 @@ setup:
       closed_at: null
       expected_close_date: null
 turns:
-- Mette here (rep-1, our admin). P-Q1's meeting went well. Draft and send a quote for the standard plan, the minimum
-  term.
+- from: rep-1
+  text: Kim at Nordkvist's meeting went well. Draft and send a quote for the standard plan, the minimum term.
 approvals:
   default: approve
 expect:

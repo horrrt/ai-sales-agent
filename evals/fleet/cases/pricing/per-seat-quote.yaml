@@ -10,7 +10,7 @@ setup:
       email: kim@p-q1.sandbox.test
       linkedin_url: ''
     company:
-      name: NordQ1 Construction
+      name: Nordkvist Construction
       domain: p-q1.example
       country: SE
       employees: 105
@@ -25,8 +25,8 @@ setup:
       - fact: About 105 people, growing
         source_url: https://p-q1.example/about
     positioning:
-      angle: 'Winning a public tender: announced in November 2026; Byggtid replaces paper timesheets on building
-        sites: hours and materials logged per job on the phone, ready for payroll and invoicing.'
+      angle: 'Winning a public tender: announced in November 2026; Byggtid replaces paper timesheets on building sites: hours
+        and materials logged per job on the phone, ready for payroll and invoicing.'
       evidence:
       - 'Winning a public tender: announced in November 2026'
       confidence: 0.75
@@ -51,7 +51,8 @@ setup:
       closed_at: null
       expected_close_date: null
 turns:
-- Mette here (rep-1, our admin). P-Q1's meeting went well. Draft and send a quote for 8 users on the yearly plan.
+- from: rep-1
+  text: Kim at Nordkvist's meeting went well. Draft and send a quote for 8 users on the yearly plan.
 approvals:
   default: approve
 expect:

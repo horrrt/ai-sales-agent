@@ -28,7 +28,7 @@ setup:
       employees: 85
       industry: Construction
 turns:
-- Find new leads for customer_id C-kvitto-dach.
+- Find new leads.
 approvals:
   default: approve
 expect:

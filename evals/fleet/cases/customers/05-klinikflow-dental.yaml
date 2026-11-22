@@ -28,7 +28,7 @@ setup:
       employees: 16
       industry: Wholesale
 turns:
-- Find new leads for customer_id C-klinikflow-dental.
+- Find new leads.
 approvals:
   default: approve
 expect:

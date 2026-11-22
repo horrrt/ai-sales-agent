@@ -36,7 +36,8 @@ setup:
         qualification: '2026-11-24T11:00:00+00:00'
       probability: 70
 turns:
-- Mette here. L-201 went with Vanta in the end. Close it as lost.
+- from: rep-1
+  text: Ingrid at Nordvik went with Vanta in the end. Close it as lost.
 expect:
   called_with:
     record_deal_outcome:

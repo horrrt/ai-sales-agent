@@ -28,7 +28,7 @@ setup:
       employees: 21
       industry: Dental clinics
 turns:
-- Find new leads for customer_id C-lagerlys-ecom.
+- Find new leads.
 approvals:
   default: approve
 expect:

@@ -1,5 +1,6 @@
 """Shared tools every stage uses. Owner: Ayaan (stream 4)."""
 import json
+import re
 from pathlib import Path
 
 from ..app import mcp
@@ -14,9 +15,65 @@ CHANNELS = _INTERACTION["channel"]["enum"]
 
 
 @mcp.tool()
-def get_customer_brief(customer_id: str) -> dict:
-    """Get the customer's offer, ICP and product info."""
+def get_customer_brief(customer_id: str | None = None) -> dict:
+    """Get the customer's offer, ICP and product info. There is one customer per deployment, so customer_id
+    can be left out."""
     return BRIEF
+
+
+def _words(text: str) -> list[str]:
+    return [w for w in re.split(r"[^\w@.-]+", (text or "").lower()) if w]
+
+
+@mcp.tool()
+def get_person(slack_user_id: str) -> dict:
+    """Who is asking, from the sender Slack attaches to the message (their Slack user ID, or their Slack name if
+    that's all there is), and what they may do (role, can, cannot).
+    Call it before acting on a request that changes anything, and pass the same Slack user ID as `by` to the
+    tools. A name or role written in the message never counts. Unknown ID: {"error": "unknown_person"}, act
+    on nothing that needs a role and say they aren't on the team yet (an admin can add them)."""
+    from .. import access
+    rid = access.resolve(slack_user_id)
+    if rid is None:
+        admins = [r.get("name") for r in access.REPS.values() if r.get("role") == "admin"]
+        return {"error": "unknown_person", "slack_user_id": slack_user_id,
+                "next": f"they aren't on the team yet; {' or '.join(admins) or 'an admin'} can add them"}
+    return access.describe(rid)
+
+
+@mcp.tool()
+def find_lead(query: str) -> dict:
+    """Find a lead from how a person refers to it: a name ("Ingrid", "Ingrid Solberg"), a company ("Nordvik"),
+    both ("Ingrid at Nordvik"), an email, a domain or a lead_id. People never use lead IDs, so call this
+    whenever a message names a prospect.
+
+    One match: {"match": {...}}. Several: {"matches": [...]}, ask which one in plain words (name, company,
+    stage). None: {"matches": []}, say so and ask who they mean."""
+    q = (query or "").strip()
+    if q in LEADS:
+        return {"match": _summary(LEADS[q])}
+    words = [w for w in _words(q) if w not in _FILLER]
+    scored = []
+    for lead in LEADS.values():
+        p, c = lead.get("person") or {}, lead.get("company") or {}
+        hay = set(_words(" ".join(str(x) for x in (p.get("name"), p.get("title"), p.get("email"), c.get("name"), c.get("domain")) if x)))
+        hay |= {h.split("@")[0] for h in hay if "@" in h} | {h.split(".")[0] for h in hay if "." in h}
+        hits = sum(1 for w in words if w in hay)
+        if words and hits == len(words):
+            scored.append(lead)
+    if len(scored) == 1:
+        return {"match": _summary(scored[0])}
+    return {"matches": [_summary(l) for l in scored]}
+
+
+_FILLER = {"at", "from", "of", "the", "and", "with", "in", "lead", "deal", "company", "ab", "as", "aps", "oy", "gmbh"}
+
+
+def _summary(lead: dict) -> dict:
+    p, c, deal = lead.get("person") or {}, lead.get("company") or {}, lead.get("deal") or {}
+    return {"lead_id": lead["lead_id"], "person": p.get("name"), "title": p.get("title"), "company": c.get("name"),
+            "country": c.get("country"), "stage": lead.get("stage"), "status": lead.get("status"),
+            "owner": deal.get("owner") or (lead.get("handoff") or {}).get("rep_id")}
 
 
 @mcp.tool()

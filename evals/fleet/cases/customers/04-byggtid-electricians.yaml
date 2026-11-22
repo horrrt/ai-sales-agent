@@ -28,7 +28,7 @@ setup:
       employees: 27
       industry: E-commerce
 turns:
-- Find new leads for customer_id C-byggtid-electricians.
+- Find new leads.
 approvals:
   default: approve
 expect:

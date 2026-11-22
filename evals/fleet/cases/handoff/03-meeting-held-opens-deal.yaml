@@ -20,7 +20,8 @@ setup:
       meeting_start: '2026-11-23T10:00:00+00:00'
       call_brief: '...'
 turns:
-- 'Mette here: the meeting with L-201 happened today, it went well.'
+- from: rep-1
+  text: The meeting with Ingrid at Nordvik happened today, it went well.
 expect:
   called_with:
     record_meeting_outcome:
