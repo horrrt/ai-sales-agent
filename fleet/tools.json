@@ -293,6 +293,12 @@
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
       "display_name": "Cancel meeting"
+    },
+    {
+      "name": "get_rep_calendar",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get rep calendar"
     }
   ],
   "interrupt_config": {
@@ -344,6 +350,7 @@
     "https://sales-tools.invalid/mcp::get_pipeline::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_thread::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::reschedule_meeting::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::cancel_meeting::Sales tools (sandbox)": true
+    "https://sales-tools.invalid/mcp::cancel_meeting::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_rep_calendar::Sales tools (sandbox)": false
   }
 }

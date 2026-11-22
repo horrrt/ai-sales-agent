@@ -81,7 +81,7 @@ expect:
   called:
   - reschedule_meeting
   final_mentions:
-  - Mette
+  - keep
   lead:
     L-201:
       handoff.reschedules:

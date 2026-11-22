@@ -1,4 +1,5 @@
-title: 'The daily follow-up run: an email, a rebooking, a missing outcome and an unbooked lead are all handled'
+title: 'The daily follow-up run: the email and rebooking go out, the unbooked lead is booked, the missing outcome
+  is asked about, not guessed'
 agent: manager
 setup:
   now: '2026-11-27T10:00:00+01:00'
@@ -219,8 +220,11 @@ expect:
   - book_meeting
   asked_person:
   - record_approval
-  - record_meeting_outcome
   - book_meeting
+  not_called:
+  - record_meeting_outcome
+  final_mentions:
+  - L-303
   lead:
     L-301:
       outreach.follow_ups: 1

@@ -388,3 +388,17 @@ def test_every_active_lead_always_has_a_next_step():
     listed = {x["lead_id"] for x in outreach.due_follow_ups()}
     stuck = [l for l in leads if store.LEADS[l]["status"] in ("active", "queued") and l not in listed]
     assert stuck == [], [(l, store.LEADS[l].get("handoff")) for l in stuck]
+
+
+def test_a_reps_calendar_lists_their_meetings_and_busy_time():
+    team(2, countries=["SE", "SE"])
+    busy("rep-1", "2026-11-26T09:00:00+01:00", "2026-11-26T10:00:00+01:00", "1:1")
+    lid = positive_lead(1)
+    store.LEADS[lid]["handoff"] = {}
+    handoff.assign_rep(lid)
+    rid = store.LEADS[lid]["handoff"]["rep_id"]
+    slot = handoff.find_free_slots(rid, lead_id=lid)[0]
+    handoff.book_meeting(lid, rid, slot)
+    cal = handoff.get_rep_calendar(rid)
+    assert [m["lead_id"] for m in cal["meetings"]] == [lid] and cal["meetings"][0]["company"] == "Company 1"
+    assert [b["title"] for b in handoff.get_rep_calendar("rep-1")["busy"]] == ["1:1"]

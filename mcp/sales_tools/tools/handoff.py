@@ -54,7 +54,7 @@ def get_rep_capacity() -> list[dict]:
 @mcp.tool()
 def set_rep_status(rep_id: str, status: str) -> dict:
     """Set a rep's traffic light to green, yellow or red, or away (sick or on leave: no new leads, no slots;
-    move their booked meetings with reschedule_meeting and new_rep_id)."""
+    move their booked meetings with reschedule_meeting and new_rep_id; get_rep_calendar lists them)."""
     if rep_id not in REPS or status not in {"green", "yellow", "red", "away"}:
         return {"error": "unknown rep or status"}
     REPS[rep_id]["status"] = status
@@ -219,6 +219,23 @@ def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None
             t += timedelta(minutes=30)
         out += [_iso(x) for x in picked]
     return out
+
+
+@mcp.tool()
+def get_rep_calendar(rep_id: str, days_ahead: int = 10) -> dict:
+    """A rep's calendar from now to days_ahead working days out: booked meetings (with lead_id and company)
+    and busy blocks. Use it to find a sick or away rep's meetings before moving them."""
+    rep = REPS.get(rep_id)
+    if rep is None:
+        return {"ok": False, "error": f"unknown rep {rep_id}"}
+    until = _add_working_days(clock(), max(1, min(int(days_ahead), 30)), _rep_tz(rep))
+    events = sorted((e for e in _events(rep_id) if e.get("status") != "cancelled"
+                     and clock() <= _parse(e["end"]) and _parse(e["start"]) <= until), key=lambda e: e["start"])
+    return {"ok": True, "rep_id": rep_id, "name": rep.get("name"), "status": rep.get("status"), "timezone": _rep_tz(rep).key,
+            "meetings": [{k: e.get(k) for k in ("event_id", "lead_id", "title", "start", "end", "status")} | 
+                         {"company": (LEADS.get(e.get("lead_id")) or {}).get("company", {}).get("name")}
+                         for e in events if e.get("kind") == "meeting"],
+            "busy": [{k: e.get(k) for k in ("title", "start", "end")} for e in events if e.get("kind") != "meeting"]}
 
 
 def _meeting(lead: dict) -> dict | None:
@@ -408,7 +425,8 @@ def handoff_follow_ups() -> list[dict]:
                 and _add_working_days(_parse(h["meeting_end"]), 1, _lead_tz(lead)) <= t):
             due.append({"lead_id": lead["lead_id"], "kind": "meeting_outcome", "rep_id": h.get("rep_id"),
                         "meeting_start": h["meeting_start"],
-                        "next": "@handoff: ask the rep how the meeting went (record_meeting_outcome)"})
+                        "next": "@handoff: ask the rep in #sales-desk how the meeting went; once they answer, "
+                                "record it with record_meeting_outcome. Never guess the outcome"})
         assigned_at = h.get("assigned_at")
         if (h.get("rep_id") and not h.get("meeting_status") and assigned_at
                 and _add_working_days(_parse(assigned_at), 1, _lead_tz(lead)) <= t):

@@ -82,11 +82,13 @@ expect:
   - cancel_meeting
   asked_person:
   - cancel_meeting
+  not_called:
+  - reschedule_meeting
+  - book_meeting
   lead:
     L-201:
-      handoff.meeting_status:
-      - cancelled
-      - booked
+      handoff.meeting_status: cancelled
+      handoff.follow_up_kind: rebook
       status: active
   calendar:
     rep-1:

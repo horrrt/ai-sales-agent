@@ -104,8 +104,8 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | S4 | The prospect names a day and time, even weeks out, and that time is booked | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out` | `scheduling/02-prospect-names-a-day` |
 | S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
 | S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
-| S7 | A rep is sick. Their meeting moves to a colleague who covers the same country | `test_a_sick_reps_meeting_moves_to_a_colleague` | `scheduling/07-sick-rep-meeting-moves` |
-| S8 | The prospect cancels but wants another time. The slot is freed and a rebooking follow-up is due the next working day | `test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up` | `scheduling/04-prospect-cancels-rebook` |
+| S7 | A rep is sick. Their meetings are listed from their calendar and move to a colleague who covers the same country | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
+| S8 | The prospect cancels but wants another time. The slot is freed, no time is picked for them, and a rebooking follow-up is due the next working day | `test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up` | `scheduling/04-prospect-cancels-rebook` |
 | S9 | The prospect cancels for good. No rebooking, and a person decides whether the lead is lost | `test_cancellation_for_good_waits_for_a_person` | `scheduling/05-prospect-cancels-for-good` |
 | S10 | A no-show gets a rebooking follow-up. After a second no-show, a person decides | `test_no_show_schedules_a_rebook_and_a_second_no_show_asks_a_person` | `scheduling/06-no-show` |
 | S11 | No rep is ever double-booked, at any team size | `test_every_team_size_books_without_double_booking` | `scheduling/08-asked-for-a-taken-slot`, `scheduling/07-sick-rep-meeting-moves` |
@@ -119,7 +119,7 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 |---|---|---|---|
 | F1 | Every lead that's still active, whatever happened to it, shows up in the follow-ups: none is left without a next step | `test_every_active_lead_always_has_a_next_step` | `follow-ups/01-daily-mix` |
 | F2 | The rebooking email counts as the rebooking follow-up, in the same thread | `test_the_rebooking_email_counts_as_the_follow_up` | `follow-ups/01-daily-mix` |
-| F3 | A meeting nobody recorded shows up the working day after, until the rep records it | `test_a_meeting_nobody_recorded_shows_up_the_next_working_day` | `follow-ups/02-handoff-works-its-list` |
+| F3 | A meeting nobody recorded shows up the working day after. The agent asks the rep and never guesses the outcome | `test_a_meeting_nobody_recorded_shows_up_the_next_working_day` | `follow-ups/02-handoff-works-its-list` |
 | F4 | A lead with a rep but no meeting shows up after a working day | `test_a_lead_with_a_rep_but_no_meeting_shows_up` | `follow-ups/02-handoff-works-its-list` |
 | F5 | No outreach follow-up while a meeting is booked | `test_no_outreach_follow_up_while_a_meeting_is_booked` | `follow-ups/03-outreach-hands-back` |
 | F6 | A reply asking to move the booked meeting goes to @handoff. A reply proposing a first time stays positive | `test_a_request_to_move_the_meeting_goes_to_handoff_and_a_first_proposal_stays_positive` | `follow-ups/06-reply-moves-the-meeting` |

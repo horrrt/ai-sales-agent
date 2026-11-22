@@ -1,4 +1,4 @@
-title: '@handoff alone: asks the rep about the missed outcome and books the unbooked lead'
+title: '@handoff alone: books the unbooked lead and asks about the missing outcome without guessing it'
 agent: handoff
 setup:
   now: '2026-11-27T10:00:00+01:00'
@@ -212,11 +212,13 @@ approvals:
 expect:
   called:
   - due_follow_ups
-  - record_meeting_outcome
   - book_meeting
   asked_person:
-  - record_meeting_outcome
   - book_meeting
+  not_called:
+  - record_meeting_outcome
+  final_mentions:
+  - L-303
   lead:
     L-304:
       handoff.meeting_status: booked

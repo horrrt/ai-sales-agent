@@ -92,6 +92,7 @@ approvals:
 expect:
   called:
   - set_rep_status
+  - get_rep_calendar
   - reschedule_meeting
   asked_person:
   - reschedule_meeting
