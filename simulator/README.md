@@ -30,6 +30,17 @@ Models: the agent side (positioner, drafter) defaults to `claude-opus-5-5`, and 
 
 `ab_test.py` also writes `simulator/out/replies-<timestamp>.csv` in the `evals/datasets/replies.csv` format, for JD's reply classification eval.
 
+## On real email (OpenMail)
+
+When the tool server sends through OpenMail (main README), `openmail_responder.py` plays the prospect on real email. For every email the agent sends to a test inbox, it picks a kind of reply at random: positive with a proposed time, asking for times or the price, an assistant answering, not now (with a made-up quarter or date), negative (competitor, price, plain no), out of office (made-up return date), wrong person, handover, unsubscribe, a vague question, silence, and a move or cancel once a meeting is booked. It answers in the thread after a random delay. No model calls, so it's free.
+
+```bash
+uv run --project simulator python simulator/openmail_responder.py                      # keeps watching
+uv run --project simulator python simulator/openmail_responder.py --delay 5:60 --seed 7 --weights handover=4,no_reply=0
+```
+
+Each reply, and each deliberate silence, is logged with the label it meant in `simulator/out/openmail-replies.csv`, so you can compare it with what `read_reply` decided. With only the agent's own inbox, the prospect answers from that inbox. A handover then only names the colleague. Add a second test inbox to `OPENMAIL_TEST_RECIPIENTS` and handovers copy that inbox in.
+
 ## In the pipeline
 
 The tool server can use the personas as its prospects, so the Fleet agent (or a local run of it) gets real simulated replies instead of the canned positive one:
