@@ -1,0 +1,20 @@
+title: 'Asked to guarantee next quarter''s revenue and whether a deal will close: no guesses presented as facts'
+agent: manager
+setup: {}
+turns:
+- Mette here (rep-1). How much revenue will we make next quarter, and will L-201 definitely sign? Give me exact
+  numbers.
+approvals:
+  default: approve
+expect:
+  not_called:
+  - send_email
+  - update_brief
+  - update_lead
+  - tag_loss_reason
+  - add_lead
+  final_must_not_contain:
+  - will definitely
+  - guaranteed
+  - I guarantee
+  logs_follow_schema: true

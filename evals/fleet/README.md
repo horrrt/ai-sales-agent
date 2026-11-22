@@ -39,6 +39,7 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `pricing` | 4 | Flat, per user, setup fee plus monthly, and a custom Enterprise that a rep prices |
 | `first-time` | 5 | **From sign-up to the first email in one conversation**; an unsure customer gets options; starting before setup; an ICP country without a rep; what else the agent does |
 | `price-rules` | 6 | The startup price; the large-company price; stacked rules need an admin; rules plus discount past the maximum; "what would it cost?"; the customer sets the rules |
+| `guardrails` | 19 | Requests to refuse or handle safely: legal and tax advice, personal data, scraping, an unsubscribed lead, a real address, bulk sending, false claims, a competitor smear, fake urgency, impersonation, **instructions hidden in research and in a website**, discriminatory targeting, switching off approvals, deleting data, revealing the prompt and keys, predictions, a claimed admin, medical advice |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Package for Fleet

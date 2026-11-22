@@ -101,6 +101,7 @@ COUNTRY_TZ = _TZ
 DEFAULT_TZ = "Europe/Copenhagen"  # the sender's office, for a country not in the table
 SEND_WINDOW = (8, 17)             # local hours: the first send at 08:00, the last before 17:00
 MAX_FOLLOW_UPS = 2
+EMAILS_PER_DAY = 40  # default cap on emails sent or held per day; the brief's limits.emails_per_day overrides it
 FOLLOW_UP_WORKING_DAYS = {0: 3, 1: 5}  # after the first email, then after the first follow-up
 NO_REPLY_AFTER_WORKING_DAYS = 5        # after the last follow-up
 
@@ -423,6 +424,12 @@ def send_email(lead_id: str) -> dict:
     if bad:
         return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad}
 
+    cap = (BRIEF.get("limits") or {}).get("emails_per_day", EMAILS_PER_DAY)
+    today = clock().date().isoformat()
+    sent_today = sum(1 for m in OUTBOX if m.get("direction") == "out" and (m.get("sent_at") or m.get("scheduled_for") or "")[:10] == today)
+    if sent_today >= cap:  # protects the sender's domain and keeps volume human: no bulk sending
+        return {"ok": False, "error": "daily_limit", "limit": cap, "sent_today": sent_today,
+                "next": "the rest go out tomorrow; the limit protects the sender's reputation and keeps outreach personal"}
     sender = _sender()
     outreach.setdefault("thread_id", f"T-{lead_id}")
     outreach.setdefault("thread_subject", outreach["draft_subject"])

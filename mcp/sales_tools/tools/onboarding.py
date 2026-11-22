@@ -22,6 +22,17 @@ SECTIONS = {"company_name": str, "website": (str, list), "offer": str, "product_
             "approvers": dict}
 SIZE_BANDS = ((1, 9, "1-9"), (10, 49, "10-49"), (50, 249, "50-249"), (250, 10 ** 9, "250+"))
 MIN_DEALS_FOR_ICP = 5
+ICP_KEYS = {"countries", "employees_min", "employees_max", "industries", "titles", "triggers"}
+# Targeting people by these is discrimination (and, in the EU, unlawful): the ICP describes companies and roles.
+PROTECTED = re.compile(r"\b(gender|women|woman|female|females|male|males|men|man|mothers?|fathers?|pregnan\w*|"
+                       r"aged?\s*\d+|\d+\s*years?\s*old|young(er)?\s+(founders?|people|ceos?)|old(er)?\s+(founders?|people|ceos?)|"
+                       r"religio\w*|christian|muslim|jewish|hindu|ethnic\w*|race|racial|nationality|immigrants?|"
+                       r"disab\w*|sexual\w*|gay|lesbian|married|single parents?)\b", re.I)
+
+
+def _protected(value) -> list[str]:
+    text = value if isinstance(value, str) else __import__("json").dumps(value, ensure_ascii=False)
+    return sorted({m.group(0).lower() for m in PROTECTED.finditer(text)})
 
 
 def _todo(v) -> bool:
@@ -65,6 +76,8 @@ def _pricing_findings(pricing: dict, auto_close: dict) -> tuple[list[dict], dict
         cond = r.get("if") if isinstance(r, dict) else None
         if not isinstance(cond, dict) or not cond or not isinstance(r.get("pct"), (int, float)):
             findings.append({"severity": "error", "text": f"price rule {i + 1}: needs a label, an 'if' with conditions and a pct"})
+        elif not -100 < r["pct"] <= 100:
+            findings.append({"severity": "error", "text": f"price rule {r.get('label', i + 1)}: pct must be above -100 and at most 100"})
         elif set(cond) - RULE_KEYS:
             findings.append({"severity": "error", "text": f"price rule {r.get('label', i + 1)}: unknown conditions {sorted(set(cond) - RULE_KEYS)}; "
                                                           f"use {sorted(RULE_KEYS)}"})
@@ -132,6 +145,8 @@ def check_brief() -> dict:
         missing.append("icp.industries (the company)")
     if not icp.get("titles"):
         missing.append("icp.titles (the person): who in the company to write to")
+    if _protected({k: icp.get(k) for k in ("industries", "titles", "triggers")}):
+        missing.append(f"icp targets people by {', '.join(_protected(icp))}: describe companies and roles, never personal traits")
     if not icp.get("triggers"):
         warnings.append("icp.triggers: no buying triggers, so research can't tell a good moment from a bad one")
     if not b.get("website"):
@@ -235,6 +250,21 @@ def update_brief(section: str, value, by: str = "") -> dict:
     denied = access.check(by, "manage_brief")
     if denied:
         return denied
+    if section == "icp":
+        extra = set(value) - ICP_KEYS
+        if extra:
+            return {"ok": False, "error": f"the ICP has no {sorted(extra)}; it describes companies (countries, size, industries, "
+                                          f"triggers) and roles (titles)", "allowed": sorted(ICP_KEYS)}
+        if _protected(value):
+            return {"ok": False, "error": "not_allowed_targeting", "words": _protected(value),
+                    "next": "the ICP can't target people by gender, age, religion, ethnicity, nationality, disability, family "
+                            "status or sexuality; describe companies and roles instead"}
+    if section == "sender" and "email" in value and not str(value["email"]).endswith(".test"):
+        return {"ok": False, "error": "the sender must be a sandbox .test address during the course"}
+    if section == "approvers":
+        unknown = [f"{k}: {v}" for k, v in value.items() if access.resolve(v) is None]
+        if unknown:
+            return {"ok": False, "error": "approvers must be people on the team", "unknown": unknown}
     if section == "pricing" or section == "auto_close":
         merged_p = {**(BRIEF.get("pricing") or {}), **(value if section == "pricing" else {})}
         merged_a = {**(BRIEF.get("auto_close") or {}), **(value if section == "auto_close" else {})}
