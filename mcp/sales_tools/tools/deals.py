@@ -351,18 +351,16 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
 
 
 @mcp.tool()
-def record_payment(lead_id: str, paid: bool, amount_eur: float | None = None, status: str | None = None,
-                   by: str | None = None) -> dict:
+def record_payment(lead_id: str, paid: bool, by: str, amount_eur: float | None = None, status: str | None = None) -> dict:
     """Record what happened at the checkout. This tool always asks a person first (later: the payment provider).
 
     status: paid (default when paid is true), failed (a declined card: a retry follow-up is due the next
     working day) or refunded (after a win: a person decides what happens to the customer). A payment below
-    the offer's total is recorded as partial and waits for a person. Only finance and admins record payments
-    (by; default: the brief's payment approver)."""
+    the offer's total is recorded as partial and waits for a person; a later payment adds to it. Only finance and
+    admins record payments: by is required (their rep_id, email or name)."""
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
-    by = by or access.default_approver("payments")
     denied = access.check(by, "record_payment", lead_id=lead_id, stage="deal")
     if denied:
         return denied
@@ -370,13 +368,16 @@ def record_payment(lead_id: str, paid: bool, amount_eur: float | None = None, st
     if status not in ("paid", "failed", "refunded"):
         return {"ok": False, "error": "status must be paid, failed or refunded"}
     total = (deal.get("quote") or {}).get("total_eur")
-    if status == "paid" and deal.get("payment_status") in ("paid", "partial"):
+    if status == "paid" and deal.get("payment_status") == "paid":
         return {"ok": False, "error": "already_paid", "amount_eur": deal.get("amount_eur"), "next": "a second payment needs a person: refund one"}
     if status == "refunded" and deal.get("payment_status") not in ("paid", "partial"):
         return {"ok": False, "error": "nothing was paid, so nothing can be refunded"}
     by = access.resolve(by)
     if status == "paid":
-        amount = amount_eur if amount_eur is not None else total
+        amount = amount_eur if amount_eur is not None else (total - (deal.get("amount_eur") or 0) if deal.get("payment_status") == "partial" else total)
+        if deal.get("payment_status") == "partial":  # the rest of a partial payment
+            amount = (deal.get("amount_eur") or 0) + amount
+            lead.pop("needs_person", None)
         partial = total is not None and amount is not None and amount + 0.005 < total
         deal.update(paid=not partial, amount_eur=amount, payment_status="partial" if partial else "paid", paid_at=now())
         if partial:
@@ -409,9 +410,23 @@ def send_offer_reminder(lead_id: str) -> dict:
         return {"ok": False, "error": "no auto-close offer was sent"}
     if deal.get("paid") or deal.get("stage") in ("closed_won", "closed_lost"):
         return {"ok": False, "error": "already paid or closed"}
+    from .handoff import _add_working_days, _lead_country, _lead_tz, _parse
+    from .outreach import _release_held
+    _release_held()  # an offer held overnight goes out first
     failed = deal.get("payment_status") == "failed"
-    if not failed and deal.get("offer_reminders", 0) >= MAX_OFFER_REMINDERS:
-        return {"ok": False, "error": "no reminders left", "next": "check_deal_done: it goes to a rep"}
+    if failed:
+        if deal.get("payment_retry_due") and _parse(deal["payment_retry_due"]) > clock():
+            return {"ok": False, "error": "too_early", "due": deal["payment_retry_due"]}
+    else:
+        if deal.get("offer_reminders", 0) >= MAX_OFFER_REMINDERS:
+            return {"ok": False, "error": "no reminders left", "next": "check_deal_done: it goes to a rep"}
+        last = deal.get("last_reminder_at") or deal.get("offer_sent_at")
+        if not last:
+            return {"ok": False, "error": "the offer hasn't gone out yet (scheduled for business hours)"}
+        due = _add_working_days(_parse(last), OFFER_REMINDER_WORKING_DAYS, _lead_tz(lead), _lead_country(lead))
+        if due > clock():
+            return {"ok": False, "error": "too_early", "due": due.isoformat(),
+                    "next": "reminders go out 2 working days apart; due_follow_ups lists it when it's due"}
     from .outreach import send_policy_email
     first = lead["person"]["name"].split()[0]
     body = (f"Hi {first}, the payment didn't go through. You can try again here: {q['checkout_url']}" if failed else
@@ -440,7 +455,12 @@ def check_deal_done(lead_id: str) -> dict:
         log_event(lead_id, "deal", "success", f"paid: closed automatically, EUR {deal.get('amount_eur') or 0:,.2f}")
         return {"ok": True, "done": True, "next": "post a short summary for the rep in #sales-desk"}
     from .handoff import _add_working_days, _lead_country, _lead_tz, _parse
+    from .outreach import _release_held
+    _release_held()
     sent = deal.get("offer_sent_at")
+    if not sent and (deal.get("quote") or {}).get("checkout_url"):
+        return {"ok": True, "done": False, "payment_status": deal.get("payment_status"),
+                "next": "the offer is scheduled for business hours and hasn't gone out yet: wait"}
     expired = not sent or _add_working_days(_parse(sent), OFFER_EXPIRY_WORKING_DAYS, _lead_tz(lead), _lead_country(lead)) <= clock()
     if not expired:
         return {"ok": True, "done": False, "payment_status": deal.get("payment_status"),

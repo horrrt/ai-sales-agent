@@ -85,8 +85,9 @@ def test_a_rep_cannot_approve_or_close_someone_elses_deal():
 def test_only_finance_or_an_admin_records_a_payment():
     store.BRIEF["auto_close"]["enabled"] = True
     small_deal_offer()
+    assert deals.record_payment("L-001", True, by="")["error"] == "unknown_person"  # nobody named: refused
     assert denied(deals.record_payment("L-001", True, by="rep-2"), "record_payment")
-    assert deals.record_payment("L-001", True)["ok"]  # the brief's payment approver: Lena (finance)
+    assert deals.record_payment("L-001", True, by="Lena")["ok"]
     assert store.INTERACTIONS[-1]["by"] == "fin-1"
 
 
@@ -213,7 +214,7 @@ def test_auto_close_unpaid_offer_gets_two_reminders_then_goes_to_a_rep():
 
 def test_auto_close_failed_payment_sends_the_link_again():
     small_deal_offer()
-    r = deals.record_payment("L-001", False, status="failed")
+    r = deals.record_payment("L-001", False, by="fin-1", status="failed")
     assert r["payment_status"] == "failed" and r["retry_due"]
     assert not [d for d in outreach.due_follow_ups() if d["kind"] == "payment_failed"]
     at("2026-11-25T10:00:00+01:00")
@@ -221,31 +222,51 @@ def test_auto_close_failed_payment_sends_the_link_again():
     assert deals.send_offer_reminder("L-001")["status"] == "sent"
     assert "didn't go through" in store.OUTBOX[-1]["body"]
     assert store.LEADS["L-001"]["deal"]["payment_status"] == "unpaid"
-    deals.record_payment("L-001", True)
+    deals.record_payment("L-001", True, by="fin-1")
     assert deals.check_deal_done("L-001")["done"] is True
 
 
-def test_auto_close_partial_payment_waits_for_a_person():
+def test_auto_close_partial_payment_waits_for_a_person_until_the_rest_is_paid():
     small_deal_offer()
     total = store.LEADS["L-001"]["deal"]["quote"]["total_eur"]
-    r = deals.record_payment("L-001", True, amount_eur=total / 2)
+    r = deals.record_payment("L-001", True, by="fin-1", amount_eur=total / 2)
     assert r["payment_status"] == "partial"
     assert deals.check_deal_done("L-001")["done"] is False and store.LEADS["L-001"]["status"] == "active"
     assert [d["kind"] for d in outreach.due_follow_ups() if d["lead_id"] == "L-001"] == ["needs_person"]
+    assert deals.record_payment("L-001", True, by="fin-1")["payment_status"] == "paid"  # the rest
+    assert store.LEADS["L-001"]["deal"]["amount_eur"] == total and deals.check_deal_done("L-001")["done"] is True
+
+
+def test_auto_close_reminders_cannot_be_sent_early_and_a_held_offer_is_not_expired():
+    store.BRIEF["auto_close"]["enabled"] = True
+    sent_lead()
+    stub("positive")
+    outreach.read_reply("L-001", "How do I sign up?")
+    stub(True)
+    deals.check_small_deal("L-001", estimated_value_eur=1580)
+    at("2026-11-24T22:00:00+01:00")
+    deals.send_offer("L-001")  # held until the morning
+    assert deals.check_deal_done("L-001")["next"].startswith("the offer is scheduled")
+    assert deals.send_offer_reminder("L-001")["ok"] is False
+    at("2026-11-25T09:00:00+01:00")
+    assert deals.send_offer_reminder("L-001")["error"] == "too_early"
+    at("2026-11-27T09:00:00+01:00")  # 2 working days after it went out
+    assert deals.send_offer_reminder("L-001")["status"] == "sent"
+    assert deals.send_offer_reminder("L-001")["error"] == "too_early"
 
 
 def test_auto_close_a_second_payment_is_refused():
     small_deal_offer()
-    deals.record_payment("L-001", True)
-    assert deals.record_payment("L-001", True)["error"] == "already_paid"
+    deals.record_payment("L-001", True, by="fin-1")
+    assert deals.record_payment("L-001", True, by="fin-1")["error"] == "already_paid"
 
 
 def test_auto_close_refund_after_a_win_comes_off_revenue_and_waits_for_a_person():
     small_deal_offer()
-    deals.record_payment("L-001", True)
+    deals.record_payment("L-001", True, by="fin-1")
     deals.check_deal_done("L-001")
     assert shared.get_funnel_metrics()["won_revenue_eur"] > 0
-    assert deals.record_payment("L-001", False, status="refunded")["payment_status"] == "refunded"
+    assert deals.record_payment("L-001", False, by="fin-1", status="refunded")["payment_status"] == "refunded"
     assert shared.get_funnel_metrics()["won_revenue_eur"] == 0
     assert store.LEADS["L-001"]["needs_person"]["reason"].startswith("the customer was refunded")
     assert deals.check_deal_done("L-001")["already"] == "closed_won"

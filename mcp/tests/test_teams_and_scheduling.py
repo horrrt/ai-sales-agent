@@ -216,18 +216,31 @@ def test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep():
 
 
 def test_a_sick_reps_meeting_moves_to_a_colleague():
-    team(2, countries=["SE", "SE"])
+    team(3, countries=["SE", "SE", "SE"])
     lid = positive_lead(1)
     r = booked(lid)
     sick = store.LEADS[lid]["handoff"]["rep_id"]
-    other = "rep-2" if sick == "rep-1" else "rep-1"
+    other, third = [x for x in ("rep-1", "rep-2", "rep-3") if x != sick][:2]
+    assert denied_action(handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=other, by=other)) == "manage_team"
     handoff.set_rep_status(sick, "away")
     assert "away" in handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=sick)["error"]
-    denied = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other)  # the sick rep alone can't
-    assert denied["error"] == "not_allowed" and denied["action"] == "manage_team"
-    m = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other, by=other)  # the colleague takes it
+    assert denied_action(handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=other, by=third)) == "manage_team"
+    m = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other, by=other)  # takes it over
     assert m["ok"] and m["rep_id"] == other and store.LEADS[lid]["handoff"]["rep_id"] == other
     assert [e["lead_id"] for e in store.CALENDARS[other]] == [lid] and store.CALENDARS[sick] == []
+
+
+def test_the_owner_can_hand_a_meeting_to_a_colleague():
+    team(2, countries=["SE", "SE"])
+    lid = positive_lead(1)
+    r = booked(lid)
+    owner = store.LEADS[lid]["handoff"]["rep_id"]
+    other = "rep-2" if owner == "rep-1" else "rep-1"
+    assert handoff.reschedule_meeting(lid, r["start"], "rep", "going on holiday", new_rep_id=other, by=owner)["rep_id"] == other
+
+
+def denied_action(r):
+    return r.get("action") if r.get("error") == "not_allowed" else r
 
 
 # --- Cancellation and no-shows -----------------------------------------------------------------

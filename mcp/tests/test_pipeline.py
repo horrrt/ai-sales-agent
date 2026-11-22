@@ -222,7 +222,7 @@ def test_auto_close_small_deal_paid_is_won():
     stub(True)
     assert deals.check_small_deal("L-001", estimated_value_eur=1500)["next"] == "send_offer"
     assert deals.send_offer("L-001")["offer_link"].startswith("https://checkout.sandbox.test")
-    deals.record_payment("L-001", True)
+    deals.record_payment("L-001", True, by="fin-1")
     stub(True)
     assert deals.check_deal_done("L-001")["done"] is True
     assert store.LEADS["L-001"]["status"] == "won"
@@ -391,7 +391,7 @@ def test_payment_amount_is_kept():
     stub(True)
     deals.check_small_deal("L-001", estimated_value_eur=1500)
     deals.send_offer("L-001")
-    deals.record_payment("L-001", True, amount_eur=1500)
+    deals.record_payment("L-001", True, by="fin-1", amount_eur=1500)
     stub(True)
     deals.check_deal_done("L-001")
     lead = store.LEADS["L-001"]

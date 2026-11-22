@@ -28,7 +28,8 @@ def test_every_row_points_at_tests_that_exist():
         assert named_units or unit.strip() == "agent only", f"{uid}: no unit test (or 'agent only')"
         assert not set(named_units) - units, f"{uid}: unknown unit tests {set(named_units) - units}"
         named_cases = re.findall(r"`([\w-]+/[\w-]+)`", fleet)
-        assert named_cases, f"{uid}: no Fleet case"
+        assert named_cases or fleet.strip() == "unit only", f"{uid}: no Fleet case (or 'unit only')"
+        assert named_units or named_cases, f"{uid}: no test at all"
         assert not set(named_cases) - cases, f"{uid}: unknown Fleet cases {set(named_cases) - cases}"
     assert len(ids) == len(set(ids)), "duplicate use-case IDs"
 

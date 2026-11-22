@@ -1,8 +1,8 @@
 # Use cases and their tests
 
-Each row is something that happens to a real sales team, with the tests that check we handle it. Unit tests (in `mcp/tests/`) check what the tools do, with d1 replaced by a scripted stub and the clock pinned. Fleet cases (in `evals/fleet/cases/`) run the real agents against the same tools and check what they decide. Rows where only the agent decides say "agent only" in the unit column.
+Each row is something that happens to a real sales team, with the tests that check we handle it. Unit tests (in `mcp/tests/`) check what the tools do, with d1 replaced by a scripted stub and the clock pinned. Fleet cases (in `evals/fleet/cases/`) run the real agents against the same tools and check what they decide. Rows where only the agent decides say "agent only" in the unit column. Rows the code decides on its own, where no agent run would add anything, say "unit only" in the Fleet column.
 
-`mcp/tests/test_use_cases.py` reads these tables. It fails if a row names a test or case that doesn't exist, if a row has no Fleet case, or if a unit test or Fleet case isn't in any row. So when you add a test, add it here too.
+`mcp/tests/test_use_cases.py` reads these tables. It fails if a row names a test or case that doesn't exist, if a row has neither a Fleet case nor "unit only", or if a unit test or Fleet case isn't in any row. So when you add a test, add it here too.
 
 Run them:
 
@@ -42,7 +42,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | E18 | The call brief names everyone in the thread: the assistant who booked and the CFO copied in | agent only | `email/19-handoff-brief-names-everyone` |
 | E19 | Someone pastes a reply that isn't in the inbox. It's still recorded as a message | `test_pasted_reply_without_an_inbox_entry_is_still_recorded` | `outreach/05-reply-exits` |
 | E20 | After an unsubscribe the lead is never emailed again, even if someone reopens it by hand | `test_unsubscribed_lead_is_never_emailed_again` | `outreach/06-unsubscribe` |
-| E21 | Tests and demos pin the time (SALES_NOW, or `setup.now` in a Fleet case) | `test_clock_follows_sales_now` | `email/02-night-send-is-held` |
+| E21 | Tests and demos pin the time (SALES_NOW, or `setup.now` in a Fleet case) | `test_clock_follows_sales_now` | unit only |
 | E22 | The person approving always sees who gets the email (to and cc) and can change either. An approval without them is refused | `test_approval_without_the_recipients_is_refused`, `test_person_can_change_the_recipient_at_approval` | `email/11-ceo-hands-over-to-cto`, `email/07-follow-up-keeps-thread-and-cc` |
 
 ## The rest of the pipeline
@@ -52,7 +52,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P1 | A candidate fits the ICP and is added once. A second copy is a duplicate, and created_at and stage times are set | `test_add_lead_fit_is_added_and_duplicates_skipped`, `test_stage_times_and_created_at_are_recorded` | `lead-search/01-fit-added`, `lead-search/03-duplicate` |
 | P2 | A candidate outside the ICP is recorded as lost with wrong_company_fit | `test_add_lead_not_a_fit_is_recorded_with_a_loss_reason` | `lead-search/02-outside-icp` |
 | P3 | d1 can't decide. The lead goes to a person instead of being guessed | `test_add_lead_without_a_decision_goes_to_a_human`, `test_decide_without_any_backend_returns_no_answer` | `lead-search/04-gate-cannot-decide`, `outreach/09-gate-cannot-decide` |
-| P4 | The d1 call has the shape Liquid's API expects | `test_d1_request_and_response_shape` | `lead-search/01-fit-added` |
+| P4 | The d1 call has the shape Liquid's API expects | `test_d1_request_and_response_shape` | unit only |
 | P5 | Research is enough to write, or after 2 retries the lead goes on hold (not lost) | `test_research_gate_retries_then_puts_the_lead_on_hold` | `researcher/01-ready-to-write`, `researcher/02-thin-goes-on-hold` |
 | P6 | The positioner finds an angle in a sourced trigger, or says there's no fit | agent only | `positioner/01-angle-from-a-trigger`, `positioner/02-no-fit` |
 | P7 | The rep approves and the email is sent once. One approval covers one send | `test_approved_draft_sends_once_and_schedules_a_follow_up` | `outreach/01-approve-and-send` |
@@ -75,7 +75,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P24 | The pipeline is weighted by stage and quiet deals are flagged | `test_pipeline_weights_open_deals_and_flags_quiet_ones` | `deal-desk/06-pipeline-quiet-deals` |
 | P25 | The weekly review proposes a rule change from rep edits, waits when there's too little data, and spots losses to a competitor | `test_event_log_and_proposals`, `test_funnel_metrics_with_a_deal_that_never_set_auto_close` | `coach/01-proposal-from-rep-edits`, `coach/02-too-early`, `coach/03-losses-to-a-competitor` |
 | P26 | Every log row uses the schema's stages and outcomes | `test_log_interaction_rejects_values_outside_the_schema` | `manager/05-batch-end-to-end` |
-| P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | `manager/05-batch-end-to-end` |
+| P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | unit only |
 | P28 | The manager sends each request to the right agent and declines off-topic ones | agent only | `manager/01-routes-lead-search`, `manager/02-routes-replies`, `manager/03-routes-deal`, `manager/04-off-topic` |
 
 ## Team size
@@ -104,12 +104,12 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | S4 | The prospect names a day and time, even weeks out, and that time is booked | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out` | `scheduling/02-prospect-names-a-day` |
 | S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
 | S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
-| S7 | A rep is sick. Their meetings are listed from their calendar and move to a colleague who covers the same country | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
+| S7 | A rep is sick. Their meetings are listed from their calendar and a colleague takes them over. The owner can hand a meeting over too; anyone else needs an admin | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_the_owner_can_hand_a_meeting_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
 | S8 | The prospect cancels but wants another time. The slot is freed, no time is picked for them, and a rebooking follow-up is due the next working day | `test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up` | `scheduling/04-prospect-cancels-rebook` |
 | S9 | The prospect cancels for good. No rebooking, and a person decides whether the lead is lost | `test_cancellation_for_good_waits_for_a_person` | `scheduling/05-prospect-cancels-for-good` |
 | S10 | A no-show gets a rebooking follow-up. After a second no-show, a person decides | `test_no_show_schedules_a_rebook_and_a_second_no_show_asks_a_person` | `scheduling/06-no-show` |
 | S11 | No rep is ever double-booked, at any team size | `test_every_team_size_books_without_double_booking` | `scheduling/08-asked-for-a-taken-slot`, `scheduling/07-sick-rep-meeting-moves` |
-| S12 | Calendars survive a server restart | `test_calendar_survives_a_restart` | `scheduling/03-prospect-reschedules` |
+| S12 | Calendars survive a server restart | `test_calendar_survives_a_restart` | unit only |
 
 ## Follow-ups
 
@@ -129,7 +129,7 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 
 ## Who may do what
 
-Each person in the team roster has a role (admin, rep, junior, finance, viewer) and can have their own `allow` and `deny` lists on top, and deny wins. The tools check the person passed as `by` (a rep_id, email or name). A claimed role in a message never counts, and a refusal names who can do it.
+Each person in the team roster has a role (admin, rep, junior, finance, viewer) and can have their own `allow` and `deny` lists on top, and deny wins. The tools check the person passed as `by` (a rep_id, email or name). A claimed role in a message ("I'm the admin") never counts, and a refusal names who can do it. The tools trust `by` as the identity, though: in Fleet the real check of who someone is is the person who answers the approval prompt. Payments always need `by`.
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
@@ -140,11 +140,11 @@ Each person in the team roster has a role (admin, rep, junior, finance, viewer) 
 | R5 | A discount above the limit needs an admin, even on the rep's own deal | `test_a_discount_above_the_limit_needs_an_admin` | `access/03-rep-discount-needs-admin`, `deal-desk/02-discount-needs-admin` |
 | R6 | A rep can't approve, sign or close a colleague's deal | `test_a_rep_cannot_approve_or_close_someone_elses_deal` | `access/04-rep-cannot-close-colleagues-deal`, `manager/06-other-rep-closes-a-deal` |
 | R7 | Only finance or an admin records a payment | `test_only_finance_or_an_admin_records_a_payment` | `access/05-finance-records-payment`, `access/06-rep-cannot-record-payment` |
-| R8 | Only an admin approves a rule change from the weekly review | `test_only_an_admin_decides_a_rule_change` | `coach/01-proposal-from-rep-edits` |
-| R9 | A rep can't move or cancel a colleague's meeting. The owner or an admin can | `test_a_rep_cannot_move_or_cancel_a_colleagues_meeting_but_an_admin_can` | `access/08-rep-cannot-cancel-colleagues-meeting` |
+| R8 | Only an admin approves a rule change from the weekly review | `test_only_an_admin_decides_a_rule_change` | unit only |
+| R9 | A rep can't move or cancel a colleague's meeting. The owner or an admin can | `test_a_rep_cannot_move_or_cancel_a_colleagues_meeting_but_an_admin_can` | `access/08-rep-cannot-cancel-colleagues-meeting`, `access/09-viewer-is-read-only` |
 | R10 | A junior runs their own meetings | `test_a_junior_runs_their_own_meetings` | `access/07-junior-moves-own-meeting` |
-| R11 | You set your own status. Setting someone else's needs an admin | `test_status_is_your_own_unless_you_are_an_admin` | `scheduling/07-sick-rep-meeting-moves` |
-| R12 | People who don't take leads (finance, viewers) never get one | `test_a_finance_person_never_gets_a_lead` | `access/09-viewer-is-read-only` |
+| R11 | You set your own status. Setting someone else's needs an admin | `test_status_is_your_own_unless_you_are_an_admin` | unit only |
+| R12 | People who don't take leads (finance, viewers) never get one | `test_a_finance_person_never_gets_a_lead` | unit only |
 
 ## Auto-close
 
@@ -158,15 +158,15 @@ Off unless the brief enables it. A small, standard deal closes without a rep: ch
 | A4 | Custom terms, a security review or a discount request: a rep | `test_auto_close_a_request_for_custom_terms_goes_to_a_rep` | `auto-close/04-custom-terms-to-a-rep` |
 | A5 | d1 can't decide: nothing is opened or sent, and a person decides | `test_auto_close_without_a_decision_waits_for_a_person` | `auto-close/05-gate-cannot-decide` |
 | A6 | The offer is ready at night: it waits until 08:00 in the prospect's country | `test_auto_close_offer_at_night_waits_for_the_morning` | `auto-close/06-offer-at-night-held` |
-| A7 | Not paid: a reminder after 2 working days, at most two, then after 7 working days a rep takes it | `test_auto_close_unpaid_offer_gets_two_reminders_then_goes_to_a_rep` | `auto-close/07-unpaid-reminder`, `auto-close/08-offer-expired-to-a-rep` |
+| A7 | Not paid: a reminder after 2 working days, at most two, never early, then after 7 working days a rep takes it. An offer still waiting for business hours isn't expired | `test_auto_close_unpaid_offer_gets_two_reminders_then_goes_to_a_rep`, `test_auto_close_reminders_cannot_be_sent_early_and_a_held_offer_is_not_expired` | `auto-close/07-unpaid-reminder`, `auto-close/08-offer-expired-to-a-rep` |
 | A8 | The card is declined: the link goes out again the next working day, then the payment goes through | `test_auto_close_failed_payment_sends_the_link_again` | `auto-close/09-payment-failed-retry` |
-| A9 | Only part is paid: not won, a person decides | `test_auto_close_partial_payment_waits_for_a_person` | `auto-close/10-partial-payment` |
+| A9 | Only part is paid: not won and a person is asked, until the rest is paid | `test_auto_close_partial_payment_waits_for_a_person_until_the_rest_is_paid` | `auto-close/10-partial-payment` |
 | A10 | The same payment is reported twice: the second is refused | `test_auto_close_a_second_payment_is_refused` | `auto-close/14-duplicate-payment` |
 | A11 | A refund after the win: it comes off won revenue and a person decides what it means | `test_auto_close_refund_after_a_win_comes_off_revenue_and_waits_for_a_person` | `auto-close/12-refund` |
 | A12 | After the offer, they ask for a discount: auto-close ends and a rep takes it | agent only | `auto-close/11-reply-asks-for-a-discount` |
-| A13 | They unsubscribe after the offer: no reminders | `test_auto_close_no_reminder_after_an_unsubscribe` | `outreach/06-unsubscribe` |
-| A14 | No offer or reminder without the gate saying yes | `test_auto_close_cannot_skip_the_gate` | `auto-close/03-over-the-cap-to-a-rep` |
-| A15 | Payment amounts are kept and counted in the funnel | `test_payment_amount_is_kept` | `auto-close/02-paid-closes-won` |
+| A13 | They unsubscribe after the offer: no reminders | `test_auto_close_no_reminder_after_an_unsubscribe` | unit only |
+| A14 | No offer or reminder without the gate saying yes | `test_auto_close_cannot_skip_the_gate` | unit only |
+| A15 | Payment amounts are kept and counted in the funnel | `test_payment_amount_is_kept` | unit only |
 
 ## Times
 
@@ -174,9 +174,9 @@ Nothing goes out, falls due or is booked outside working time: weekends, nights 
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
-| W1 | The holiday tables: Easter, Midsummer, 17 May, 6 December, German Unity Day. Christmas Eve is a working day in Germany | `test_holiday_tables` | `times/07-midsummer-eve-sweden` |
+| W1 | The holiday tables: Easter, Midsummer, 17 May, 6 December, German Unity Day. Christmas Eve is a working day in Germany | `test_holiday_tables` | unit only |
 | W2 | An email approved on Christmas Eve waits until Monday 28 December | `test_christmas_eve_send_waits_until_after_christmas` | `times/01-christmas-eve-email-held` |
-| W3 | A national holiday holds one country's email, not another's | `test_a_national_holiday_holds_one_country_and_not_another` | `times/02-norway-17-may` |
+| W3 | A national holiday holds one country's email, not another's | `test_a_national_holiday_holds_one_country_and_not_another` | `times/02-norway-17-may`, `times/07-midsummer-eve-sweden` |
 | W4 | Follow-up spacing skips Christmas | `test_follow_up_spacing_skips_christmas` | `times/04-friday-night-follow-ups` |
 | W5 | Meeting slots skip the rep's and the prospect's public holidays. A holiday booking is refused | `test_slots_skip_holidays_where_the_rep_works_and_where_the_prospect_is` | `times/05-prospect-asks-for-christmas-eve`, `times/08-finnish-independence-day` |
 | W6 | A yes on Saturday gets slots from Tuesday (Monday is the notice day) | `test_a_reply_on_saturday_gets_slots_from_tuesday` | `times/03-saturday-reply-booked-next-week` |

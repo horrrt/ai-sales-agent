@@ -35,9 +35,10 @@ turns:
 approvals:
   default: approve
 expect:
-  called_with:
-    record_approval:
-      by: ~rep-2
+  events:
+  - stage: approval
+    outcome: success
+    by: rep-2
   lead:
     L-201:
       stage: sent

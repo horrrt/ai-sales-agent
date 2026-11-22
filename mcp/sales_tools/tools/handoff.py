@@ -313,8 +313,8 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
 
     requested_by: prospect or rep. new_rep_id moves it to another rep too (the rep is sick or away); check
     that rep's find_free_slots first. After the second move, the result says to ask the rep whether to keep going.
-    by: who approves (default: the meeting's rep). Moving it to another rep needs manage_team, unless by is
-    that rep taking it over."""
+    by: who approves (default: the meeting's rep). Moving it to another rep: the meeting's rep may hand it over;
+    a colleague may take it over only while that rep is away; anyone else needs manage_team (admins)."""
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": f"unknown lead {lead_id}"}
@@ -328,11 +328,15 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
     minutes = int((_parse(e["end"]) - _parse(e["start"])).total_seconds() // 60)
     to_rep = new_rep_id or h["rep_id"]
     approver = by or h["rep_id"]
-    if to_rep != h["rep_id"] and access.resolve(approver) != to_rep:
+    who, owner = access.resolve(approver), h["rep_id"]
+    if to_rep == owner or who == owner:
+        # the same rep, or the owner handing their own meeting to a colleague
+        denied = access.check(approver, "change_meeting", owner=owner, lead_id=lead_id, stage="handoff")
+    elif who == to_rep and (REPS.get(owner) or {}).get("status") == "away":
+        # a colleague takes over the meeting of a rep who is away
+        denied = access.check(approver, "change_meeting", owner=to_rep, lead_id=lead_id, stage="handoff")
+    else:  # anyone else moving a meeting between reps
         denied = access.check(approver, "manage_team", lead_id=lead_id, stage="handoff")
-    else:
-        denied = access.check(approver, "change_meeting", owner=to_rep if access.resolve(approver) == to_rep else h["rep_id"],
-                              lead_id=lead_id, stage="handoff")
     if denied:
         return denied
     if to_rep not in REPS:
