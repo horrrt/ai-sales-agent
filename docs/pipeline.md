@@ -74,7 +74,6 @@ flowchart TD
     H1 -- "approved or edited" --> T1
     T1 -. "no reply" .-> F1
     F1 -. "follow-up draft" .-> A5
-    K1 -. "next week: better search, better drafts" .-> A1
 
     classDef agent fill:#4b3fae,stroke:#8c80ff,color:#ffffff
     classDef gate fill:#0e6b50,stroke:#33c49a,color:#ffffff
@@ -93,7 +92,7 @@ flowchart TD
 | Grey cylinder | Stored data (lead sheet, event log, rules) |
 | Dashed box | An exit: the lead stops here, with a status and, if it's lost, one loss reason |
 
-Every gate and tool writes a row to the event log, which feeds the weekly loop. Lines from each stage to the event log are left out to keep the diagram readable.
+Every gate and tool writes a row to the event log, which feeds the weekly loop, and the approved rules change next week's search and drafts. Those lines are left out so the diagram reads top to bottom.
 
 | Diagram box | Built as | File |
 |---|---|---|
