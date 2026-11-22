@@ -1,0 +1,35 @@
+title: 'Aino (junior, 8 of 8 leads, red) says hi: told she is full, not offered approvals or new leads'
+agent: manager
+setup: {}
+turns:
+- from: rep-3
+  text: hi!
+expect:
+  called:
+  - get_person
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - update_brief
+  final_mentions_any:
+  - - full
+    - red
+    - 8 of 8
+    - 8/8
+    - capacity
+    - no room
+  max_tool_calls: 16
+  logs_follow_schema: true
+  final_must_not_contain:
+  - you can approve
+  - want to approve
+  - find new leads

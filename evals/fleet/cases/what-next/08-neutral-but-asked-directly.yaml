@@ -1,0 +1,111 @@
+title: 'Neutral mode, but Jonas asks "what is the best thing to do here?": he still gets one pick, and why'
+agent: manager
+setup:
+  leads:
+  - lead_id: L-301
+    person:
+      name: Karin Ek
+      title: CEO
+      email: karin@fjallsoft.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Fjällsoft AB
+      domain: fjallsoft.example
+      country: SE
+      employees: 22
+      industry: B2B SaaS
+    stage: handed_off
+    status: active
+    handoff:
+      rep_id: rep-2
+      event_id: E-L-301-1
+      meeting_start: '2026-11-25T09:00:00+00:00'
+      meeting_end: '2026-11-25T09:30:00+00:00'
+      meeting_status: booked
+      meeting_outcome: null
+  - lead_id: L-302
+    person:
+      name: Per Holm
+      title: CEO
+      email: per@norrdata.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Norrdata AB
+      domain: norrdata.example
+      country: SE
+      employees: 22
+      industry: B2B SaaS
+    stage: handed_off
+    status: active
+    updated_at: '2026-11-02T09:00:00+00:00'
+    handoff:
+      rep_id: rep-2
+      meeting_start: '2026-11-02T10:00:00+00:00'
+      meeting_outcome: held
+    deal:
+      owner: rep-2
+      auto_close: false
+      call_notes: []
+      bant: {}
+      contract:
+        status: none
+        signed_at: null
+      paid: false
+      amount_eur: null
+      closed_at: null
+      expected_close_date: null
+      stage: quote
+      stage_times:
+        qualification: '2026-11-02T11:00:00+00:00'
+      probability: 40
+      quote:
+        plan: annual
+        quantity: 1
+        term_months: 12
+        total_eur: 7800
+        status: draft
+  calendars:
+    rep-2:
+    - event_id: E-L-301-1
+      kind: meeting
+      status: booked
+      title: Intro call
+      lead_id: L-301
+      start: '2026-11-25T09:00:00+00:00'
+      end: '2026-11-25T09:30:00+00:00'
+  brief:
+    question_mode: neutral
+turns:
+- from: rep-2
+  text: What is the best thing to do here?
+expect:
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - read_reply
+  - update_brief
+  max_tool_calls: 16
+  logs_follow_schema: true
+  final_mentions_any:
+  - - recommend
+    - 'i''d '
+    - 'i’d '
+    - i would
+    - best next step
+    - start with
+    - first,
+    - 'first:'
+    - my pick
+    - comes first
+    - suggest
+  - - Fjällsoft
+    - Norrdata

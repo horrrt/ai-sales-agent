@@ -1,0 +1,20 @@
+title: '"Hi" once the setup is done and nothing is running: suggests finding leads and a first batch, runs neither'
+agent: manager
+setup: {}
+turns:
+- Hi!
+expect:
+  not_called:
+  - find_leads
+  - add_lead
+  - send_email
+  - book_meeting
+  - update_brief
+  final_mentions_any:
+  - - lead
+  - - batch
+    - find
+    - search
+    - outreach
+  max_tool_calls: 12
+  logs_follow_schema: true

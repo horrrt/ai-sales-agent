@@ -103,5 +103,7 @@ def describe(rep_id: str) -> dict:
     can = sorted(a for a in ACTIONS if allowed(rep_id, a))
     return {"rep_id": rep_id, "name": r.get("name"), "role": r.get("role", "rep"), "email": r.get("email"),
             "status": r.get("status"), "takes_leads": r.get("takes_leads", True),
+            # how to put options to them: their own setting, else the team default in the brief, else recommend
+            "question_mode": r.get("question_mode") or (BRIEF.get("question_mode") or "recommend"),
             "can": [ACTIONS[a] + (" (own leads only)" if a in OWN and "any_lead" not in can else "") for a in can],
             "cannot": [ACTIONS[a] for a in ACTIONS if a not in can]}

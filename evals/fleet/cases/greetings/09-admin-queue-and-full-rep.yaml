@@ -1,0 +1,51 @@
+title: 'Mette (admin) says good morning: a lead waits in the queue and Aino is full, both offered, nothing released'
+agent: manager
+setup:
+  queue:
+  - lead_id: L-401
+    since: '2026-11-20T09:00:00+00:00'
+  leads:
+  - lead_id: L-401
+    person:
+      name: Eero Laine
+      title: CEO
+      email: eero@sisu.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Sisu Learning Oy
+      domain: sisu.example
+      country: FI
+      employees: 22
+      industry: B2B SaaS
+    stage: sent
+    status: queued
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+      reply_label: positive
+turns:
+- Good morning!
+expect:
+  called:
+  - get_person
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - update_brief
+  final_mentions_any:
+  - - queue
+    - waiting for a rep
+    - waiting
+  - - Sisu
+  - - Aino
+    - Aino Virtanen
+  max_tool_calls: 16
+  logs_follow_schema: true

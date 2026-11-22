@@ -19,7 +19,10 @@ from ..store import BRIEF, LEADS, WEBSITES, log_event
 
 SECTIONS = {"company_name": str, "website": (str, list), "offer": str, "product_info": str, "tone": str,
             "exclusions": list, "won_deals": list, "icp": dict, "pricing": dict, "auto_close": dict, "sender": dict,
-            "approvers": dict}
+            "approvers": dict, "question_mode": str}
+# How the agent puts options to people: recommend = names the best next step first, neutral = options side by side, no pick.
+# The brief's question_mode is the team default; a team member's own question_mode overrides it.
+QUESTION_MODES = ("recommend", "neutral")
 SIZE_BANDS = ((1, 9, "1-9"), (10, 49, "10-49"), (50, 249, "50-249"), (250, 10 ** 9, "250+"))
 MIN_DEALS_FOR_ICP = 5
 ICP_KEYS = {"countries", "employees_min", "employees_max", "industries", "titles", "triggers"}
@@ -258,7 +261,8 @@ def list_industries() -> dict:
 def update_brief(section: str, value, by: str = "") -> dict:
     """Change one section of the customer brief. This tool always asks a person first, and only an admin
     (by) may change the brief. Sections: company_name, website, offer, product_info, tone, exclusions,
-    won_deals, icp, pricing, auto_close, sender, approvers. A dict (icp, pricing, auto_close, sender,
+    won_deals, icp, pricing, auto_close, sender, approvers, question_mode (the team default for how the agent puts
+    options to people: "recommend" or "neutral"). A dict (icp, pricing, auto_close, sender,
     approvers) is merged into what's there. Returns check_brief afterwards, so you see what's still missing."""
     if section not in SECTIONS:
         return {"ok": False, "error": f"unknown section {section!r}", "sections": sorted(SECTIONS)}
@@ -282,6 +286,8 @@ def update_brief(section: str, value, by: str = "") -> dict:
                 return {"ok": False, "error": "unknown_industries", "unknown": problems,
                         "next": "pick names from the suggestions or list_industries; a new industry is added to data/industries.json"}
             value = {**value, "industries": mapped}
+    if section == "question_mode" and value not in QUESTION_MODES:
+        return {"ok": False, "error": f"question_mode must be one of {list(QUESTION_MODES)}"}
     if section == "sender" and "email" in value and not str(value["email"]).endswith(".test"):
         return {"ok": False, "error": "the sender must be a sandbox .test address during the course"}
     if section == "approvers":
@@ -309,7 +315,7 @@ def update_brief(section: str, value, by: str = "") -> dict:
 
 ROLES_ALLOWED = ("admin", "rep", "junior", "finance", "viewer")
 MEMBER_FIELDS = {"name", "email", "role", "countries", "languages", "timezone", "working_hours", "max_leads", "takes_leads",
-                 "slack_user_id", "status", "allow", "deny"}
+                 "slack_user_id", "status", "allow", "deny", "question_mode"}
 
 
 def _member_problems(m: dict) -> list[str]:
@@ -321,6 +327,8 @@ def _member_problems(m: dict) -> list[str]:
         out.append("a sandbox .test email")
     if m.get("role", "rep") not in ROLES_ALLOWED:
         out.append(f"a role from {list(ROLES_ALLOWED)}")
+    if m.get("question_mode") is not None and m["question_mode"] not in QUESTION_MODES:
+        out.append(f"question_mode from {list(QUESTION_MODES)}")
     try:
         ZoneInfo(m.get("timezone") or "")
     except Exception:
@@ -375,15 +383,17 @@ def add_team_member(rep_id: str, name: str, email: str, role: str = "rep", count
 @mcp.tool()
 def update_team_member(rep_id: str, fields: dict, by: str = "") -> dict:
     """Change a team member: role, countries, capacity (max_leads), time zone, working hours, whether they
-    take leads, or their own allow/deny actions. Asks a person first; only an admin may do it. An admin
-    can't take away the last admin."""
+    take leads, their own allow/deny actions, or question_mode (how the agent puts options to them: "recommend"
+    or "neutral"). Asks a person first; only an admin may do it, except that anyone may set their own
+    question_mode. An admin can't take away the last admin."""
     from ..store import REPS
     if rep_id not in REPS:
         return {"ok": False, "error": f"unknown team member {rep_id}"}
     bad = set(fields) - MEMBER_FIELDS
     if bad:
         return {"ok": False, "error": f"unknown fields {sorted(bad)}", "allowed": sorted(MEMBER_FIELDS)}
-    denied = access.check(by, "manage_team")
+    own_preference = set(fields) == {"question_mode"} and access.resolve(by or rep_id) == rep_id
+    denied = None if own_preference else access.check(by, "manage_team")
     if denied:
         return denied
     new = {**REPS[rep_id], **fields}

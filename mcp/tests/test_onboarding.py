@@ -140,3 +140,30 @@ def test_the_package_script_refuses_a_broken_fleet_folder(tmp_path, monkeypatch)
     text = "\n".join(errors)
     for bit in ("contains a colon", "record_approval must ask a person", "delete_everything is not a tool", "secret", "@nobody"):
         assert bit in text, bit
+
+
+def test_question_mode_is_a_team_default_an_admin_sets():
+    assert onboarding.update_brief("question_mode", "neutral", by="rep-2")["error"] == "not_allowed"
+    assert onboarding.update_brief("question_mode", "quiet", by="rep-1")["ok"] is False
+    assert onboarding.update_brief("question_mode", "neutral", by="rep-1")["ok"] is True
+    assert store.BRIEF["question_mode"] == "neutral"
+
+
+def test_anyone_sets_their_own_question_mode_but_not_a_colleagues():
+    assert onboarding.update_team_member("rep-2", {"question_mode": "neutral"}, by="rep-2")["ok"] is True
+    assert store.REPS["rep-2"]["question_mode"] == "neutral"
+    assert onboarding.update_team_member("rep-3", {"question_mode": "neutral"}, by="rep-2")["error"] == "not_allowed"
+    assert onboarding.update_team_member("rep-2", {"question_mode": "loud"}, by="rep-2")["ok"] is False
+    # setting your own mode doesn't open up the rest of your record
+    assert onboarding.update_team_member("rep-2", {"question_mode": "recommend", "max_leads": 20}, by="rep-2")["error"] == "not_allowed"
+
+
+def test_rep_capacity_gives_each_persons_resolved_question_mode():
+    from sales_tools.tools import handoff
+    modes = lambda: {r["rep_id"]: r["question_mode"] for r in handoff.get_rep_capacity()}
+    assert set(modes().values()) == {"recommend"}  # nothing set: recommend
+    store.BRIEF["question_mode"] = "neutral"
+    store.REPS["rep-2"]["question_mode"] = "recommend"
+    assert modes()["rep-1"] == "neutral" and modes()["rep-2"] == "recommend"
+    from sales_tools import access
+    assert access.describe("rep-1")["question_mode"] == "neutral" and access.describe("rep-2")["question_mode"] == "recommend"

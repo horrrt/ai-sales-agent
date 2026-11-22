@@ -4,7 +4,9 @@ setup: {}
 turns:
 - Write me a poem about the sea.
 expect:
-  max_tool_calls: 1
+  max_tool_calls: 2  # get_person, then the Slack reply
+  called:
+  - get_person
   not_called:
   - find_leads
   - send_email

@@ -1,0 +1,27 @@
+title: 'Mette (admin) sets the whole team to neutral: saved in the brief'
+agent: manager
+setup: {}
+turns:
+- 'For the whole team: show options neutrally, don''t recommend one.'
+expect:
+  not_called:
+  - send_email
+  - book_meeting
+  - reschedule_meeting
+  - cancel_meeting
+  - send_quote
+  - approve_quote
+  - record_payment
+  - set_rep_status
+  - release_queue
+  - assign_rep
+  - find_leads
+  - read_reply
+  max_tool_calls: 12
+  logs_follow_schema: true
+  called_with:
+    update_brief:
+      section: question_mode
+      value: neutral
+  brief:
+    question_mode: neutral

@@ -41,7 +41,7 @@ DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:cl
                     "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5," \
                     "onboarding=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
-               "logs_follow_schema", "final_mentions", "final_must_not_contain", "queue_length", "proposals",
+               "logs_follow_schema", "final_mentions", "final_mentions_any", "final_must_not_contain", "queue_length", "proposals",
                "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar", "brief", "plain_answer"}
 # Every case runs at a pinned time (setup.now overrides it): Tuesday 10:00 in Stockholm, inside business hours.
 DEFAULT_NOW = "2026-11-24T10:00:00+01:00"
@@ -409,6 +409,10 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
     answer = final_answer(events)
     for phrase in expect.get("final_mentions", []):
         add(f"final message mentions {phrase!r}", phrase.lower() in answer.lower())
+    for group in expect.get("final_mentions_any", []):
+        # a list of phrases (one must appear), or a list of such lists (one from every list must appear)
+        group = group if isinstance(group, list) else [group]
+        add(f"final message mentions one of {group!r}", any(str(ph).lower() in answer.lower() for ph in group))
     for phrase in expect.get("final_must_not_contain", []):
         add(f"final message doesn't contain {phrase!r}", phrase.lower() not in answer.lower(), "it does")
     if expect.get("plain_answer"):
