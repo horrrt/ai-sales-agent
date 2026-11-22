@@ -3,43 +3,43 @@
     {
       "name": "get_customer_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get customer brief"
     },
     {
       "name": "get_lead",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get lead"
     },
     {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Log interaction"
     },
     {
       "name": "get_funnel_metrics",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get funnel metrics"
     },
     {
       "name": "get_event_log",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get event log"
     },
     {
       "name": "get_changes",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get changes"
     },
     {
       "name": "save_proposal",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Save proposal"
     },
     {
@@ -50,13 +50,13 @@
     }
   ],
   "interrupt_config": {
-    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_funnel_metrics::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_event_log::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_changes::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::save_proposal::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_customer_brief::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_funnel_metrics::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_event_log::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_changes::sales_tools": false,
+    "https://sales-tools.invalid/mcp::save_proposal::sales_tools": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false
   }
 }

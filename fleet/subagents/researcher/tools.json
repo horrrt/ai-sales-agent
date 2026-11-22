@@ -3,60 +3,60 @@
     {
       "name": "get_customer_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get customer brief"
     },
     {
       "name": "get_lead",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get lead"
     },
     {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Log interaction"
     },
     {
       "name": "next_lead",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Next lead"
     },
     {
       "name": "get_targets_from_clay",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get targets from clay"
     },
     {
       "name": "research_target",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Research target"
     },
     {
       "name": "check_ready_to_write",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Check ready to write"
     },
     {
       "name": "tag_loss_reason",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Tag loss reason"
     }
   ],
   "interrupt_config": {
-    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::next_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_targets_from_clay::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::research_target::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::check_ready_to_write::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::tag_loss_reason::Sales tools (sandbox)": false
+    "https://sales-tools.invalid/mcp::get_customer_brief::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
+    "https://sales-tools.invalid/mcp::next_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_targets_from_clay::sales_tools": false,
+    "https://sales-tools.invalid/mcp::research_target::sales_tools": false,
+    "https://sales-tools.invalid/mcp::check_ready_to_write::sales_tools": false,
+    "https://sales-tools.invalid/mcp::tag_loss_reason::sales_tools": false
   }
 }

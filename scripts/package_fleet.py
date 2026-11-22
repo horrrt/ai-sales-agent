@@ -5,7 +5,11 @@
     python3 scripts/package_fleet.py --sandbox          # keep the placeholder URL (for a local look only)
     python3 scripts/package_fleet.py --check            # validate only, no zip
 
-Fleet's sidebar: + > Import, then pick the zip. Import creates the agent exactly as written and skips
+First register the tool server in Fleet: Integrations > + Custom MCP, name "sales_tools" (the name must
+match --server-name), the same URL, no auth. The import only points the tools at a server name; without a
+custom MCP of that name the agent sees none of our tools at runtime.
+
+Then Fleet's sidebar: + > Import, and pick the zip. Import creates the agent exactly as written and skips
 schedules, so add the schedules in config.json's metadata by hand.
 
 The repo's fleet/ keeps the placeholder server URL (https://sales-tools.invalid/mcp). With --mcp-url the
@@ -16,6 +20,7 @@ Checks (any error stops the build):
 - every JSON file parses; every subagent and skill has frontmatter with a description (no colons for
   subagents, which Fleet's import rejects); every @name the manager or a skill routes to exists
 - every tool on our server that a tools.json lists exists in mcp/sales_tools, and has an approval entry
+- the server name is one Fleet accepts for a custom MCP (letters, digits, - and _)
 - the tools that commit the company (APPROVAL_TOOLS) ask a person in every tools.json that lists them
 - no secrets (API keys, tokens, .env files) anywhere in the zip
 - only files that belong in Fleet's export layout go in (a stray notes file in subagents/ is left out, with a warning)
@@ -33,7 +38,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 FLEET = REPO / "fleet"
 PLACEHOLDER = "https://sales-tools.invalid/mcp"
-SERVER_NAME = "Sales tools (sandbox)"
+SERVER_NAME = "sales_tools"
 APPROVAL_TOOLS = {"record_approval", "book_meeting", "reschedule_meeting", "cancel_meeting", "record_meeting_outcome",
                   "approve_quote", "record_contract", "record_deal_outcome", "record_payment", "decide_proposal",
                   "update_brief", "add_team_member", "update_team_member"}
@@ -124,6 +129,9 @@ def validate(root: Path) -> tuple[list[str], list[str]]:
                 continue  # Fleet's built-in tools (Slack)
             if name not in ours:
                 errors.append(f"{rel}: {name} is not a tool on our server (mcp/sales_tools)")
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", t.get("mcp_server_name") or ""):
+                errors.append(f"{rel}: server name {t.get('mcp_server_name')!r} for {name}: Fleet only accepts letters, "
+                              "digits, - and _, and loads the tools only if it matches the custom MCP registered in Integrations")
             key = f"{url}::{name}::{t.get('mcp_server_name')}"
             if key not in keys:
                 errors.append(f"{rel}: no approval entry for {name}")
@@ -192,7 +200,7 @@ def build(out: Path, url: str | None, name: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mcp-url", help="the deployed tool server, e.g. https://sales-tools-xyz.a.run.app/mcp")
-    ap.add_argument("--server-name", default=SERVER_NAME, help="the MCP server's display name in Fleet")
+    ap.add_argument("--server-name", default=SERVER_NAME, help="the custom MCP's name in Fleet Integrations (letters, digits, - and _)")
     ap.add_argument("--sandbox", action="store_true", help="keep the placeholder URL (not for upload)")
     ap.add_argument("--check", action="store_true", help="validate fleet/ only, build nothing")
     ap.add_argument("--out", default=str(REPO / "dist/sales-assistant-fleet.zip"))

@@ -133,7 +133,7 @@ def test_the_package_script_refuses_a_broken_fleet_folder(tmp_path, monkeypatch)
     (copy / "subagents/outreach/AGENTS.md").write_text("---\ndescription: Writes emails: and more\n---\n")
     t = json.loads((copy / "subagents/outreach/tools.json").read_text())
     t["interrupt_config"] = {k: False for k in t["interrupt_config"]}  # record_approval no longer asks
-    t["tools"].append({"name": "delete_everything", "mcp_server_url": "https://sales-tools.invalid/mcp", "mcp_server_name": "Sales tools (sandbox)"})
+    t["tools"].append({"name": "delete_everything", "mcp_server_url": "https://sales-tools.invalid/mcp", "mcp_server_name": "sales_tools"})
     (copy / "subagents/outreach/tools.json").write_text(json.dumps(t))
     (copy / "skills/find-leads/SKILL.md").write_text("---\nname: find-leads\ndescription: x\n---\nsk-ant-api03-abcdefghijklmnopqrstuvwxyz\n@nobody")
     errors, _ = package_fleet.validate(copy)

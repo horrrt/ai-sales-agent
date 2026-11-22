@@ -3,73 +3,73 @@
     {
       "name": "get_customer_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get customer brief"
     },
     {
       "name": "get_lead",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get lead"
     },
     {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Log interaction"
     },
     {
       "name": "assign_rep",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Assign rep"
     },
     {
       "name": "release_queue",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Release queue"
     },
     {
       "name": "get_wait_queue",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get wait queue"
     },
     {
       "name": "get_rep_capacity",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get rep capacity"
     },
     {
       "name": "set_rep_status",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Set rep status"
     },
     {
       "name": "find_free_slots",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Find free slots"
     },
     {
       "name": "book_meeting",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Book meeting"
     },
     {
       "name": "save_call_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Save call brief"
     },
     {
       "name": "record_meeting_outcome",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Record meeting outcome"
     },
     {
@@ -93,54 +93,54 @@
     {
       "name": "get_thread",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get thread"
     },
     {
       "name": "reschedule_meeting",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Reschedule meeting"
     },
     {
       "name": "cancel_meeting",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Cancel meeting"
     },
     {
       "name": "due_follow_ups",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Due follow ups"
     },
     {
       "name": "get_rep_calendar",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get rep calendar"
     }
   ],
   "interrupt_config": {
-    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::assign_rep::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::release_queue::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_wait_queue::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::set_rep_status::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::find_free_slots::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::book_meeting::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::save_call_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_customer_brief::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
+    "https://sales-tools.invalid/mcp::assign_rep::sales_tools": false,
+    "https://sales-tools.invalid/mcp::release_queue::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_wait_queue::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_rep_capacity::sales_tools": false,
+    "https://sales-tools.invalid/mcp::set_rep_status::sales_tools": false,
+    "https://sales-tools.invalid/mcp::find_free_slots::sales_tools": false,
+    "https://sales-tools.invalid/mcp::book_meeting::sales_tools": true,
+    "https://sales-tools.invalid/mcp::save_call_brief::sales_tools": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
     "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
     "https://tools.langchain.com::slack_read_thread_messages::Fleet": false,
-    "https://sales-tools.invalid/mcp::record_meeting_outcome::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::get_thread::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::reschedule_meeting::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::cancel_meeting::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::due_follow_ups::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_rep_calendar::Sales tools (sandbox)": false
+    "https://sales-tools.invalid/mcp::record_meeting_outcome::sales_tools": true,
+    "https://sales-tools.invalid/mcp::get_thread::sales_tools": false,
+    "https://sales-tools.invalid/mcp::reschedule_meeting::sales_tools": true,
+    "https://sales-tools.invalid/mcp::cancel_meeting::sales_tools": true,
+    "https://sales-tools.invalid/mcp::due_follow_ups::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_rep_calendar::sales_tools": false
   }
 }

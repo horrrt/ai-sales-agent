@@ -3,91 +3,91 @@
     {
       "name": "get_customer_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get customer brief"
     },
     {
       "name": "get_lead",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get lead"
     },
     {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Log interaction"
     },
     {
       "name": "record_call_notes",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Record call notes"
     },
     {
       "name": "qualify_deal",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Qualify deal"
     },
     {
       "name": "draft_quote",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Draft quote"
     },
     {
       "name": "approve_quote",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Approve quote"
     },
     {
       "name": "send_quote",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Send quote"
     },
     {
       "name": "record_contract",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Record contract"
     },
     {
       "name": "record_deal_outcome",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Record deal outcome"
     },
     {
       "name": "get_pipeline",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get pipeline"
     },
     {
       "name": "check_small_deal",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Check small deal"
     },
     {
       "name": "send_offer",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Send offer"
     },
     {
       "name": "record_payment",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Record payment"
     },
     {
       "name": "check_deal_done",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Check deal done"
     },
     {
@@ -99,48 +99,48 @@
     {
       "name": "get_thread",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Get thread"
     },
     {
       "name": "send_offer_reminder",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Send offer reminder"
     },
     {
       "name": "due_follow_ups",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Due follow ups"
     },
     {
       "name": "suggest_price",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
+      "mcp_server_name": "sales_tools",
       "display_name": "Suggest price"
     }
   ],
   "interrupt_config": {
-    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::record_call_notes::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::qualify_deal::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::draft_quote::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::approve_quote::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::send_quote::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::record_contract::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::record_deal_outcome::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::get_pipeline::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::check_small_deal::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::send_offer::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::record_payment::Sales tools (sandbox)": true,
-    "https://sales-tools.invalid/mcp::check_deal_done::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_customer_brief::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_lead::sales_tools": false,
+    "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
+    "https://sales-tools.invalid/mcp::record_call_notes::sales_tools": false,
+    "https://sales-tools.invalid/mcp::qualify_deal::sales_tools": false,
+    "https://sales-tools.invalid/mcp::draft_quote::sales_tools": false,
+    "https://sales-tools.invalid/mcp::approve_quote::sales_tools": true,
+    "https://sales-tools.invalid/mcp::send_quote::sales_tools": false,
+    "https://sales-tools.invalid/mcp::record_contract::sales_tools": true,
+    "https://sales-tools.invalid/mcp::record_deal_outcome::sales_tools": true,
+    "https://sales-tools.invalid/mcp::get_pipeline::sales_tools": false,
+    "https://sales-tools.invalid/mcp::check_small_deal::sales_tools": false,
+    "https://sales-tools.invalid/mcp::send_offer::sales_tools": false,
+    "https://sales-tools.invalid/mcp::record_payment::sales_tools": true,
+    "https://sales-tools.invalid/mcp::check_deal_done::sales_tools": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
-    "https://sales-tools.invalid/mcp::get_thread::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::send_offer_reminder::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::due_follow_ups::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::suggest_price::Sales tools (sandbox)": false
+    "https://sales-tools.invalid/mcp::get_thread::sales_tools": false,
+    "https://sales-tools.invalid/mcp::send_offer_reminder::sales_tools": false,
+    "https://sales-tools.invalid/mcp::due_follow_ups::sales_tools": false,
+    "https://sales-tools.invalid/mcp::suggest_price::sales_tools": false
   }
 }

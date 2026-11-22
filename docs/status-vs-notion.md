@@ -92,7 +92,7 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 
 ## Still missing, in order of what blocks the week 3 demo
 
-1. **Deploy the tool server.** The `Dockerfile` is ready (Cloud Run). The deployed server keeps state in a JSON file, which a Cloud Run restart wipes, so a demo that runs for several days needs a database. Then `python3 scripts/package_fleet.py --mcp-url https://<server>/mcp` and import into Fleet.
+1. **Deploy the tool server.** The `Dockerfile` is ready (Cloud Run). The deployed server keeps state in a JSON file, which a Cloud Run restart wipes, so a demo that runs for several days needs a database. Then register it in Fleet (Integrations > + Custom MCP, named `sales_tools`, no auth), build with `python3 scripts/package_fleet.py --mcp-url https://<server>/mcp` and import the zip. Without the registered custom MCP the imported agent sees none of our tools. Tested on 22 November through a cloudflared tunnel: "Sales Assistant v2" in Fleet ran `get_setup_status` and added two leads through @lead-search. The server needs `ANTHROPIC_API_KEY` (or the d1 key) in its environment, or every ICP check comes back as needs a person.
 2. **Connect Slack:** the `#sales-desk` channel ID, the reps' Slack user IDs, and the agent name in `config.json` (the TODO list at the end of `fleet/AGENTS.md`).
 3. **Clay import and the 50-lead test set** from the beachhead (Danish B2B SaaS).
 4. **Real research:** the website and blog, and LinkedIn data through Clay.
