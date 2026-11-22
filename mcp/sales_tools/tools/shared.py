@@ -104,7 +104,8 @@ def get_funnel_metrics() -> dict:
             "deals_won": sum((l.get("deal") or {}).get("stage") == "closed_won" for l in LEADS.values()),
             "deals_lost": sum((l.get("deal") or {}).get("stage") == "closed_lost" for l in LEADS.values()),
             "won_revenue_eur": round(sum((l.get("deal") or {}).get("amount_eur") or 0 for l in LEADS.values()
-                                         if (l.get("deal") or {}).get("stage") == "closed_won"), 2),
+                                         if (l.get("deal") or {}).get("stage") == "closed_won"
+                                         and not (l.get("deal") or {}).get("refunded")), 2),
             "closed_automatically": sum(bool((l.get("deal") or {}).get("auto_close")) and (l.get("deal") or {}).get("stage") == "closed_won"
                                         for l in LEADS.values()),
             "median_days_meeting_to_won": _median_deal_days("qualification", "closed_won"),
@@ -167,6 +168,11 @@ def decide_proposal(proposal_id: str, approve: bool, by: str, note: str = "") ->
 
     An approved change is applied by a person as a new SKILL.md or prompt line in a PR, with a new prompt_version.
     """
+    from .. import access
+    denied = access.check(by, "decide_proposal")
+    if denied:
+        return denied
+    by = access.resolve(by)
     for p in PROPOSALS:
         if p["id"] == proposal_id:
             p.update(status="approved" if approve else "rejected", decided_by=by, decided_at=now(), note=note)

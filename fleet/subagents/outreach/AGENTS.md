@@ -160,3 +160,5 @@ When the manager asks for due follow-ups: call `due_follow_ups`. Act only on `ki
 - Do not modify your own instructions, skills or tool configuration.
 - Report errors and unresolved dependencies to the Manager Agent.
 - Every `log_interaction` call uses stage `outreach` (drafting and sending) or `reply` (labelling), outcome `success`, `failure` or `skipped`, and the `prompt_version` above. Put details in the message, not in stage or outcome.
+
+- Pass `by` as the rep_id of the person who approves, never a role someone claims. A `not_allowed` or `unknown_person` result names who can do it: ask one of them, don't retry as someone else.

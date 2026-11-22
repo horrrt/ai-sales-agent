@@ -18,7 +18,9 @@ and Google Calendar free/busy; the rules stay.
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+from .. import access
 from ..app import mcp
+from ..workdays import add_working_days as _wd_add, country_of_tz, holiday, is_working_day
 from ..store import CALENDARS, LEADS, QUEUE, REPS, ask_person, clock, log_event, now, set_stage
 
 MEETING_MINUTES = 30
@@ -28,6 +30,7 @@ MAX_RESCHEDULES = 2           # after this, ask the rep whether the lead is stil
 MAX_NO_SHOWS = 2
 QUEUE_WAIT_WORKING_DAYS = 1   # a queued lead waiting longer than this is flagged
 STALE_DAYS = 7                # an open deal with no activity this long is a quiet deal (as in get_pipeline)
+OFFER_REMINDER_WORKING_DAYS, MAX_OFFER_REMINDERS, OFFER_EXPIRY_WORKING_DAYS = 2, 2, 7  # as in deals.py
 
 
 def _traffic_light(rep: dict) -> str:
@@ -38,7 +41,8 @@ def _traffic_light(rep: dict) -> str:
 def _pick(lead: dict) -> str | None:
     country = (lead.get("company") or {}).get("country")
     for colour in ("green", "yellow"):
-        reps = [(rid, r) for rid, r in REPS.items() if r.get("status") == colour]  # "away" never matches
+        reps = [(rid, r) for rid, r in REPS.items() if r.get("status") == colour  # "away" never matches
+                and r.get("takes_leads", True) and r.get("role", "rep") not in ("finance", "viewer")]
         if reps:
             reps.sort(key=lambda x: (country not in (x[1].get("countries") or []), x[1].get("active_leads", 0)))
             return reps[0][0]
@@ -52,11 +56,15 @@ def get_rep_capacity() -> list[dict]:
 
 
 @mcp.tool()
-def set_rep_status(rep_id: str, status: str) -> dict:
+def set_rep_status(rep_id: str, status: str, by: str | None = None) -> dict:
     """Set a rep's traffic light to green, yellow or red, or away (sick or on leave: no new leads, no slots;
     move their booked meetings with reschedule_meeting and new_rep_id; get_rep_calendar lists them)."""
     if rep_id not in REPS or status not in {"green", "yellow", "red", "away"}:
         return {"error": "unknown rep or status"}
+    by = by or rep_id  # a rep sets their own status; anyone else needs manage_team
+    denied = access.check(by, "set_own_status" if access.resolve(by) == rep_id else "manage_team")
+    if denied:
+        return denied
     REPS[rep_id]["status"] = status
     return {"ok": True}
 
@@ -133,17 +141,22 @@ def _parse(start: str) -> datetime:
     return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
 
 
-def _add_working_days(at: datetime, n: int, tz: ZoneInfo) -> datetime:
-    day = at.astimezone(tz)
-    while n > 0:
-        day += timedelta(days=1)
-        if day.weekday() < 5:
-            n -= 1
-    return day
+def _add_working_days(at: datetime, n: int, tz: ZoneInfo, *countries: str | None) -> datetime:
+    return _wd_add(at, n, tz, *countries)
 
 
-def _next_working_morning(tz: ZoneInfo, hour: int = 9) -> datetime:
-    day = _add_working_days(clock(), 1, tz)
+def _lead_country(lead: dict | None) -> str | None:
+    return ((lead or {}).get("company") or {}).get("country", "").upper() or None
+
+
+def _rep_country(rep: dict) -> str | None:
+    """Where the rep works, for their public holidays: country, else their time zone's country, else the first they cover."""
+    return rep.get("country") or country_of_tz(rep.get("timezone")) or (rep.get("countries") or [None])[0]
+
+
+def _next_working_morning(lead: dict, hour: int = 9) -> datetime:
+    tz = _lead_tz(lead)
+    day = _add_working_days(clock(), 1, tz, _lead_country(lead))
     return datetime.combine(day.date(), time(hour), tz)
 
 
@@ -171,10 +184,14 @@ def _slot_problem(rep_id: str, lead: dict | None, start: datetime, minutes: int,
     local, (h0, h1) = start.astimezone(_rep_tz(rep)), _hours(rep)
     if local.weekday() >= 5:
         return "start is on a weekend; pick a slot from find_free_slots"
+    if holiday(local.date(), _rep_country(rep)):
+        return f"{local:%Y-%m-%d} is a public holiday where {rep.get('name', rep_id)} works ({holiday(local.date(), _rep_country(rep))})"
     if not (h0 <= local.time() and (local + timedelta(minutes=minutes)).time() <= h1 and local.date() == (local + timedelta(minutes=minutes)).date()):
         return f"outside {rep.get('name', rep_id)}'s working hours ({h0:%H:%M}-{h1:%H:%M} {_rep_tz(rep).key})"
     if lead is not None:
         ll = start.astimezone(_lead_tz(lead))
+        if holiday(ll.date(), _lead_country(lead)):
+            return f"{ll:%Y-%m-%d} is a public holiday for the prospect ({holiday(ll.date(), _lead_country(lead))})"
         if ll.weekday() >= 5 or not (LEAD_HOURS[0] <= ll.hour and (ll + timedelta(minutes=minutes)).hour <= LEAD_HOURS[1]
                                        and (ll + timedelta(minutes=minutes)).time() <= time(LEAD_HOURS[1])):
             return f"outside business hours for the prospect ({ll:%a %H:%M} in {_lead_tz(lead).key})"
@@ -204,7 +221,7 @@ def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None
     days, day = [], clock().astimezone(tz)
     while len(days) < days_ahead:
         day += timedelta(days=1)
-        if day.weekday() < 5:
+        if is_working_day(day.date(), _rep_country(rep), _lead_country(lead)):
             days.append(day.date())
     days = days[1:]  # a working day's notice
     if on_date:
@@ -228,7 +245,7 @@ def get_rep_calendar(rep_id: str, days_ahead: int = 10) -> dict:
     rep = REPS.get(rep_id)
     if rep is None:
         return {"ok": False, "error": f"unknown rep {rep_id}"}
-    until = _add_working_days(clock(), max(1, min(int(days_ahead), 30)), _rep_tz(rep))
+    until = _add_working_days(clock(), max(1, min(int(days_ahead), 30)), _rep_tz(rep), _rep_country(rep))
     events = sorted((e for e in _events(rep_id) if e.get("status") != "cancelled"
                      and clock() <= _parse(e["end"]) and _parse(e["start"]) <= until), key=lambda e: e["start"])
     return {"ok": True, "rep_id": rep_id, "name": rep.get("name"), "status": rep.get("status"), "timezone": _rep_tz(rep).key,
@@ -247,16 +264,20 @@ def _meeting(lead: dict) -> dict | None:
 
 
 @mcp.tool()
-def book_meeting(lead_id: str, rep_id: str, start: str, duration_minutes: int = MEETING_MINUTES) -> dict:
+def book_meeting(lead_id: str, rep_id: str, start: str, duration_minutes: int = MEETING_MINUTES, by: str | None = None) -> dict:
     """Book a meeting between a lead and a rep in the rep's calendar. Needs approval in Fleet.
 
     Refuses a time that has passed, is outside the rep's working hours or the prospect's business hours,
     or clashes with something in the rep's calendar. A lead with a booked meeting: use reschedule_meeting.
+    by: who approves (default: the rep whose calendar it is). Booking into another rep's calendar needs any_lead.
     STUB: the calendar invite isn't sent anywhere."""
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"error": f"unknown lead {lead_id}"}
     h = lead.get("handoff") or {}
+    denied = access.check(by or rep_id, "book_meeting", owner=rep_id, lead_id=lead_id, stage="handoff")
+    if denied:
+        return denied
     if h.get("meeting_status") == "booked":
         return {"ok": False, "error": "already_booked", "meeting_start": h.get("meeting_start"),
                 "next": "reschedule_meeting to move it, or cancel_meeting"}
@@ -287,11 +308,13 @@ def book_meeting(lead_id: str, rep_id: str, start: str, duration_minutes: int = 
 
 @mcp.tool()
 def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospect", reason: str = "",
-                       new_rep_id: str | None = None) -> dict:
+                       new_rep_id: str | None = None, by: str | None = None) -> dict:
     """Move a booked meeting to a new time (same rules as book_meeting). This tool always asks a person first.
 
     requested_by: prospect or rep. new_rep_id moves it to another rep too (the rep is sick or away); check
-    that rep's find_free_slots first. After the second move, the result says to ask the rep whether to keep going."""
+    that rep's find_free_slots first. After the second move, the result says to ask the rep whether to keep going.
+    by: who approves (default: the meeting's rep). Moving it to another rep needs manage_team, unless by is
+    that rep taking it over."""
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": f"unknown lead {lead_id}"}
@@ -304,6 +327,14 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
         return {"ok": False, "error": "new_start must be an ISO date-time from find_free_slots"}
     minutes = int((_parse(e["end"]) - _parse(e["start"])).total_seconds() // 60)
     to_rep = new_rep_id or h["rep_id"]
+    approver = by or h["rep_id"]
+    if to_rep != h["rep_id"] and access.resolve(approver) != to_rep:
+        denied = access.check(approver, "manage_team", lead_id=lead_id, stage="handoff")
+    else:
+        denied = access.check(approver, "change_meeting", owner=to_rep if access.resolve(approver) == to_rep else h["rep_id"],
+                              lead_id=lead_id, stage="handoff")
+    if denied:
+        return denied
     if to_rep not in REPS:
         return {"ok": False, "error": f"unknown rep {to_rep}"}
     if REPS[to_rep].get("status") == "away":
@@ -335,7 +366,8 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
 
 
 @mcp.tool()
-def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "", rebook: bool = True) -> dict:
+def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "", rebook: bool = True,
+                   by: str | None = None) -> dict:
     """Cancel a booked meeting and free the rep's slot. This tool always asks a person first.
 
     rebook true (the prospect still wants to talk): a follow-up to offer new times is due the next working
@@ -346,6 +378,9 @@ def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "
     h, e = lead.get("handoff") or {}, _meeting(lead)
     if h.get("meeting_status") != "booked":
         return {"ok": False, "error": "no booked meeting to cancel"}
+    denied = access.check(by or h.get("rep_id"), "change_meeting", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
+    if denied:
+        return denied
     if e is not None:
         e["status"] = "cancelled"
         e["history"].append({"cancelled_by": cancelled_by, "reason": reason, "at": now()})
@@ -360,7 +395,7 @@ def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "
 def _rebook_follow_up(lead: dict, rebook: bool) -> None:
     h = lead["handoff"]
     if rebook:
-        h["follow_up_due"] = _iso(_next_working_morning(_lead_tz(lead)))
+        h["follow_up_due"] = _iso(_next_working_morning(lead))
         h["follow_up_kind"] = "rebook"
     else:
         h["follow_up_due"], h["follow_up_kind"] = None, None
@@ -368,7 +403,7 @@ def _rebook_follow_up(lead: dict, rebook: bool) -> None:
 
 
 @mcp.tool()
-def record_meeting_outcome(lead_id: str, outcome: str, by: str = "rep") -> dict:
+def record_meeting_outcome(lead_id: str, outcome: str, by: str | None = None) -> dict:
     """The rep reports how the booked meeting went: held, no_show or cancelled. This tool always asks a person first.
 
     held is the North Star: a qualified meeting that actually happened. The rep takes the deal from here.
@@ -383,6 +418,10 @@ def record_meeting_outcome(lead_id: str, outcome: str, by: str = "rep") -> dict:
         return {"ok": False, "error": "no meeting was booked for this lead"}
     if outcome not in ("held", "no_show", "cancelled"):
         return {"ok": False, "error": "outcome must be held, no_show or cancelled"}
+    denied = access.check(by or h.get("rep_id"), "record_meeting_outcome", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
+    if denied:
+        return denied
+    by = access.resolve(by or h.get("rep_id"))
     if outcome in ("held", "no_show") and _parse(h["meeting_start"]) > clock():
         return {"ok": False, "error": f"the meeting hasn't started yet ({h['meeting_start']})",
                 "next": "record the outcome after the meeting; to call it off now, use cancel_meeting"}
@@ -422,14 +461,14 @@ def handoff_follow_ups() -> list[dict]:
                         "next": "@outreach: email the prospect in the thread with two new times from find_free_slots; "
                                 "@handoff books when they answer"})
         if (h.get("meeting_status") == "booked" and h.get("meeting_end") and not h.get("meeting_outcome")
-                and _add_working_days(_parse(h["meeting_end"]), 1, _lead_tz(lead)) <= t):
+                and _add_working_days(_parse(h["meeting_end"]), 1, _lead_tz(lead), _lead_country(lead)) <= t):
             due.append({"lead_id": lead["lead_id"], "kind": "meeting_outcome", "rep_id": h.get("rep_id"),
                         "meeting_start": h["meeting_start"],
                         "next": "@handoff: ask the rep in #sales-desk how the meeting went; once they answer, "
                                 "record it with record_meeting_outcome. Never guess the outcome"})
         assigned_at = h.get("assigned_at")
         if (h.get("rep_id") and not h.get("meeting_status") and assigned_at
-                and _add_working_days(_parse(assigned_at), 1, _lead_tz(lead)) <= t):
+                and _add_working_days(_parse(assigned_at), 1, _lead_tz(lead), _lead_country(lead)) <= t):
             due.append({"lead_id": lead["lead_id"], "kind": "not_booked", "rep_id": h["rep_id"],
                         "next": "@handoff: the lead said yes but has no meeting; book the first free slot (find_free_slots with "
                                 "lead_id, then book_meeting), as for any positive reply. The invite lets them accept or ask for another time"})
@@ -437,6 +476,20 @@ def handoff_follow_ups() -> list[dict]:
             due.append({"lead_id": lead["lead_id"], "kind": "needs_person", **lead["needs_person"],
                         "next": "ask a person in #sales-desk; clear it with update_lead(needs_person=null) once decided"})
         deal = lead.get("deal") or {}
+        if deal.get("auto_close") and deal.get("stage") == "negotiation" and deal.get("offer_sent_at") and not deal.get("paid") \
+                and deal.get("payment_status") != "partial":
+            sent, last = _parse(deal["offer_sent_at"]), _parse(deal.get("last_reminder_at") or deal["offer_sent_at"])
+            tz, c = _lead_tz(lead), _lead_country(lead)
+            if deal.get("payment_status") == "failed" and deal.get("payment_retry_due") and _parse(deal["payment_retry_due"]) <= t:
+                due.append({"lead_id": lead["lead_id"], "kind": "payment_failed",
+                            "next": "send_offer_reminder: the payment failed, send the checkout link again"})
+            elif _add_working_days(sent, OFFER_EXPIRY_WORKING_DAYS, tz, c) <= t:
+                due.append({"lead_id": lead["lead_id"], "kind": "offer_expired",
+                            "next": "@handoff: not paid after 7 working days: assign_rep, the deal goes to a rep"})
+            elif deal.get("offer_reminders", 0) < MAX_OFFER_REMINDERS and _add_working_days(last, OFFER_REMINDER_WORKING_DAYS, tz, c) <= t:
+                due.append({"lead_id": lead["lead_id"], "kind": "offer_unpaid", "reminders": deal.get("offer_reminders", 0),
+                            "next": "send_offer_reminder: a short reminder with the checkout link"})
+            continue
         if deal and deal.get("stage") not in ("closed_won", "closed_lost"):
             last = lead.get("updated_at") or lead.get("created_at")
             if last and _parse(last) + timedelta(days=STALE_DAYS) <= t:
@@ -444,7 +497,8 @@ def handoff_follow_ups() -> list[dict]:
                             "rep_id": deal.get("owner"), "next": "@deal-desk: nudge the rep about this deal"})
     for q in QUEUE:
         lead = LEADS.get(q["lead_id"]) or {}
-        if _add_working_days(_parse(q["since"]), QUEUE_WAIT_WORKING_DAYS, _lead_tz(lead) if lead else ZoneInfo("Europe/Copenhagen")) <= t:
+        if _add_working_days(_parse(q["since"]), QUEUE_WAIT_WORKING_DAYS,
+                             _lead_tz(lead) if lead else ZoneInfo("Europe/Copenhagen"), _lead_country(lead)) <= t:
             due.append({"lead_id": q["lead_id"], "kind": "queue_waiting", "since": q["since"],
                         "next": "@handoff: post in #sales-desk that a positive reply has waited over a working day for a rep"})
     return due

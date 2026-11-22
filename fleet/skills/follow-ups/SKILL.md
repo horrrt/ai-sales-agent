@@ -17,4 +17,6 @@ Every follow-up the pipeline owes shows up in `due_follow_ups`, each with a `kin
    - `queue_waiting`: @handoff posts in #sales-desk that a positive reply is waiting for a rep.
    - `needs_person`: post the reason in #sales-desk and ask; don't decide it yourself.
    - `quiet_deal`: @deal-desk nudges the deal's rep.
+   - `offer_unpaid`, `payment_failed`: @deal-desk `send_offer_reminder` (the checkout link again, in the thread).
+   - `offer_expired`: @handoff `assign_rep`; the deal goes to a rep, with the offer in the call brief.
 3. Report per lead: the kind, what was done, and anything waiting for a person. If `due_follow_ups` is empty, say so in one line.

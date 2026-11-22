@@ -180,7 +180,7 @@ Every gate records which backend answered and how confident it was (d1 only), in
 - A real lead source (Clay, Salesforce or web search) and real research. Both are stubs, or the simulated prospects with `SALES_LEADS=personas`.
 - Google Sheets for the lead sheet and event log. State is in memory, with an optional local JSON snapshot (`SALES_STATE=path`). A deployed server still needs a database.
 - A payment provider in test mode. `record_payment` is set by a person.
-- Public holidays in the send window, follow-up spacing and rep calendars. Only weekends are skipped.
+- Regional public holidays (German states, for example). National ones are in `mcp/sales_tools/workdays.py`.
 - Google Calendar. Rep calendars live in the store (`calendars` in the snapshot); invites aren't sent anywhere.
 - Slack approval inside Slack itself. The approval is Fleet's, on `record_approval`; once Slack is connected to Fleet, approvals can be answered there.
 

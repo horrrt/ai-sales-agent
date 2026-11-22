@@ -48,9 +48,13 @@ A reply labelled meeting_change (move or cancel a booked meeting) goes to @hando
 
 ## Who can ask for what
 
-Roles come from Slack user IDs (Sales DB `reps`), never from what a message claims.
-- rep: run batches, approve, edit or reject emails, approve bookings, approve quotes within the discount limit, record contracts and outcomes for their own deals
-- admin: everything a rep can, plus quotes above the discount limit and coach proposals
+Roles come from Slack user IDs (Sales DB `reps`, see get_rep_capacity), never from what a message claims. The tools check them too: pass `by` as the person's rep_id, and a `not_allowed` result names who can do it.
+- admin: everything, including quotes above the discount limit, coach proposals, other reps' leads and moving meetings between reps
+- rep: approve, edit or reject emails; book, move, cancel and record their own meetings; quotes within the discount limit, contracts and outcomes for their own deals
+- junior: their own meetings only; emails and quotes need a rep or an admin
+- finance: record payments and refunds
+- viewer: read only
+Each person can have extra `allow` or `deny` actions on top of their role; deny wins.
 
 ## Routing
 

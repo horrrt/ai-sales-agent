@@ -30,6 +30,9 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `teams` | 7 | Teams of 1, 2, 3, 5 and 10 reps: a solo founder books around their calendar; the only rep is full so the lead queues; country before load; five time zones; the least-loaded of ten; an away rep is skipped; ten reps all full |
 | `scheduling` | 9 | Booking around busy time; the day the prospect named; **a reschedule frees the old slot**; a cancellation with and without rebooking; a no-show; **a sick rep's meeting moves to a colleague**; **a second prospect asks for a taken slot**; the third move asks the rep |
 | `follow-ups` | 6 | **The daily run handles an email, a rebooking, a missing outcome and an unbooked lead**; @handoff works its list; @outreach hands back what isn't an email; nothing due; a person's decision surfaces; a reply moves the meeting |
+| `access` | 9 | A junior's email approval is refused, a rep's counts; 15% off needs an admin; a rep can't close a colleague's deal or record a payment; finance can; a junior moves her own meeting; a rep can't cancel a colleague's; a viewer is read-only |
+| `auto-close` | 14 | The offer in the thread; paid and won; over the cap; custom terms; no decision; **an offer at night**; an unpaid reminder; expired to a rep; a declined card; a partial payment; **a discount request after the offer**; a refund; switched off; a duplicate payment |
+| `times` | 8 | Christmas Eve; 17 May in Norway but not Sweden; a Saturday yes; follow-ups late on Friday; a prospect asking for Christmas Eve; **booking after the clock change**; Midsummer Eve; Finnish Independence Day |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Write a case
@@ -86,7 +89,7 @@ pass_at: 3         # how many runs must pass (default: all)
 
 `setup.no_decisions: true` starts the tool server without `LIQUID_API_KEY` or `ANTHROPIC_API_KEY`, so every gate returns no answer. That tests that the agent sends the lead to a person instead of guessing.
 
-Run `--dry-run` and `--check-fixtures` after adding a case; both are free.
+Run `--dry-run` and `--check-fixtures` after adding a case; both are free. `--now 2026-12-24T22:00:00+01:00` runs every case without its own `setup.now` at that time.
 
 ## Limits
 

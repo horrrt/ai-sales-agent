@@ -223,7 +223,9 @@ def test_a_sick_reps_meeting_moves_to_a_colleague():
     other = "rep-2" if sick == "rep-1" else "rep-1"
     handoff.set_rep_status(sick, "away")
     assert "away" in handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=sick)["error"]
-    m = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other)
+    denied = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other)  # the sick rep alone can't
+    assert denied["error"] == "not_allowed" and denied["action"] == "manage_team"
+    m = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other, by=other)  # the colleague takes it
     assert m["ok"] and m["rep_id"] == other and store.LEADS[lid]["handoff"]["rep_id"] == other
     assert [e["lead_id"] for e in store.CALENDARS[other]] == [lid] and store.CALENDARS[sick] == []
 

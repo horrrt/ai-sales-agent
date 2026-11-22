@@ -25,7 +25,9 @@ from datetime import datetime, time, timedelta, timezone
 from email.utils import formataddr, parseaddr
 from zoneinfo import ZoneInfo
 
+from .. import access
 from ..decide import decide
+from ..workdays import COUNTRY_TZ as _TZ, add_working_days as _wd_add, holiday as _holiday, is_working_day
 from ..store import BRIEF, INBOX, LEADS, OUTBOX, REPS, ask_person, clock, log_event, now, set_stage
 
 SANDBOX_OUTBOX = OUTBOX  # kept in the store, so a restart doesn't lose sent emails
@@ -95,9 +97,7 @@ def _missing_required_fields(lead: dict) -> list[str]:
 
 
 
-COUNTRY_TZ = {"SE": "Europe/Stockholm", "NO": "Europe/Oslo", "FI": "Europe/Helsinki", "DK": "Europe/Copenhagen",
-              "DE": "Europe/Berlin", "NL": "Europe/Amsterdam", "GB": "Europe/London", "UK": "Europe/London",
-              "IS": "Atlantic/Reykjavik", "EE": "Europe/Tallinn"}
+COUNTRY_TZ = _TZ
 DEFAULT_TZ = "Europe/Copenhagen"  # the sender's office, for a country not in the table
 SEND_WINDOW = (8, 17)             # local hours: the first send at 08:00, the last before 17:00
 MAX_FOLLOW_UPS = 2
@@ -136,25 +136,25 @@ def _lead_tz(lead: dict) -> ZoneInfo:
         return ZoneInfo(DEFAULT_TZ)
 
 
+def _country(lead: dict) -> str:
+    return ((lead.get("company") or {}).get("country") or "").upper()
+
+
 def _next_send_time(lead: dict, at: datetime) -> datetime | None:
-    """None if `at` is inside business hours in the lead's country, else the next 08:00 on a working day."""
-    local = at.astimezone(_lead_tz(lead))
+    """None if `at` is inside business hours on a working day in the lead's country (weekends and public
+    holidays there don't count), else the next 08:00 on a working day."""
+    local, c = at.astimezone(_lead_tz(lead)), _country(lead)
     start, end = SEND_WINDOW
-    if local.weekday() < 5 and start <= local.hour < end:
+    if is_working_day(local.date(), c) and start <= local.hour < end:
         return None
-    day = local.date() if (local.weekday() < 5 and local.hour < start) else local.date() + timedelta(days=1)
-    while day.weekday() >= 5:
+    day = local.date() if (is_working_day(local.date(), c) and local.hour < start) else local.date() + timedelta(days=1)
+    while not is_working_day(day, c):
         day += timedelta(days=1)
     return datetime.combine(day, time(start), local.tzinfo).astimezone(timezone.utc)
 
 
-def _add_working_days(at: datetime, n: int, tz: ZoneInfo) -> datetime:
-    day = at.astimezone(tz)
-    while n > 0:
-        day += timedelta(days=1)
-        if day.weekday() < 5:
-            n -= 1
-    return day.astimezone(timezone.utc)
+def _add_working_days(at: datetime, n: int, tz: ZoneInfo, *countries: str) -> datetime:
+    return _wd_add(at, n, tz, *countries).astimezone(timezone.utc)
 
 
 def _iso(dt: datetime) -> str:
@@ -215,13 +215,24 @@ def _deliver(m: dict, at: datetime) -> None:
     """The email actually goes out: bookkeeping on the lead happens here, for an immediate or a held send."""
     lead = LEADS[m["lead_id"]]
     out = lead.setdefault("outreach", {})
+    if m.get("kind") in ("offer", "offer_reminder"):  # auto-close emails: the deal keeps their bookkeeping
+        m.update(status="sent", sent_at=_iso(at))
+        deal = lead.get("deal") or {}
+        if m["kind"] == "offer":
+            deal["offer_sent_at"] = m["sent_at"]
+        else:
+            deal["offer_reminders"] = deal.get("offer_reminders", 0) + 1
+            deal["last_reminder_at"] = m["sent_at"]
+        log_event(m["lead_id"], "deal", "success", f"{m['kind'].replace('_', ' ')} sent: {m['subject']!r}", channel="email",
+                  message_id=m["message_id"])
+        return
     chasing = _awaiting_reply(m["lead_id"])  # we wrote last and write again: a follow-up
     m.update(status="sent", sent_at=_iso(at))
     out["follow_ups"] = out.get("follow_ups", 0) + int(chasing)
     out["sent_count"] = out.get("sent_count", 0) + 1
     out["sent_at"] = m["sent_at"]
     out.pop("scheduled_for", None)
-    out["follow_up_due"] = (_iso(_add_working_days(at, FOLLOW_UP_WORKING_DAYS[out["follow_ups"]], _lead_tz(lead)))
+    out["follow_up_due"] = (_iso(_add_working_days(at, FOLLOW_UP_WORKING_DAYS[out["follow_ups"]], _lead_tz(lead), _country(lead)))
                             if out["follow_ups"] < MAX_FOLLOW_UPS else None)
     h = lead.get("handoff") or {}
     if h.get("follow_up_kind") == "rebook":  # this email is the rebooking follow-up
@@ -319,7 +330,7 @@ def save_draft(lead_id: str, subject: str, body: str, cc: list[str] | None = Non
 
 @mcp.tool()
 def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None = None, cc: list[str] | None = None,
-                    decision: str = "approve", note: str = "", by: str = "rep") -> dict:
+                    decision: str = "approve", note: str = "", by: str | None = None) -> dict:
     """The human check: a rep approves, edits or rejects the saved draft. This tool always asks a person first.
 
     Call it with the subject, body, to and cc that save_draft returned (cc may be an empty list), so the
@@ -327,6 +338,8 @@ def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None 
     the subject, body, to or cc before accepting, or reject it. An edited email is saved as the new draft
     and counts as approved. The original and the edit are kept in the event log, so the weekly review can
     learn from them. send_email only sends a draft that has an approval, to exactly the approved recipients.
+    by: who decided (rep_id, email or name). Juniors and viewers may not approve emails; left out, it is the
+    lead's rep, or the brief's email approver.
     """
     lead = LEADS.get(lead_id)
     if lead is None:
@@ -336,6 +349,11 @@ def record_approval(lead_id: str, subject: str, body: str, to: list[str] | None 
         return {"ok": False, "error": "no_draft_to_approve"}
     if decision not in ("approve", "edit", "reject"):
         return {"ok": False, "error": "decision must be approve, edit or reject"}
+    by = by or (lead.get("handoff") or {}).get("rep_id") or access.default_approver("emails")
+    denied = access.check(by, "approve_email", lead_id=lead_id)
+    if denied:
+        return denied
+    by = access.resolve(by)
     original = {"subject": outreach["draft_subject"], "body": outreach["draft_body"],
                 "to": list(outreach.get("draft_to") or [lead["person"]["email"]]), "cc": list(outreach.get("draft_cc") or [])}
     if decision == "reject":
@@ -420,8 +438,10 @@ def send_email(lead_id: str) -> dict:
     if hold:
         outreach["scheduled_for"] = m["scheduled_for"]
         local = at.astimezone(_lead_tz(lead))
+        why = _holiday(local.date(), _country(lead))
         log_event(lead_id, "outreach", "skipped", f"held until {m['scheduled_for']}: {local:%a %H:%M} in "
-                  f"{(lead.get('company') or {}).get('country')} is outside business hours", channel="email",
+                  f"{(lead.get('company') or {}).get('country')} is " + (f"a public holiday ({why})" if why else "outside business hours"),
+                  channel="email",
                   message_id=m["message_id"])
         return {"ok": True, "sandbox": True, "status": "scheduled", "scheduled_for": m["scheduled_for"],
                 "local_time_now": local.isoformat(), "message_id": m["message_id"], "to": to, "cc": cc,
@@ -429,6 +449,39 @@ def send_email(lead_id: str) -> dict:
     _deliver(m, at)
     return {"ok": True, "sandbox": True, "status": "sent", "sent_at": m["sent_at"], "follow_up_due": outreach["follow_up_due"],
             "message_id": m["message_id"], "thread_id": m["thread_id"], "to": to, "cc": cc, "subject": m["subject"]}
+
+
+def send_policy_email(lead_id: str, subject: str, body: str, kind: str) -> dict:
+    """An email the auto-close policy sends without a per-email approval (the standard offer and its reminders).
+    Same thread, same recipients and the same business hours as any other email."""
+    _release_held()
+    lead = LEADS[lead_id]
+    out = lead.setdefault("outreach", {})
+    if lead.get("do_not_contact"):
+        return {"ok": False, "error": "do_not_contact"}
+    to = [out.get("next_to") or lead["person"]["email"]]
+    cc = list(out.get("next_cc") or [])
+    bad = [a for a in to + cc if not _is_sandbox(a)]
+    if bad:
+        return {"ok": False, "error": "not_sandbox_recipient", "addresses": bad}
+    thread = _delivered(lead_id)
+    out.setdefault("thread_id", f"T-{lead_id}")
+    if out.get("thread_subject") and not subject.lower().startswith("re:"):
+        subject = f"Re: {out['thread_subject']}"
+    out.setdefault("thread_subject", subject)
+    sender, at = _sender(), clock()
+    hold = _next_send_time(lead, at)
+    m = {"message_id": _message_id(lead_id, "out"), "thread_id": out["thread_id"], "lead_id": lead_id, "direction": "out",
+         "from": formataddr((sender["name"], sender["email"])), "to": to, "cc": cc, "subject": subject, "body": body,
+         "in_reply_to": thread[-1]["message_id"] if thread else None, "attachments": [], "kind": kind, "asked": True,
+         "status": "scheduled" if hold else "sending", "scheduled_for": _iso(hold) if hold else None, "sent_at": None}
+    SANDBOX_OUTBOX.append(m)
+    if hold:
+        log_event(lead_id, "deal", "skipped", f"{kind.replace('_', ' ')} held until {m['scheduled_for']} (outside business hours)",
+                  channel="email", message_id=m["message_id"])
+        return {"ok": True, "status": "scheduled", "scheduled_for": m["scheduled_for"], "message_id": m["message_id"]}
+    _deliver(m, at)
+    return {"ok": True, "status": "sent", "sent_at": m["sent_at"], "message_id": m["message_id"]}
 
 
 # --------------------------------------------------------------------------- the inbox
@@ -694,6 +747,9 @@ def due_follow_ups() -> list[dict]:
     needs_person: a lead is parked for a person's decision (a reply no one could label, a handover with no
       address, a meeting cancelled for good, a second no-show).
     quiet_deal: an open deal with no activity for 7 days.
+    offer_unpaid: an auto-close offer is unpaid after 2 working days (at most 2 reminders).
+    payment_failed: the checkout payment failed; send the link again the next working day.
+    offer_expired: an auto-close offer is unpaid after 7 working days; it goes to a rep.
     queue_waiting: a positive reply has waited more than a working day for a rep.
     """
     _release_held()
@@ -710,7 +766,7 @@ def due_follow_ups() -> list[dict]:
                         "to": out.get("next_to") or lead["person"]["email"], "cc": out.get("next_cc") or [],
                         "next": "write a short follow-up (save_draft keeps the thread and cc), then record_approval and send_email"})
         elif (out.get("follow_ups", 0) >= MAX_FOLLOW_UPS and _awaiting_reply(lead["lead_id"])
-              and _add_working_days(datetime.fromisoformat(out["sent_at"]), NO_REPLY_AFTER_WORKING_DAYS, _lead_tz(lead)) <= now_dt):
+              and _add_working_days(datetime.fromisoformat(out["sent_at"]), NO_REPLY_AFTER_WORKING_DAYS, _lead_tz(lead), _country(lead)) <= now_dt):
             lead.update(status="lost", loss_reason="no_reply")
             log_event(lead["lead_id"], "outreach", "failure", "no reply after all follow-ups", loss_reason="no_reply")
             due.append({"lead_id": lead["lead_id"], "kind": "no_reply", "status": "lost", "loss_reason": "no_reply"})

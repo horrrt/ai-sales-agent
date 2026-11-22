@@ -612,7 +612,11 @@ async def main():
     ap.add_argument("--model-map", default=DEFAULT_MODEL_MAP, help="per-agent models; '' for --model everywhere")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--repeat", type=int, default=1, help="run every case this many times (cases can also set repeat)")
+    ap.add_argument("--now", default=None, help="pinned time for cases without setup.now, e.g. 2026-12-24T22:00:00+01:00")
     args = ap.parse_args()
+    if args.now:
+        global DEFAULT_NOW
+        DEFAULT_NOW = args.now
     cases = load_cases(args.k)
     if not cases:
         sys.exit("No cases matched")

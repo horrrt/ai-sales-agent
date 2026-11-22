@@ -1,0 +1,58 @@
+title: 'The reply comes in at 22:30: the offer is held until 08:00 and reported as scheduled'
+agent: deal-desk
+setup:
+  now: '2026-11-24T22:30:00+01:00'
+  brief:
+    auto_close:
+      enabled: true
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: replied
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+    positioning:
+      angle: Nordvik is moving a hospital pilot toward a contract and hiring its first security officer; hospital
+        procurement asks for ISO 27001, which Kvitto gets small SaaS teams ready for in about 8 weeks.
+      evidence:
+      - Announced a pilot with a regional hospital trust in Oslo in September 2026
+      confidence: 0.8
+      variant: research
+    outreach:
+      draft_subject: ISO 27001 before the hospital contract
+      draft_body: Hi Ingrid, ... (first email)
+      sent_at: '2026-11-18T09:00:00+00:00'
+      follow_ups: 0
+      sent_count: 1
+      reply_label: positive
+      reply_body: How do I sign up for the monthly plan?
+turns:
+- 'L-201 replied: "How do I sign up for the monthly plan?" Auto-close is on. Handle it.'
+approvals:
+  default: approve
+expect:
+  called:
+  - send_offer
+  sent:
+    lead: L-201
+    status: scheduled
+    scheduled_for: '2026-11-25T07:00:00+00:00'
+  final_mentions:
+  - schedul
+  logs_follow_schema: true

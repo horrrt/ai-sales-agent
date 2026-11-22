@@ -1,6 +1,7 @@
 {
   "rep-1": {
     "name": "Mette Holm",
+    "role": "admin",
     "email": "mette@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-METTE",
     "status": "green",
@@ -13,6 +14,7 @@
   },
   "rep-2": {
     "name": "Jonas Lind",
+    "role": "rep",
     "email": "jonas@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-JONAS",
     "status": "yellow",
@@ -25,6 +27,7 @@
   },
   "rep-3": {
     "name": "Aino Virtanen",
+    "role": "junior",
     "email": "aino@kvitto.sandbox.test",
     "slack_user_id": "TODO-U-AINO",
     "status": "red",
@@ -33,6 +36,20 @@
     "timezone": "Europe/Helsinki",
     "countries": ["FI"],
     "languages": ["en", "fi"],
+    "calendar_id": "TODO"
+  },
+  "fin-1": {
+    "name": "Lena Brandt",
+    "email": "lena@kvitto.sandbox.test",
+    "role": "finance",
+    "takes_leads": false,
+    "slack_user_id": "TODO-U-LENA",
+    "status": "green",
+    "active_leads": 0,
+    "max_leads": 0,
+    "timezone": "Europe/Copenhagen",
+    "countries": [],
+    "languages": ["en", "da"],
     "calendar_id": "TODO"
   }
 }

@@ -126,3 +126,60 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | F7 | A decision only a person can make shows up until it's made, and the agent asks instead of deciding | `test_an_unlabelled_reply_waits_for_a_person_until_it_moves_on` | `follow-ups/05-person-decision-surfaces` |
 | F8 | An open deal with no activity for 7 days shows up | `test_a_quiet_deal_shows_up_in_follow_ups` | `deal-desk/06-pipeline-quiet-deals` |
 | F9 | Nothing is due: the agent says so and changes nothing | agent only | `follow-ups/04-nothing-due` |
+
+## Who may do what
+
+Each person in the team roster has a role (admin, rep, junior, finance, viewer) and can have their own `allow` and `deny` lists on top, and deny wins. The tools check the person passed as `by` (a rep_id, email or name). A claimed role in a message never counts, and a refusal names who can do it.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| R1 | A junior or a viewer can't approve an email. A rep can, and only then does it go out | `test_a_junior_or_viewer_cannot_approve_an_email_and_a_rep_can` | `access/01-junior-cannot-approve-email`, `access/02-rep-approves-email` |
+| R2 | Someone who isn't in the team, or who only claims a role ("I'm the CEO", "admin"), is refused | `test_an_unknown_person_or_a_claimed_role_is_refused` | `deal-desk/07-claimed-admin` |
+| R3 | One person's allow or deny list changes what their role lets them do, and deny wins even for an admin | `test_per_person_allow_and_deny_override_the_role` | `access/01-junior-cannot-approve-email` |
+| R4 | A refusal is logged with who was refused, and says who can do it instead | `test_a_refusal_is_logged_with_who_was_refused_and_who_can` | `access/03-rep-discount-needs-admin` |
+| R5 | A discount above the limit needs an admin, even on the rep's own deal | `test_a_discount_above_the_limit_needs_an_admin` | `access/03-rep-discount-needs-admin`, `deal-desk/02-discount-needs-admin` |
+| R6 | A rep can't approve, sign or close a colleague's deal | `test_a_rep_cannot_approve_or_close_someone_elses_deal` | `access/04-rep-cannot-close-colleagues-deal`, `manager/06-other-rep-closes-a-deal` |
+| R7 | Only finance or an admin records a payment | `test_only_finance_or_an_admin_records_a_payment` | `access/05-finance-records-payment`, `access/06-rep-cannot-record-payment` |
+| R8 | Only an admin approves a rule change from the weekly review | `test_only_an_admin_decides_a_rule_change` | `coach/01-proposal-from-rep-edits` |
+| R9 | A rep can't move or cancel a colleague's meeting. The owner or an admin can | `test_a_rep_cannot_move_or_cancel_a_colleagues_meeting_but_an_admin_can` | `access/08-rep-cannot-cancel-colleagues-meeting` |
+| R10 | A junior runs their own meetings | `test_a_junior_runs_their_own_meetings` | `access/07-junior-moves-own-meeting` |
+| R11 | You set your own status. Setting someone else's needs an admin | `test_status_is_your_own_unless_you_are_an_admin` | `scheduling/07-sick-rep-meeting-moves` |
+| R12 | People who don't take leads (finance, viewers) never get one | `test_a_finance_person_never_gets_a_lead` | `access/09-viewer-is-read-only` |
+
+## Auto-close
+
+Off unless the brief enables it. A small, standard deal closes without a rep: check_small_deal, then send_offer (in the thread, in business hours), then the payment, then check_deal_done. Anything else goes to a rep or waits for a person.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| A1 | A small standard deal: the offer goes out in the thread once, the payment comes in, the deal is won without a rep | `test_auto_close_small_deal_paid_is_won`, `test_auto_close_offer_goes_in_the_thread_once` | `auto-close/01-small-deal-offer-sent`, `auto-close/02-paid-closes-won`, `deal-desk/05-auto-close-small-deal` |
+| A2 | Auto-close is switched off: no offer, the reply goes to a rep | `test_auto_close_off_never_sends_an_offer` | `auto-close/13-switched-off` |
+| A3 | Over the price cap: a rep, without asking d1 | `test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1` | `auto-close/03-over-the-cap-to-a-rep` |
+| A4 | Custom terms, a security review or a discount request: a rep | `test_auto_close_a_request_for_custom_terms_goes_to_a_rep` | `auto-close/04-custom-terms-to-a-rep` |
+| A5 | d1 can't decide: nothing is opened or sent, and a person decides | `test_auto_close_without_a_decision_waits_for_a_person` | `auto-close/05-gate-cannot-decide` |
+| A6 | The offer is ready at night: it waits until 08:00 in the prospect's country | `test_auto_close_offer_at_night_waits_for_the_morning` | `auto-close/06-offer-at-night-held` |
+| A7 | Not paid: a reminder after 2 working days, at most two, then after 7 working days a rep takes it | `test_auto_close_unpaid_offer_gets_two_reminders_then_goes_to_a_rep` | `auto-close/07-unpaid-reminder`, `auto-close/08-offer-expired-to-a-rep` |
+| A8 | The card is declined: the link goes out again the next working day, then the payment goes through | `test_auto_close_failed_payment_sends_the_link_again` | `auto-close/09-payment-failed-retry` |
+| A9 | Only part is paid: not won, a person decides | `test_auto_close_partial_payment_waits_for_a_person` | `auto-close/10-partial-payment` |
+| A10 | The same payment is reported twice: the second is refused | `test_auto_close_a_second_payment_is_refused` | `auto-close/14-duplicate-payment` |
+| A11 | A refund after the win: it comes off won revenue and a person decides what it means | `test_auto_close_refund_after_a_win_comes_off_revenue_and_waits_for_a_person` | `auto-close/12-refund` |
+| A12 | After the offer, they ask for a discount: auto-close ends and a rep takes it | agent only | `auto-close/11-reply-asks-for-a-discount` |
+| A13 | They unsubscribe after the offer: no reminders | `test_auto_close_no_reminder_after_an_unsubscribe` | `outreach/06-unsubscribe` |
+| A14 | No offer or reminder without the gate saying yes | `test_auto_close_cannot_skip_the_gate` | `auto-close/03-over-the-cap-to-a-rep` |
+| A15 | Payment amounts are kept and counted in the funnel | `test_payment_amount_is_kept` | `auto-close/02-paid-closes-won` |
+
+## Times
+
+Nothing goes out, falls due or is booked outside working time: weekends, nights and national public holidays in the prospect's country (and, for meetings, where the rep works) don't count. Holidays are national only (not, say, German states). The Fleet runner's `--now` runs any case at another time.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| W1 | The holiday tables: Easter, Midsummer, 17 May, 6 December, German Unity Day. Christmas Eve is a working day in Germany | `test_holiday_tables` | `times/07-midsummer-eve-sweden` |
+| W2 | An email approved on Christmas Eve waits until Monday 28 December | `test_christmas_eve_send_waits_until_after_christmas` | `times/01-christmas-eve-email-held` |
+| W3 | A national holiday holds one country's email, not another's | `test_a_national_holiday_holds_one_country_and_not_another` | `times/02-norway-17-may` |
+| W4 | Follow-up spacing skips Christmas | `test_follow_up_spacing_skips_christmas` | `times/04-friday-night-follow-ups` |
+| W5 | Meeting slots skip the rep's and the prospect's public holidays. A holiday booking is refused | `test_slots_skip_holidays_where_the_rep_works_and_where_the_prospect_is` | `times/05-prospect-asks-for-christmas-eve`, `times/08-finnish-independence-day` |
+| W6 | A yes on Saturday gets slots from Tuesday (Monday is the notice day) | `test_a_reply_on_saturday_gets_slots_from_tuesday` | `times/03-saturday-reply-booked-next-week` |
+| W7 | Slots keep their local time across the switch to summer time | `test_slots_keep_local_time_across_the_daylight_saving_change` | `times/06-booking-after-the-clock-change` |
+| W8 | A cancellation late on Friday: the rebooking follow-up is due Monday morning | `test_a_rebook_follow_up_after_a_friday_cancellation_is_due_monday` | `scheduling/04-prospect-cancels-rebook` |
+| W9 | The same flow at 14 times (from 07:59 to 23:59, weekends, Christmas, New Year's Eve, Easter, the clock change, Midsummer, 17 May, 6 December) in 5 countries: nothing goes out, falls due or is offered at the wrong time | `test_time_sweep_nothing_goes_out_or_is_booked_at_the_wrong_time` | `times/04-friday-night-follow-ups` |

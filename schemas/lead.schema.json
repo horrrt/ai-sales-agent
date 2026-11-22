@@ -135,6 +135,13 @@
           "quote_hash": {"type": "string"}, "approval": {"type": "object"}, "checkout_url": {"type": "string"}}},
         "contract": {"type": "object", "properties": {"status": {"enum": ["none", "sent", "signed"]}, "signed_at": {"type": ["string", "null"], "format": "date-time"}}},
         "paid": {"type": "boolean"},
+        "payment_status": {"enum": ["unpaid", "paid", "partial", "failed", "refunded", null], "description": "Auto-close checkout. partial and refunded wait for a person (needs_person)"},
+        "paid_at": {"type": ["string", "null"], "format": "date-time"},
+        "payment_retry_due": {"type": ["string", "null"], "format": "date-time", "description": "After a failed payment: when the checkout link goes out again"},
+        "offer_sent_at": {"type": ["string", "null"], "format": "date-time", "description": "When the auto-close offer actually went out (after any hold for business hours)"},
+        "offer_reminders": {"type": "integer", "description": "Reminders sent for an unpaid offer; at most 2, and after 7 working days it goes to a rep"},
+        "last_reminder_at": {"type": ["string", "null"], "format": "date-time"},
+        "refunded": {"type": "boolean", "description": "Refunded after the win: not counted in won revenue"},
         "amount_eur": {"type": ["number", "null"], "description": "Final value of a won deal (Salesforce: Opportunity.Amount)"},
         "closed_at": {"type": ["string", "null"], "format": "date-time"}
       }

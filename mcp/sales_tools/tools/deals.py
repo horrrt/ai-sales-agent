@@ -21,13 +21,17 @@ import hashlib
 import json
 from datetime import date, datetime, timedelta, timezone
 
+from .. import access
 from ..app import mcp
 from ..decide import decide
-from ..store import BRIEF, LEADS, clock, log_event, now, set_stage
+from ..store import BRIEF, LEADS, ask_person, clock, log_event, now, set_stage
 from .shared import REASONS
 
 PROBABILITY = {"qualification": 20, "quote": 40, "negotiation": 70, "closed_won": 100, "closed_lost": 0}
 STALE_DAYS = 7
+OFFER_REMINDER_WORKING_DAYS = 2   # an unpaid offer gets a reminder after this, at most MAX_OFFER_REMINDERS times
+MAX_OFFER_REMINDERS = 2
+OFFER_EXPIRY_WORKING_DAYS = 7     # then it goes to a rep
 BANT = {
     "budget": "Do the notes show they have, or can get, budget for this offer at our price?",
     "authority": "Do the notes show the person can decide, or that the decision maker is involved?",
@@ -166,6 +170,11 @@ def approve_quote(lead_id: str, by: str, note: str = "") -> dict:
     q = deal.get("quote")
     if not q or q["status"] != "draft":
         return {"ok": False, "error": "no draft quote to approve"}
+    denied = access.check(by, "approve_quote", owner=deal.get("owner"), lead_id=lead_id) or \
+        (access.check(by, "approve_discount", lead_id=lead_id) if q["needs_admin"] else None)
+    if denied:
+        return denied
+    by = access.resolve(by)
     q["approval"] = {"by": by, "at": now(), "note": note, "quote_hash": q["quote_hash"], "admin_needed": q["needs_admin"]}
     q["status"] = "approved"
     log_event(lead_id, "approval", "success", f"quote approved by {by}" + (" (above the discount limit)" if q["needs_admin"] else ""), by=by)
@@ -189,13 +198,17 @@ def send_quote(lead_id: str) -> dict:
 
 
 @mcp.tool()
-def record_contract(lead_id: str, status: str, by: str = "rep") -> dict:
+def record_contract(lead_id: str, status: str, by: str | None = None) -> dict:
     """Record the contract status: sent or signed. This tool always asks a person first."""
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
     if status not in ("sent", "signed"):
         return {"ok": False, "error": "status must be sent or signed"}
+    denied = access.check(by or deal.get("owner"), "record_contract", owner=deal.get("owner"), lead_id=lead_id, stage="deal")
+    if denied:
+        return denied
+    by = access.resolve(by or deal.get("owner"))
     deal["contract"] = {"status": status, "signed_at": now() if status == "signed" else None}
     log_event(lead_id, "deal", "success", f"contract {status}", by=by)
     return {"ok": True, "next": "record_deal_outcome" if status == "signed" else "wait for the signature"}
@@ -214,6 +227,10 @@ def record_deal_outcome(lead_id: str, outcome: str, by: str, amount_eur: float |
         return {"ok": False, "error": err}
     if deal["stage"] in ("closed_won", "closed_lost"):
         return {"ok": False, "error": f"already {deal['stage']}"}
+    denied = access.check(by, "record_deal_outcome", owner=deal.get("owner"), lead_id=lead_id, stage="deal")
+    if denied:
+        return denied
+    by = access.resolve(by)
     if outcome == "won":
         amount = amount_eur if amount_eur is not None else (deal.get("quote") or {}).get("total_eur")
         if amount is None:
@@ -285,6 +302,10 @@ def check_small_deal(lead_id: str, estimated_value_eur: float | None = None) -> 
                 "reply": (lead.get("outreach") or {}).get("reply_body", "")}
     d = decide("Can this deal close at the standard offer: its value is under the price cap and the prospect asks "
                "for no custom terms, security review, discount or contract changes?", evidence)
+    if d["answer"] is None:  # no decision: a person decides, nothing is opened or sent
+        ask_person(lead, "decide whether this positive reply can close at the standard offer (auto-close) or goes to a rep")
+        log_event(lead_id, "deal", "skipped", "small standard deal? no decision: ask a person", decision={"question": "small, standard deal?", **d})
+        return {"ok": True, "small_deal": None, "decision": d, "next": "Ask a person: auto-close or a rep?"}
     small = bool(d["answer"])
     if small:
         deal = open_deal(lead_id, auto_close=True)
@@ -306,26 +327,99 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
     q = _price(plan, 1, None, 0) if plan else {"error": "the brief has no pricing"}
     if "error" in q:
         return {"ok": False, "error": q["error"]}
+    if (deal.get("quote") or {}).get("checkout_url"):
+        return {"ok": False, "error": "offer_already_sent", "offer_link": deal["quote"]["checkout_url"],
+                "next": "wait for the payment; due_follow_ups sends the reminders"}
+    if lead.get("do_not_contact"):
+        return {"ok": False, "error": "do_not_contact"}
     link = f"{_auto_close().get('checkout_url', 'https://checkout.sandbox.test')}?lead={lead_id}"
     q.update(status="sent", checkout_url=link, approval={"by": "auto_close policy", "at": now(), "quote_hash": None})
     q["quote_hash"] = _quote_hash(q)
     deal["quote"] = q
+    deal.update(payment_status="unpaid", offer_reminders=0)
+    from .outreach import send_policy_email
+    body = (f"Thanks, {lead['person']['name'].split()[0]}. Here is the standard {plan} plan at EUR {q['total_eur']:,.2f} "
+            f"({q['term_months']} months). You can start straight away here: {link}")
+    mail = send_policy_email(lead_id, "Your Kvitto offer", body, "offer")
+    if not mail.get("ok"):
+        return {"ok": False, "error": mail.get("error"), "addresses": mail.get("addresses")}
     _set_deal_stage(lead, "negotiation")
     set_stage(lead, "offer_sent")
-    log_event(lead_id, "deal", "success", f"standard offer sent with checkout link {link}", channel="email")
-    return {"ok": True, "offer_link": link, "quote": q, "sandbox": True, "next": "check_deal_done once the prospect had time to pay"}
+    log_event(lead_id, "deal", "success", f"standard offer with checkout link {link}: {mail['status']}", channel="email")
+    return {"ok": True, "offer_link": link, "quote": q, "sandbox": True, "email": mail,
+            "next": "check_deal_done once the prospect had time to pay; due_follow_ups sends reminders"}
 
 
 @mcp.tool()
-def record_payment(lead_id: str, paid: bool, amount_eur: float | None = None) -> dict:
-    """Record whether the checkout was paid and how much. This tool always asks a person first (later: the payment provider)."""
+def record_payment(lead_id: str, paid: bool, amount_eur: float | None = None, status: str | None = None,
+                   by: str | None = None) -> dict:
+    """Record what happened at the checkout. This tool always asks a person first (later: the payment provider).
+
+    status: paid (default when paid is true), failed (a declined card: a retry follow-up is due the next
+    working day) or refunded (after a win: a person decides what happens to the customer). A payment below
+    the offer's total is recorded as partial and waits for a person. Only finance and admins record payments
+    (by; default: the brief's payment approver)."""
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
-    deal["paid"] = bool(paid)
-    if paid:
-        deal["amount_eur"] = amount_eur if amount_eur is not None else (deal.get("quote") or {}).get("total_eur")
-    return {"ok": True}
+    by = by or access.default_approver("payments")
+    denied = access.check(by, "record_payment", lead_id=lead_id, stage="deal")
+    if denied:
+        return denied
+    status = status or ("paid" if paid else "failed")
+    if status not in ("paid", "failed", "refunded"):
+        return {"ok": False, "error": "status must be paid, failed or refunded"}
+    total = (deal.get("quote") or {}).get("total_eur")
+    if status == "paid" and deal.get("payment_status") in ("paid", "partial"):
+        return {"ok": False, "error": "already_paid", "amount_eur": deal.get("amount_eur"), "next": "a second payment needs a person: refund one"}
+    if status == "refunded" and deal.get("payment_status") not in ("paid", "partial"):
+        return {"ok": False, "error": "nothing was paid, so nothing can be refunded"}
+    by = access.resolve(by)
+    if status == "paid":
+        amount = amount_eur if amount_eur is not None else total
+        partial = total is not None and amount is not None and amount + 0.005 < total
+        deal.update(paid=not partial, amount_eur=amount, payment_status="partial" if partial else "paid", paid_at=now())
+        if partial:
+            ask_person(lead, f"partial payment: EUR {amount:,.2f} of EUR {total:,.2f}")
+        log_event(lead_id, "deal", "success" if not partial else "skipped",
+                  f"payment {'partial ' if partial else ''}EUR {amount or 0:,.2f}", by=by)
+        return {"ok": True, "payment_status": deal["payment_status"],
+                "next": "check_deal_done" if not partial else "Ask a person: the amount paid is below the offer"}
+    if status == "failed":
+        from .handoff import _iso, _next_working_morning
+        deal.update(paid=False, payment_status="failed", payment_retry_due=_iso(_next_working_morning(lead)))
+        log_event(lead_id, "deal", "failure", "payment failed at the checkout", by=by)
+        return {"ok": True, "payment_status": "failed", "retry_due": deal["payment_retry_due"],
+                "next": "due_follow_ups sends the checkout link again the next working day"}
+    deal.update(paid=False, payment_status="refunded", refunded=True, refunded_at=now())
+    ask_person(lead, "the customer was refunded: decide whether the deal is lost and why")
+    log_event(lead_id, "deal", "failure", "payment refunded", by=by)
+    return {"ok": True, "payment_status": "refunded", "next": "Ask a person: refunded, lost or keep?"}
+
+
+@mcp.tool()
+def send_offer_reminder(lead_id: str) -> dict:
+    """Send the checkout link again for an unpaid or failed auto-close offer (sandbox, same thread, business
+    hours). Only when due_follow_ups lists offer_unpaid or payment_failed; at most 2 reminders."""
+    lead, deal, err = _deal(lead_id)
+    if err:
+        return {"ok": False, "error": err}
+    q = deal.get("quote") or {}
+    if not deal.get("auto_close") or not q.get("checkout_url"):
+        return {"ok": False, "error": "no auto-close offer was sent"}
+    if deal.get("paid") or deal.get("stage") in ("closed_won", "closed_lost"):
+        return {"ok": False, "error": "already paid or closed"}
+    failed = deal.get("payment_status") == "failed"
+    if not failed and deal.get("offer_reminders", 0) >= MAX_OFFER_REMINDERS:
+        return {"ok": False, "error": "no reminders left", "next": "check_deal_done: it goes to a rep"}
+    from .outreach import send_policy_email
+    first = lead["person"]["name"].split()[0]
+    body = (f"Hi {first}, the payment didn't go through. You can try again here: {q['checkout_url']}" if failed else
+            f"Hi {first}, a quick reminder: your Kvitto offer (EUR {q['total_eur']:,.2f}) is ready whenever you are: {q['checkout_url']}")
+    mail = send_policy_email(lead_id, "Your Kvitto offer", body, "offer_reminder")
+    if failed and mail.get("ok"):
+        deal.update(payment_status="unpaid", payment_retry_due=None)
+    return {**mail, "reminders": deal.get("offer_reminders", 0)}
 
 
 @mcp.tool()
@@ -334,6 +428,10 @@ def check_deal_done(lead_id: str) -> dict:
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
+    if deal.get("stage") in ("closed_won", "closed_lost"):
+        return {"ok": True, "done": deal["stage"] == "closed_won", "already": deal["stage"], "next": "stop"}
+    if deal.get("payment_status") == "partial":
+        return {"ok": True, "done": False, "next": "Ask a person: the amount paid is below the offer"}
     if deal.get("paid"):
         deal["closed_at"] = now()
         _set_deal_stage(lead, "closed_won")
@@ -341,5 +439,11 @@ def check_deal_done(lead_id: str) -> dict:
         set_stage(lead, "closed")
         log_event(lead_id, "deal", "success", f"paid: closed automatically, EUR {deal.get('amount_eur') or 0:,.2f}")
         return {"ok": True, "done": True, "next": "post a short summary for the rep in #sales-desk"}
+    from .handoff import _add_working_days, _lead_country, _lead_tz, _parse
+    sent = deal.get("offer_sent_at")
+    expired = not sent or _add_working_days(_parse(sent), OFFER_EXPIRY_WORKING_DAYS, _lead_tz(lead), _lead_country(lead)) <= clock()
+    if not expired:
+        return {"ok": True, "done": False, "payment_status": deal.get("payment_status"),
+                "next": "not paid yet: wait; due_follow_ups sends reminders, and after 7 working days it goes to a rep"}
     log_event(lead_id, "deal", "skipped", "not paid: handing to a rep")
     return {"ok": True, "done": False, "next": "assign_rep"}
