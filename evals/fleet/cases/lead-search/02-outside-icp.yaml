@@ -1,0 +1,27 @@
+title: A US enterprise is skipped as not a fit, with the loss reason
+agent: lead-search
+setup:
+  source:
+  - lead_id: L-202
+    person:
+      name: Dana Wells
+      title: VP Procurement
+      email: dana@megacorp.sandbox.test
+      linkedin_url: ''
+    company:
+      name: MegaCorp Inc
+      domain: megacorp.example
+      country: US
+      employees: 4000
+      industry: Retail
+turns:
+- Find new leads for customer_id C-demo.
+expect:
+  called:
+  - add_lead
+  not_called:
+  - research_target
+  lead:
+    L-202:
+      status: lost
+      loss_reason: wrong_company_fit

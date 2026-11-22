@@ -1,0 +1,39 @@
+title: A candidate already in the sheet under the same email isn't added twice
+agent: lead-search
+setup:
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+  source:
+  - lead_id: L-301
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+turns:
+- Find new leads for customer_id C-demo.
+expect:
+  lead:
+    L-301:
+      status: null
+    L-201:
+      status: active
+  called:
+  - find_leads

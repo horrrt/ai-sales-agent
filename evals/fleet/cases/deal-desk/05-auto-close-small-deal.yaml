@@ -1,0 +1,38 @@
+title: 'Auto-close on: a small standard deal gets the standard offer'
+agent: deal-desk
+setup:
+  brief:
+    auto_close:
+      enabled: true
+      max_annual_value_eur: 10000
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: replied
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+      reply_label: positive
+      reply_body: Sounds right for us. How do I sign up for the monthly plan?
+turns:
+- L-201 replied positively and auto-close is on for this customer. Handle it.
+expect:
+  called:
+  - check_small_deal
+  - send_offer
+  not_called:
+  - assign_rep
+  lead:
+    L-201:
+      deal.auto_close: true
+      deal.stage: negotiation
+      stage: offer_sent

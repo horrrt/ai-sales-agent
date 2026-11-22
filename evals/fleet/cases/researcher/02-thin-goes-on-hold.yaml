@@ -1,0 +1,46 @@
+title: 'Only generic research: retried, then on hold, not lost'
+agent: researcher
+setup:
+  leads:
+  - lead_id: L-210
+    person:
+      name: Karl Berg
+      title: CEO
+      email: karl@grafit.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Grafit IT AB
+      domain: grafit.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+  source:
+  - lead_id: L-210
+    person:
+      name: Karl Berg
+      title: CEO
+      email: karl@grafit.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Grafit IT AB
+      domain: grafit.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    research:
+      summary: Grafit IT is an IT services company.
+      enough_to_personalize: false
+      facts:
+      - fact: Provides IT services
+        source_url: https://grafit.example
+turns:
+- Research lead L-210 for customer_id C-demo until it's ready to write or can't be.
+expect:
+  called:
+  - check_ready_to_write
+  lead:
+    L-210:
+      status: on_hold
+      loss_reason: null
+  not_called:
+  - save_positioning

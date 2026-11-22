@@ -1,0 +1,10 @@
+title: 'Off-topic: says what it does and stops'
+agent: manager
+setup: {}
+turns:
+- Write me a poem about the sea.
+expect:
+  max_tool_calls: 1
+  not_called:
+  - find_leads
+  - send_email

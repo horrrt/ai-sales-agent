@@ -1,0 +1,53 @@
+title: Sourced trigger facts pass the enough-to-write check
+agent: researcher
+setup:
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+  source:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts: &id001
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+turns:
+- Research the next lead for customer_id C-demo and check it's ready to write.
+expect:
+  called:
+  - research_target
+  - check_ready_to_write
+  lead:
+    L-201:
+      stage: researched
+      status: active
+      research.facts: *id001
+  logs_follow_schema: true
+  events:
+  - stage: research
+    outcome: success
+    by: tool

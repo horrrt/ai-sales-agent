@@ -1,0 +1,30 @@
+title: A candidate inside the ICP goes into the lead sheet
+agent: lead-search
+setup:
+  source:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    source: salesforce
+    source_id: 00Q-NORDVIK
+turns:
+- Find new leads for customer_id C-demo, look at up to 5 candidates.
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    L-201:
+      status: active
+      stage: new
+      created_at: set
+  logs_follow_schema: true

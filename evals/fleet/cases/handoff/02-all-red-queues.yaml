@@ -1,0 +1,51 @@
+title: 'Every rep is red: the lead waits in the queue, not lost'
+agent: handoff
+setup:
+  reps:
+    rep-1:
+      name: Mette Holm
+      slack_user_id: TODO-U-METTE
+      status: red
+      active_leads: 8
+      max_leads: 8
+      countries:
+      - 'NO'
+      - SE
+      - FI
+    rep-2:
+      name: Jonas Lind
+      slack_user_id: TODO-U-JONAS
+      status: red
+      active_leads: 8
+      max_leads: 8
+      countries:
+      - SE
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: replied
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+      reply_label: positive
+turns:
+- L-201 replied positively. Hand it to a rep.
+expect:
+  called:
+  - assign_rep
+  not_called:
+  - book_meeting
+  queue_length: 1
+  lead:
+    L-201:
+      status: queued
+      loss_reason: null

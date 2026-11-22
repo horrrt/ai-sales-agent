@@ -107,7 +107,8 @@ def research_target(lead_id: str) -> dict:
     if not lead:
         return {"error": f"unknown lead {lead_id}"}
     attempts = (lead.get("research") or {}).get("attempts", 0)
-    profile = sim.research(lead_id) or {
+    # The personas, or a lead-source entry that carries its own research (test fixtures), else the stub.
+    profile = sim.research(lead_id) or copy.deepcopy((SOURCE.get(lead_id) or {}).get("research")) or {
         "summary": f"STUB: {lead['company']['name']} is a {lead['company']['industry']} company with {lead['company']['employees']} employees.",
         "facts": [{"fact": "STUB: recently hired two account executives", "source_url": "https://example.com"}],
         "enough_to_personalize": True,

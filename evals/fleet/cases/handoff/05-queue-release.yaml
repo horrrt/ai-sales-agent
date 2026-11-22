@@ -1,0 +1,54 @@
+title: 'A rep frees up: the waiting lead is handed out'
+agent: handoff
+setup:
+  reps:
+    rep-1:
+      name: Mette Holm
+      slack_user_id: TODO-U-METTE
+      status: red
+      active_leads: 8
+      max_leads: 8
+      countries:
+      - 'NO'
+      - SE
+      - FI
+    rep-2:
+      name: Jonas Lind
+      slack_user_id: TODO-U-JONAS
+      status: red
+      active_leads: 8
+      max_leads: 8
+      countries:
+      - SE
+  queue:
+  - lead_id: L-201
+    since: '2026-11-20T09:00:00+00:00'
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: replied
+    status: queued
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+      reply_label: positive
+turns:
+- Mette has room again, set her to green and hand out anything that's waiting.
+expect:
+  called:
+  - set_rep_status
+  - release_queue
+  queue_length: 0
+  lead:
+    L-201:
+      status: active
+      handoff.rep_id: rep-1

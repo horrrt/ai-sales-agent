@@ -1,0 +1,39 @@
+title: 'Find a lead and run a batch of one: search, research, angle, approved email'
+agent: manager
+setup:
+  source:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik.example/news/hospital-pilot
+      - fact: Job post for an Information Security Officer, first hire in that role
+        source_url: https://nordvik.example/careers/security-officer
+turns:
+- Find new leads for customer_id C-demo, then run an outreach batch with batch size 1.
+expect:
+  delegated_to:
+  - lead-search
+  - researcher
+  - positioner
+  - outreach
+  asked_person:
+  - record_approval
+  lead:
+    L-201:
+      stage: sent
+      positioning.angle: set
+  logs_follow_schema: true

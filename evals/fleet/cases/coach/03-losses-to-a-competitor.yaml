@@ -1,0 +1,244 @@
+title: '6 of 10 losses are to a competitor: the proposal cites that evidence'
+agent: coach
+setup:
+  leads:
+  - lead_id: L-500
+    person:
+      name: Person 0
+      title: CEO
+      email: p0@c0.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 0 AB
+      domain: c0.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-501
+    person:
+      name: Person 1
+      title: CEO
+      email: p1@c1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 1 AB
+      domain: c1.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-502
+    person:
+      name: Person 2
+      title: CEO
+      email: p2@c2.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 2 AB
+      domain: c2.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-503
+    person:
+      name: Person 3
+      title: CEO
+      email: p3@c3.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 3 AB
+      domain: c3.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-504
+    person:
+      name: Person 4
+      title: CEO
+      email: p4@c4.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 4 AB
+      domain: c4.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-505
+    person:
+      name: Person 5
+      title: CEO
+      email: p5@c5.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 5 AB
+      domain: c5.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: has_competitor
+  - lead_id: L-506
+    person:
+      name: Person 6
+      title: CEO
+      email: p6@c6.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 6 AB
+      domain: c6.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: negative
+  - lead_id: L-507
+    person:
+      name: Person 7
+      title: CEO
+      email: p7@c7.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 7 AB
+      domain: c7.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: negative
+  - lead_id: L-508
+    person:
+      name: Person 8
+      title: CEO
+      email: p8@c8.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 8 AB
+      domain: c8.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: negative
+  - lead_id: L-509
+    person:
+      name: Person 9
+      title: CEO
+      email: p9@c9.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 9 AB
+      domain: c9.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+    stage: replied
+    status: lost
+    loss_reason: negative
+  interactions:
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-500
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-501
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-502
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-503
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-504
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-505
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: has_competitor
+    by: tool
+    message: 'negative: We already use Vanta.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-506
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: negative
+    by: tool
+    message: 'negative: Not interested.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-507
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: negative
+    by: tool
+    message: 'negative: Not interested.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-508
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: negative
+    by: tool
+    message: 'negative: Not interested.'
+  - timestamp: '2026-11-18T10:00:00+00:00'
+    lead_id: L-509
+    stage: reply
+    channel: email
+    outcome: failure
+    loss_reason: negative
+    by: tool
+    message: 'negative: Not interested.'
+turns:
+- Run the weekly review.
+expect:
+  called:
+  - save_proposal
+  called_with:
+    save_proposal:
+      evidence: ~competitor
+  proposals: 1
