@@ -61,6 +61,9 @@ def _pricing_findings(pricing: dict, auto_close: dict) -> tuple[list[dict], dict
     findings, plans, values = [], (pricing or {}).get("plans") or {}, {}
     if not plans:
         findings.append({"severity": "error", "text": "no plans: add at least one plan with a monthly price (or custom)"})
+    if plans and all(str(n).upper().startswith("TODO") or (spec.get("price_per_month") == 0 and not spec.get("custom"))
+                     for n, spec in plans.items()):
+        findings.append({"severity": "error", "text": "the plans are still the placeholder: add the real plans and prices"})
     for name, spec in plans.items():
         if spec.get("price_per_month") is None and not spec.get("custom"):
             findings.append({"severity": "error", "text": f"{name}: no price_per_month; set one, or custom: true for a price a rep sets"})
@@ -165,7 +168,10 @@ def check_brief() -> dict:
         if access.resolve(who) is None:
             warnings.append(f"approvers.{kind}: {who} is not in the team roster")
     todo = [p for p in _todos(b) if not any(p.startswith(m.split(":")[0].split(" ")[0]) for m in missing)]
-    optional = ("won_deals", "exclusions", "website")  # a new customer may have none yet
+    # a new customer may have none of these yet; the numbers in pricing and auto_close are what the tools use
+    optional = ("won_deals", "exclusions", "website", "pricing.deal_policy", "auto_close.standard_terms")
+    if not (b.get("auto_close") or {}).get("enabled"):
+        optional += ("auto_close",)  # switched off: its settings don't matter yet
     missing += [f"{p}: still TODO" for p in todo if not p.startswith(optional)]
     warnings += [f"{p}: still the example placeholder (optional)" for p in todo if p.startswith(optional)]
     return {"ok": True, "ready": not missing, "missing": missing, "warnings": warnings,

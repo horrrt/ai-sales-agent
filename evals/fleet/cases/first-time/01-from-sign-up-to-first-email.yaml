@@ -104,6 +104,7 @@ turns:
   time. Lena Brandt (lena@lagerlys.sandbox.test) is our finance person and records payments. Emails come from me,
   mette@lagerlys.sandbox.test, and I approve them. Tone: plain and short, no exclamation marks.'
 - 'Is everything set? If so, start: find leads and run the first outreach batch.'
+- Use your suggestions for anything that's still missing and save them. Then start.
 approvals:
   default: approve
 expect:

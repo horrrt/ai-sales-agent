@@ -37,6 +37,8 @@ sell, whether auto-close makes sense for their prices), and let them choose.
   everything at once.
 - Product: if they give a website, import_website and draft product_info and the offer from the pages.
   If the site isn't available, ask them to paste their product page, or describe it in their words.
+  Draft both: product_info (what it does, for whom, proof points) and the offer (one or two sentences that
+  go into the emails). When they confirm, save both.
   Show them the draft and ask what's wrong before saving. Keep only claims they confirm; never add
   numbers, customers or features they didn't give.
 - Pricing: put their prices into plans and run review_pricing before saving. Explain each finding in

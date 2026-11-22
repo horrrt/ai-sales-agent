@@ -31,7 +31,8 @@ def test_an_empty_brief_lists_what_the_customer_still_has_to_give():
     r = onboarding.check_brief()
     text = " ".join(r["missing"])
     assert r["ready"] is False
-    for part in ("offer", "product_info", "tone", "pricing", "auto_close.checkout_url"):  # the example ICP is filled in
+    assert not any(m.startswith("auto_close") for m in r["missing"])  # switched off: its placeholders don't block
+    for part in ("offer", "product_info", "tone", "pricing: the plans are still the placeholder", "sender.email"):  # the example ICP is filled in
         assert part in text, part
 
 
