@@ -4,7 +4,6 @@ setup:
   brief:
     auto_close:
       enabled: true
-      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -57,14 +56,14 @@ setup:
       stage_times:
         qualification: '2026-11-23T11:00:00+00:00'
       small_deal: true
-      estimated_value_eur: 790
+      estimated_value_eur: 1188
       quote:
-        plan: monthly
+        plan: starter
         quantity: 1
         term_months: 1
         discount_pct: 0
-        list_total_eur: 790.0
-        total_eur: 790.0
+        list_total_eur: 99.0
+        total_eur: 99.0
         needs_admin: false
         status: sent
         checkout_url: https://checkout.sandbox.test/kvitto?lead=L-201

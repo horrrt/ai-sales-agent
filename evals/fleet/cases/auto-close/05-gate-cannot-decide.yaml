@@ -5,7 +5,6 @@ setup:
   brief:
     auto_close:
       enabled: true
-      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -17,7 +16,7 @@ setup:
       name: Nordvik Health Data AS
       domain: nordvik.example
       country: 'NO'
-      employees: 22
+      employees: 7
       industry: B2B SaaS
     stage: replied
     research:
@@ -42,9 +41,9 @@ setup:
       follow_ups: 0
       sent_count: 1
       reply_label: positive
-      reply_body: How do I start?
+      reply_body: How do I start on Starter?
 turns:
-- 'L-201 replied: "How do I start?" Auto-close is on. Handle it.'
+- 'L-201 replied: "How do I start on Starter?" Auto-close is on. Handle it.'
 approvals:
   default: approve
 expect:

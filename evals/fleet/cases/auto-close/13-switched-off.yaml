@@ -12,7 +12,7 @@ setup:
       name: Nordvik Health Data AS
       domain: nordvik.example
       country: 'NO'
-      employees: 22
+      employees: 7
       industry: B2B SaaS
     stage: replied
     research:

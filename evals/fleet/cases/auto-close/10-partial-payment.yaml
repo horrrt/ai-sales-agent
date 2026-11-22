@@ -4,7 +4,6 @@ setup:
   brief:
     auto_close:
       enabled: true
-      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -16,7 +15,7 @@ setup:
       name: Nordvik Health Data AS
       domain: nordvik.example
       country: 'NO'
-      employees: 22
+      employees: 7
       industry: B2B SaaS
     stage: offer_sent
     research:
@@ -57,14 +56,14 @@ setup:
       stage_times:
         qualification: '2026-11-23T11:00:00+00:00'
       small_deal: true
-      estimated_value_eur: 790
+      estimated_value_eur: 1188
       quote:
-        plan: monthly
+        plan: starter
         quantity: 1
         term_months: 1
         discount_pct: 0
-        list_total_eur: 790.0
-        total_eur: 790.0
+        list_total_eur: 99.0
+        total_eur: 99.0
         needs_admin: false
         status: sent
         checkout_url: https://checkout.sandbox.test/kvitto?lead=L-201
@@ -75,7 +74,7 @@ setup:
       offer_reminders: 0
       offer_sent_at: '2026-11-24T09:00:00+00:00'
 turns:
-- 'Lena (fin-1) here: L-201 paid EUR 395 of the EUR 790 offer.'
+- 'Lena (fin-1) here: L-201 paid EUR 50 of the EUR 99 offer.'
 approvals:
   default: approve
 expect:

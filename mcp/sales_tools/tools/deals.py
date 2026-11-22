@@ -91,6 +91,8 @@ def _price(plan: str, quantity: int, term_months: int | None, discount_pct: floa
         return {"error": f"{plan} needs at least {spec['min_term_months']} months"}
     if quantity < 1:
         return {"error": "quantity must be at least 1"}
+    if spec.get("max_quantity") and quantity > spec["max_quantity"]:
+        return {"error": f"{plan} is for at most {spec['max_quantity']}; use a bigger plan"}
     if discount_pct < 0 or discount_pct > p.get("max_discount_pct", 0):
         return {"error": f"discount must be between 0 and {p.get('max_discount_pct', 0)}%"}
     list_total = round(spec["price_per_month"] * quantity * term, 2)
@@ -284,8 +286,10 @@ def _auto_close() -> dict:
 def check_small_deal(lead_id: str, estimated_value_eur: float | None = None) -> dict:
     """d1 gate "small, standard deal?" for a positive reply. Only used when the brief enables auto-close.
 
-    estimated_value_eur: what the deal would be worth per year, from the reply and the brief's prices.
-    Above the brief's price cap it's not a small deal, whatever else the reply says.
+    estimated_value_eur: what the deal would be worth per year on the auto-close plan (auto_close.plans in
+    the brief, e.g. starter at EUR 99 a month = EUR 1,188). Above the brief's price cap it's not a small deal,
+    whatever else the reply says. A reply that needs a bigger plan (more teams, the compliance lead, an
+    annual contract) is not a small deal either: d1 judges that against the plan description.
     """
     lead = LEADS.get(lead_id)
     if lead is None:
@@ -297,11 +301,14 @@ def check_small_deal(lead_id: str, estimated_value_eur: float | None = None) -> 
     if estimated_value_eur is not None and isinstance(cap, (int, float)) and estimated_value_eur > cap:
         log_event(lead_id, "deal", "skipped", f"estimated EUR {estimated_value_eur:g}/year is over the cap of {cap:g}: to a rep")
         return {"ok": True, "small_deal": False, "next": "assign_rep", "note": "over the price cap"}
+    plans = _pricing().get("plans") or {}
     evidence = {"price_cap_eur_per_year": cap, "estimated_value_eur_per_year": estimated_value_eur,
-                "standard_terms": cfg.get("standard_terms"), "offer": BRIEF.get("offer"), "company": lead.get("company"),
+                "auto_close_plans": {p: plans.get(p) for p in cfg.get("plans") or []},
+                "standard_terms": cfg.get("standard_terms"), "company": lead.get("company"),
                 "reply": (lead.get("outreach") or {}).get("reply_body", "")}
-    d = decide("Can this deal close at the standard offer: its value is under the price cap and the prospect asks "
-               "for no custom terms, security review, discount or contract changes?", evidence)
+    d = decide("Can this deal close on one of the auto-close plans (auto_close_plans) at its list price and standard "
+               "terms: the company fits what the plan is for (size included), the value is under the price cap, and the "
+               "prospect asks for no custom terms, security review, discount or contract changes?", evidence)
     if d["answer"] is None:  # no decision: a person decides, nothing is opened or sent
         ask_person(lead, "decide whether this positive reply can close at the standard offer (auto-close) or goes to a rep")
         log_event(lead_id, "deal", "skipped", "small standard deal? no decision: ask a person", decision={"question": "small, standard deal?", **d})
@@ -318,12 +325,17 @@ def check_small_deal(lead_id: str, estimated_value_eur: float | None = None) -> 
 
 @mcp.tool()
 def send_offer(lead_id: str, plan: str | None = None) -> dict:
-    """Send the standard offer (list price, no discount) with the checkout link (sandbox). Only after check_small_deal said yes."""
+    """Send the standard offer on the auto-close plan (list price, no discount) with the checkout link (sandbox).
+    Only after check_small_deal said yes, and only for a plan in the brief's auto_close.plans."""
     lead, deal, err = _deal(lead_id)
     if err or not deal.get("small_deal"):
         return {"ok": False, "error": "check_small_deal has not approved this lead for auto-close"}
     plans = (_pricing().get("plans") or {})
-    plan = plan or min(plans, key=lambda p: plans[p].get("min_term_months", 1), default=None)
+    allowed = [p for p in (_auto_close().get("plans") or []) if p in plans] or \
+              [min(plans, key=lambda p: plans[p].get("min_term_months", 1))] if plans else []
+    plan = plan or (allowed[0] if allowed else None)
+    if plan and plan not in allowed:
+        return {"ok": False, "error": f"{plan} isn't an auto-close plan (the brief allows {allowed}); a rep sells it"}
     q = _price(plan, 1, None, 0) if plan else {"error": "the brief has no pricing"}
     if "error" in q:
         return {"ok": False, "error": q["error"]}

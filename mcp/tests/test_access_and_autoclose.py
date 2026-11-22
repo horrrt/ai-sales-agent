@@ -140,14 +140,34 @@ def test_a_finance_person_never_gets_a_lead():
 
 # --- Auto-close ---------------------------------------------------------------------------------
 
-def small_deal_offer(lead_id="L-001", reply="How do I sign up for the monthly plan?"):
+def small_deal_offer(lead_id="L-001", reply="How do I sign up for Starter? We're six people."):
     store.BRIEF["auto_close"]["enabled"] = True
     sent_lead(lead_id)
     stub("positive")
     assert outreach.read_reply(lead_id, reply)["next"] == "check_small_deal"
     stub(True)
-    assert deals.check_small_deal(lead_id, estimated_value_eur=790 * 12 / 12 * 2)["next"] == "send_offer"
+    assert deals.check_small_deal(lead_id, estimated_value_eur=99 * 12)["next"] == "send_offer"
     return deals.send_offer(lead_id)
+
+
+def test_auto_close_sells_only_the_starter_plan_under_the_cap():
+    r = small_deal_offer()
+    assert r["quote"]["plan"] == "starter" and r["quote"]["total_eur"] == 99 and "EUR 99.00" in store.OUTBOX[-1]["body"]
+    assert store.BRIEF["auto_close"]["max_annual_value_eur"] >= 99 * 12  # the cheapest plan fits under the cap
+
+
+def test_auto_close_a_bigger_plan_is_over_the_cap_and_never_offered():
+    store.BRIEF["auto_close"]["enabled"] = True
+    sent_lead()
+    stub("positive")
+    outreach.read_reply("L-001", "We'd like the monthly plan with the compliance lead.")
+    for yearly in (790 * 12, 650 * 12, 99 * 12 * 3):  # monthly, annual, three companies on Starter
+        assert deals.check_small_deal("L-001", estimated_value_eur=yearly)["note"] == "over the price cap"
+    assert "deal" not in store.LEADS["L-001"]
+    stub(True)
+    deals.check_small_deal("L-001", estimated_value_eur=99 * 12)
+    assert "isn't an auto-close plan" in deals.send_offer("L-001", plan="monthly")["error"]
+    assert "at most 1" in deals.draft_quote("L-001", "starter", quantity=3)["error"]
 
 
 def test_auto_close_a_request_for_custom_terms_goes_to_a_rep():
@@ -156,7 +176,7 @@ def test_auto_close_a_request_for_custom_terms_goes_to_a_rep():
     stub("positive")
     outreach.read_reply("L-001", "Interested, but we'd need 20% off and our own contract.")
     stub(False)
-    r = deals.check_small_deal("L-001", estimated_value_eur=1580)
+    r = deals.check_small_deal("L-001", estimated_value_eur=1188)
     assert r["next"] == "assign_rep" and "deal" not in store.LEADS["L-001"]
 
 
@@ -166,7 +186,7 @@ def test_auto_close_without_a_decision_waits_for_a_person():
     stub("positive")
     outreach.read_reply("L-001", "Sounds good")
     stub(None)
-    r = deals.check_small_deal("L-001", estimated_value_eur=1580)
+    r = deals.check_small_deal("L-001", estimated_value_eur=1188)
     assert r["small_deal"] is None and "deal" not in store.LEADS["L-001"]
     assert [d["kind"] for d in outreach.due_follow_ups() if d["lead_id"] == "L-001"] == ["needs_person"]
 
@@ -185,7 +205,7 @@ def test_auto_close_offer_at_night_waits_for_the_morning():
     stub("positive")
     outreach.read_reply("L-001", "How do I sign up?")
     stub(True)
-    deals.check_small_deal("L-001", estimated_value_eur=1580)
+    deals.check_small_deal("L-001", estimated_value_eur=1188)
     at("2026-11-24T23:15:00+01:00")
     r = deals.send_offer("L-001")
     assert r["email"]["status"] == "scheduled" and r["email"]["scheduled_for"] == "2026-11-25T07:00:00+00:00"
@@ -243,7 +263,7 @@ def test_auto_close_reminders_cannot_be_sent_early_and_a_held_offer_is_not_expir
     stub("positive")
     outreach.read_reply("L-001", "How do I sign up?")
     stub(True)
-    deals.check_small_deal("L-001", estimated_value_eur=1580)
+    deals.check_small_deal("L-001", estimated_value_eur=1188)
     at("2026-11-24T22:00:00+01:00")
     deals.send_offer("L-001")  # held until the morning
     assert deals.check_deal_done("L-001")["next"].startswith("the offer is scheduled")

@@ -148,13 +148,13 @@ Each person in the team roster has a role (admin, rep, junior, finance, viewer) 
 
 ## Auto-close
 
-Off unless the brief enables it. A small, standard deal closes without a rep: check_small_deal, then send_offer (in the thread, in business hours), then the payment, then check_deal_done. Anything else goes to a rep or waits for a person.
+Off unless the brief enables it. It only sells the brief's auto-close plans (in the demo, Starter: EUR 99 a month, one company up to 10 people, EUR 1,188 a year against a EUR 2,000 cap). A small, standard deal closes without a rep: check_small_deal, then send_offer (in the thread, in business hours), then the payment, then check_deal_done. Anything else goes to a rep or waits for a person.
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
-| A1 | A small standard deal: the offer goes out in the thread once, the payment comes in, the deal is won without a rep | `test_auto_close_small_deal_paid_is_won`, `test_auto_close_offer_goes_in_the_thread_once` | `auto-close/01-small-deal-offer-sent`, `auto-close/02-paid-closes-won`, `deal-desk/05-auto-close-small-deal` |
+| A1 | A small standard deal on the Starter plan (EUR 99 a month, under the EUR 2,000 a year cap): the offer goes out in the thread once, the payment comes in, the deal is won without a rep | `test_auto_close_small_deal_paid_is_won`, `test_auto_close_offer_goes_in_the_thread_once`, `test_auto_close_sells_only_the_starter_plan_under_the_cap` | `auto-close/01-small-deal-offer-sent`, `auto-close/02-paid-closes-won`, `deal-desk/05-auto-close-small-deal` |
 | A2 | Auto-close is switched off: no offer, the reply goes to a rep | `test_auto_close_off_never_sends_an_offer` | `auto-close/13-switched-off` |
-| A3 | Over the price cap: a rep, without asking d1 | `test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1` | `auto-close/03-over-the-cap-to-a-rep` |
+| A3 | Over the price cap (the monthly or annual plan, or Starter for several companies): a rep, without asking d1. Only the brief's auto-close plans are ever offered | `test_deal_over_the_price_cap_goes_to_a_rep_without_asking_d1`, `test_auto_close_a_bigger_plan_is_over_the_cap_and_never_offered` | `auto-close/03-over-the-cap-to-a-rep` |
 | A4 | Custom terms, a security review or a discount request: a rep | `test_auto_close_a_request_for_custom_terms_goes_to_a_rep` | `auto-close/04-custom-terms-to-a-rep` |
 | A5 | d1 can't decide: nothing is opened or sent, and a person decides | `test_auto_close_without_a_decision_waits_for_a_person` | `auto-close/05-gate-cannot-decide` |
 | A6 | The offer is ready at night: it waits until 08:00 in the prospect's country | `test_auto_close_offer_at_night_waits_for_the_morning` | `auto-close/06-offer-at-night-held` |

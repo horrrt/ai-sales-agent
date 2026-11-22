@@ -4,7 +4,7 @@
   "company_name": "Kvitto ApS",
   "approvers": {"emails": "rep-1", "payments": "fin-1"},
   "sender": {"name": "Sofie Dahl, Kvitto", "email": "sofie@kvitto.sandbox.test", "timezone": "Europe/Copenhagen"},
-  "offer": "Kvitto gets small B2B SaaS companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks. Price: EUR 650 per month on a 12-month plan (about EUR 7,800 a year), auditor fees not included. Setup is free if the customer signs before their first audit window. Monthly plan available at EUR 790 per month.",
+  "offer": "Kvitto gets small B2B SaaS companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks. Price: EUR 650 per month on a 12-month plan (about EUR 7,800 a year), auditor fees not included. Setup is free if the customer signs before their first audit window. Monthly plan available at EUR 790 per month. Starter, for companies up to 10 people that only need the evidence collection and policy templates (no named compliance lead): EUR 99 per month, cancel any month, sign up online.",
   "icp": {
     "countries": ["SE", "FI", "NO"],
     "employees_min": 10,
@@ -27,6 +27,6 @@
   ],
   "exclusions": ["Vanta", "Drata", "Secureframe", "existing customers: Fjordline Analytics, Tallbacka Systems, Merikivi Data"],
   "tone": "Plain, short and specific. No hype words, no 'revolutionary', no exclamation marks. Write like a founder writing to another founder. Never claim the customer will pass an audit; we make them audit-ready. Never invent customer names or numbers beyond the proof points above. Max 120 words for a first email, one clear ask.",
-  "auto_close": {"enabled": false, "max_annual_value_eur": 2000, "standard_terms": "Monthly plan at the list price, standard terms, no custom contract or security review", "checkout_url": "https://checkout.sandbox.test/kvitto"},
-  "pricing": {"currency": "EUR", "plans": {"annual": {"price_per_month": 650, "min_term_months": 12}, "monthly": {"price_per_month": 790, "min_term_months": 1}}, "max_discount_pct_without_approval": 10, "max_discount_pct": 20, "deal_policy": "Discounts above 10% need an admin. Never above 20%. No free months, no custom contract under EUR 20,000 a year."}
+  "auto_close": {"enabled": false, "max_annual_value_eur": 2000, "plans": ["starter"], "standard_terms": "Starter plan at the list price (EUR 99 a month, one company up to 10 people), monthly, standard terms, no custom contract, security review or compliance lead", "checkout_url": "https://checkout.sandbox.test/kvitto"},
+  "pricing": {"currency": "EUR", "plans": {"annual": {"price_per_month": 650, "min_term_months": 12}, "monthly": {"price_per_month": 790, "min_term_months": 1}, "starter": {"price_per_month": 99, "min_term_months": 1, "max_quantity": 1, "for": "Companies up to 10 people: evidence collection and policy templates, no named compliance lead"}}, "max_discount_pct_without_approval": 10, "max_discount_pct": 20, "deal_policy": "Discounts above 10% need an admin. Never above 20%. No free months, no custom contract under EUR 20,000 a year."}
 }

@@ -1,10 +1,9 @@
-title: 'A two-person team asks how to start: the standard offer goes out in the thread'
+title: 'A six-person company asks how to start on Starter: the standard offer goes out in the thread'
 agent: deal-desk
 setup:
   brief:
     auto_close:
       enabled: true
-      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -16,7 +15,7 @@ setup:
       name: Nordvik Health Data AS
       domain: nordvik.example
       country: 'NO'
-      employees: 22
+      employees: 7
       industry: B2B SaaS
     stage: replied
     research:
@@ -41,9 +40,10 @@ setup:
       follow_ups: 0
       sent_count: 1
       reply_label: positive
-      reply_body: How do I sign up for the monthly plan? We're two people.
+      reply_body: How do I sign up for Starter? We're six people and just need the policies and evidence collection.
 turns:
-- 'L-201 replied: "How do I sign up for the monthly plan? We''re two people." Auto-close is on. Handle it.'
+- 'L-201 replied: "How do I sign up for Starter? We''re six people and just need the policies and evidence collection."
+  Auto-close is on. Handle it.'
 approvals:
   default: approve
 expect:
