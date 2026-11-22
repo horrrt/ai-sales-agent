@@ -16,8 +16,10 @@
     "timezone": "Europe/Copenhagen",
     "slack_channel": "#sales-desk",
     "schedules_local": [
-      "TODO: e.g. weekdays 08:00 run outreach batch",
-      "TODO: e.g. Friday 15:00 weekly review"
+      "Monday 08:00: skill find-leads (weekly lead search)",
+      "Weekdays 08:30: skill run-outreach-batch",
+      "Weekdays every 2 hours 09:00-17:00: skill handle-reply",
+      "Friday 15:00: skill weekly-review"
     ]
   },
   "cron_schedules": []

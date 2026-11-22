@@ -7,13 +7,15 @@
   "properties": {
     "timestamp": {"type": "string", "format": "date-time"},
     "lead_id": {"type": "string"},
-    "stage": {"enum": ["research", "positioning", "outreach", "reply", "handoff", "close"]},
+    "stage": {"enum": ["targeting", "research", "positioning", "outreach", "approval", "reply", "close", "handoff"]},
     "channel": {"enum": ["email", "slack", "calendar", "internal"]},
     "message": {"type": "string"},
     "outcome": {"enum": ["success", "failure", "skipped"]},
     "loss_reason": {"type": ["string", "null"]},
     "prompt_version": {"type": ["string", "null"], "description": "prompt_version from the AGENTS.md that ran (git tag prompt-vN). Splits metrics into before/after a change"},
     "variant": {"type": ["string", "null"], "description": "A/B arm, e.g. research or template, when the stage runs an experiment"},
-    "trace_id": {"type": ["string", "null"], "description": "LangSmith trace ID"}
+    "trace_id": {"type": ["string", "null"], "description": "LangSmith trace ID"},
+    "by": {"enum": ["tool", "agent"], "description": "tool: written by code as a fact. agent: log_interaction, the agent's decision"},
+    "decision": {"type": ["object", "null"], "description": "For d1 gates: question, answer, confidence and which backend answered"}
   }
 }

@@ -1,23 +1,22 @@
 ---
 name: run-outreach-batch
-description: Use when a salesperson asks for a new outreach batch or the morning schedule runs. Finds and researches targets, positions the offer, drafts outreach and sends it after approval.
+description: Use when a salesperson asks for a batch or the morning schedule runs. Takes the next leads from the lead sheet through research, positioning and a draft, gets the rep's approval, sends, and sends any follow-ups that are due.
 ---
 
-<!-- Owner: Ayaan (integration), with Kyriakos, Gyula and JD for their stages. -->
+<!-- Owner: Ayaan (integration), with Kyriakos, Gyula and JD for their stages. Stages 2-4 of the pipeline diagram. -->
 
 # Run an outreach batch
 
 ## Inputs
-- Customer ID (which brief to use)
-- Batch size (default 10)
+- Customer ID
+- Batch size (default 5)
 
-## Steps
-1. @researcher: get targets and research each one
-2. @positioner: one positioning angle per researched lead
-3. @outreach: draft, then send after approval
-4. Log every stage with log_interaction
+## Steps, one lead at a time
+1. @researcher: next_lead, research_target, check_ready_to_write. Not ready after 2 retries: the lead is on hold; take the next one.
+2. @positioner: one angle (save_positioning). No angle: the positioner tags the lead and you take the next one.
+3. @outreach: save_draft, then record_approval. The rep sees the whole email and approves, edits or rejects it. Approved: send_email. Rejected: one redraft. While a rep decides, work on the next lead.
+4. Repeat until the batch size is reached or next_lead returns no lead.
+5. @outreach: due_follow_ups, and send each one through the same approval.
 
 ## Output
-One summary message in #sales-desk: leads researched, angles found, emails sent, leads stopped and why.
-
-TODO: fill in details as each stage stops being a stub.
+One message in #sales-desk with prompt_version: researched, on hold, positioned, drafted, approved, edited, rejected, sent, follow-ups sent, and anything waiting for a person.

@@ -1,15 +1,14 @@
 ---
 name: weekly-review
-description: Use on the Friday schedule or when someone asks how outreach is going. Summarises the funnel per stage and proposes up to three improvements for a person to approve.
+description: Use on the Friday schedule or when someone asks how outreach is going. Reviews what happened this week, including rep edits and replies, and proposes one rule change for a person to approve.
 ---
 
-<!-- Owner: Ayaan. -->
+<!-- Owner: Ayaan. The weekly learning loop of the pipeline diagram. Loop design: docs/fleet-prompts-v2.md §3 -->
 
 # Weekly review
 
 ## Steps
-1. @coach: funnel metrics per stage and loss reasons
-2. Post the summary and up to three proposals in #sales-desk
-3. Wait for a person to approve each proposal. Never apply changes yourself
-
-TODO: define the proposal format and the metrics per stage.
+1. @coach runs its steps: funnel, event log (rep edits, replies, skipped and on-hold leads), last changes, and at most one proposal saved with save_proposal.
+2. Post the summary and the proposal in #sales-desk. An admin approves or rejects it; record the answer with decide_proposal (it asks the admin to confirm).
+3. Approved changes become a new SKILL.md or prompt line in a PR to fleet/, with a new prompt_version. Never apply them yourself.
+4. If a rep freed up capacity this week, @handoff: release_queue.

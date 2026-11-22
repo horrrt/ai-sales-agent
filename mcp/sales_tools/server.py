@@ -11,7 +11,8 @@ import os
 from mcp.server.transport_security import TransportSecuritySettings
 
 from .app import mcp
-from .tools import handoff, outreach, positioning, research, shared  # noqa: F401  (registers the tools)
+from . import store
+from .tools import close, handoff, outreach, positioning, research, shared  # noqa: F401  (registers the tools)
 
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 
@@ -31,6 +32,24 @@ def configure() -> None:
         mcp.settings.stateless_http = True
 
 
+def persist_after_each_tool() -> None:
+    """Save the store snapshot after every tool call (only does anything when SALES_STATE is set)."""
+    import functools
+
+    for tool in mcp._tool_manager.list_tools():
+        fn = tool.fn
+
+        @functools.wraps(fn)
+        def wrapped(*args, __fn=fn, **kwargs):
+            try:
+                return __fn(*args, **kwargs)
+            finally:
+                store.save()
+
+        tool.fn = wrapped
+
+
 if __name__ == "__main__":
     configure()
+    persist_after_each_tool()
     mcp.run(transport="streamable-http")

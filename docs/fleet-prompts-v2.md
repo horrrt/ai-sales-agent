@@ -164,7 +164,7 @@ Why: subagents don't inherit the manager's prompt, so without this block each su
 
 ## 5. Where each prompt lives, and what's applied
 
-The prompt text lives only in `fleet/`, so this doc can't drift from what Fleet runs.
+The prompt text lives only in `fleet/`, so this doc can't drift from what Fleet runs. `docs/pipeline.md` maps every stage of the team's pipeline diagram to its tool and prompt.
 
 | Prompt | File | State |
 |---|---|---|

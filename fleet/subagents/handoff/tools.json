@@ -13,22 +13,34 @@
       "display_name": "Get lead"
     },
     {
-      "name": "update_lead",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Update lead"
-    },
-    {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
       "display_name": "Log interaction"
     },
     {
+      "name": "assign_rep",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Assign rep"
+    },
+    {
+      "name": "release_queue",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Release queue"
+    },
+    {
+      "name": "get_wait_queue",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get wait queue"
+    },
+    {
       "name": "get_rep_capacity",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Get rep capacity (traffic light)"
+      "display_name": "Get rep capacity"
     },
     {
       "name": "set_rep_status",
@@ -46,13 +58,19 @@
       "name": "book_meeting",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Book meeting (needs approval)"
+      "display_name": "Book meeting"
     },
     {
       "name": "save_call_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
       "display_name": "Save call brief"
+    },
+    {
+      "name": "record_meeting_outcome",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Record meeting outcome"
     },
     {
       "name": "slack_send_channel_message",
@@ -76,8 +94,10 @@
   "interrupt_config": {
     "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::update_lead::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::assign_rep::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::release_queue::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::get_wait_queue::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::set_rep_status::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::find_free_slots::Sales tools (sandbox)": false,
@@ -85,6 +105,7 @@
     "https://sales-tools.invalid/mcp::save_call_brief::Sales tools (sandbox)": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
     "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
-    "https://tools.langchain.com::slack_read_thread_messages::Fleet": false
+    "https://tools.langchain.com::slack_read_thread_messages::Fleet": false,
+    "https://sales-tools.invalid/mcp::record_meeting_outcome::Sales tools (sandbox)": true
   }
 }
