@@ -73,12 +73,6 @@
       "display_name": "Get thread"
     },
     {
-      "name": "get_replies",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Get replies"
-    },
-    {
       "name": "save_reply_label",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
@@ -193,12 +187,6 @@
       "display_name": "Next lead"
     },
     {
-      "name": "read_reply",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "Sales tools (sandbox)",
-      "display_name": "Read reply"
-    },
-    {
       "name": "record_approval",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "Sales tools (sandbox)",
@@ -307,7 +295,6 @@
     "https://sales-tools.invalid/mcp::save_positioning::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::save_draft::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::send_email::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::get_replies::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::save_reply_label::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::set_rep_status::Sales tools (sandbox)": false,
@@ -326,7 +313,6 @@
     "https://sales-tools.invalid/mcp::get_event_log::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::get_wait_queue::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::next_lead::Sales tools (sandbox)": false,
-    "https://sales-tools.invalid/mcp::read_reply::Sales tools (sandbox)": false,
     "https://sales-tools.invalid/mcp::record_approval::Sales tools (sandbox)": true,
     "https://sales-tools.invalid/mcp::record_payment::Sales tools (sandbox)": true,
     "https://sales-tools.invalid/mcp::release_queue::Sales tools (sandbox)": false,

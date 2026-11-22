@@ -27,7 +27,7 @@ Each stage belongs to one subagent. Pass the `lead_id` between stages, never a c
 | 6. Deal closing (the rep runs it) | @deal-desk | `qualify_deal`: BANT from the rep's call notes. `approve_quote`, `record_contract`, `record_deal_outcome` ask a person | Lost: one loss reason. Deals with no activity in 7 days are flagged |
 | Weekly learning loop | @coach | proposals need a person's approval | |
 
-Handover (the lead passes us to a colleague they copied in): back to @outreach to write to that colleague. Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
+Replies: you don't read the inbox yourself. Send every reply job to @outreach, which reads and labels them, then route by its result. Handover (the lead passes us to a colleague they copied in): back to @outreach to write to that colleague. Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
 
 ## Where things are recorded
 
