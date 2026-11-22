@@ -35,7 +35,7 @@ docs/         Architecture, Fleet notes and one-pagers.
 
 See `docs/architecture.md` for how the pieces connect and the Fleet facts that shape this layout.
 
-**Where we are:** [`docs/status-vs-notion.md`](docs/status-vs-notion.md) compares what's built with the Notion plan and lists what's still missing, in order of what blocks the week 3 demo. [`docs/use-cases.md`](docs/use-cases.md) maps every use case to its tests.
+**Where we are:** [`docs/status-vs-notion.md`](docs/status-vs-notion.md) compares what's built with the Notion plan and lists what's still missing, in order of what blocks the week 3 demo. [`docs/use-cases.md`](docs/use-cases.md) maps every use case to its tests. [`docs/testing-strategy.md`](docs/testing-strategy.md) says who tests what, and how we track it in the shared Google Sheet. [`docs/access-and-behaviour.md`](docs/access-and-behaviour.md) says who can see and do what, how the agent behaves, and the minimum before the demo and before a real customer.
 
 ## Week 1 goal: the pipeline runs end to end with stubs
 

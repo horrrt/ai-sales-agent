@@ -35,6 +35,20 @@ def test_a_junior_or_viewer_cannot_approve_an_email_and_a_rep_can():
     assert outreach.send_email("L-001")["status"] == "sent"
 
 
+def test_once_a_lead_has_a_rep_only_that_rep_or_an_admin_approves_its_emails():
+    rc = drafted()
+    store.REPS["rep-9"] = {"name": "Kari Berg", "role": "rep", "email": "kari@kvitto.sandbox.test"}
+    assert outreach.record_approval("L-001", "Subject line", "Body of the email", by="rep-9", **rc)["ok"]  # nobody owns it yet
+    store.LEADS["L-001"]["handoff"] = {"rep_id": "rep-2"}
+    outreach.save_draft("L-001", "Subject 2", "Body 2")
+    r = outreach.record_approval("L-001", "Subject 2", "Body 2", by="rep-9", **rc)
+    assert denied(r, "approve_email") and "rep-2" in r["reason"]
+    assert set(r["who_can"]) == {"rep-1", "rep-2"} and "Jonas Lind (rep-2)" in r["next"]
+    assert outreach.record_approval("L-001", "Subject 2", "Body 2", **rc)["ok"]  # left out, it's the lead's rep
+    outreach.save_draft("L-001", "Subject 3", "Body 3")
+    assert outreach.record_approval("L-001", "Subject 3", "Body 3", by="rep-1", **rc)["ok"]  # an admin may
+
+
 def test_an_unknown_person_or_a_claimed_role_is_refused():
     rc = drafted()
     r = outreach.record_approval("L-001", "Subject line", "Body of the email", by="the CEO", **rc)

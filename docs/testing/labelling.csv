@@ -1,0 +1,6 @@
+dataset,owner,rows_now,target,labelled,status,notes
+evals/datasets/research.csv,Kyriakos,0,12 (one per persona lead),0,not started,expected_enough_to_personalize
+evals/datasets/positioning.csv,Gyula,12,12 labels confirmed + your_label filled in the to-label CSV,0,not started,expected_angle_quality is empty; proposed labels are in the notes column
+evals/datasets/replies.csv,JD,343,classifier accuracy against expected_label,,not started,
+evals/datasets/routing.csv,Slava,0,one row per routing rule in the teams cases,0,not started,"country before load, least loaded, away, all red"
+evals/datasets/loss_reasons.csv,Ayaan,0,9 (one per reason in schemas/loss_reasons.json),0,not started,

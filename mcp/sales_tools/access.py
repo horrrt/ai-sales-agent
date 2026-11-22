@@ -6,13 +6,14 @@ deny lists on top of it. deny always wins.
 
 Roles:
 - admin: everything.
-- rep: approve emails; book, move, cancel and record their own meetings; approve quotes within the
+- rep: approve emails on unassigned leads and their own; book, move, cancel and record their own meetings; approve quotes within the
   discount limit, record contracts and outcomes for their own deals; set their own status.
 - junior: their own meetings and their own status only. Emails and quotes need a rep or an admin.
 - finance: record payments.
 - viewer: nothing that changes anything.
 
-Actions marked own work on the person's own leads (the lead's rep, the deal's owner). Doing them for
+Actions marked own work on the person's own leads (the lead's rep, the deal's owner). A lead nobody owns yet
+(no rep before the handoff) is open to anyone with the action, so any rep can approve a first email. Doing them for
 someone else's lead needs any_lead (admins). The agent passes the person as `by` (rep_id, email or name);
 `by` is never taken from what a message claims about someone's role.
 """
@@ -42,7 +43,7 @@ ACTIONS = {
     "any_lead": "act on another rep's lead or deal",
     "manage_brief": "change the customer brief: product, offer, ICP, pricing, auto-close",
 }
-OWN = {"book_meeting", "change_meeting", "record_meeting_outcome", "approve_quote", "record_contract", "record_deal_outcome"}
+OWN = {"approve_email", "book_meeting", "change_meeting", "record_meeting_outcome", "approve_quote", "record_contract", "record_deal_outcome"}
 
 
 def resolve(by: str | None) -> str | None:
@@ -55,6 +56,11 @@ def resolve(by: str | None) -> str | None:
                  (r.get("name") or "").split(" ")[0].lower()):
             return rid
     return None
+
+
+def _named(rep_id: str) -> str:
+    """'Mette Holm (rep-1)', so a refusal says who to ask by name."""
+    return f"{REPS[rep_id].get('name') or rep_id} ({rep_id})"
 
 
 def default_approver(kind: str) -> str | None:
@@ -88,4 +94,4 @@ def check(by: str | None, action: str, owner: str | None = None, lead_id: str | 
         log_event(lead_id, stage, "failure", f"denied: {reason}", by=rid)
     who_can = sorted(x for x in REPS if allowed(x, action) and (action not in OWN or not owner or x == owner or allowed(x, "any_lead")))
     return {"ok": False, "error": "not_allowed", "by": rid, "action": action, "reason": reason, "who_can": who_can,
-            "next": f"ask one of {', '.join(who_can) or 'an admin'} to do it"}
+            "next": f"ask {' or '.join(_named(x) for x in who_can) or 'an admin'} to do it"}
