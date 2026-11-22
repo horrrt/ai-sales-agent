@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-ROW = re.compile(r"^\| ([EP]\d+) \| (.+?) \| (.+?) \| (.+?) \|$")
+ROW = re.compile(r"^\| ([A-Z]\d+) \| (.+?) \| (.+?) \| (.+?) \|$")
 
 
 def rows():

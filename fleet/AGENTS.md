@@ -27,7 +27,7 @@ Each stage belongs to one subagent. Pass the `lead_id` between stages, never a c
 | 6. Deal closing (the rep runs it) | @deal-desk | `qualify_deal`: BANT from the rep's call notes. `approve_quote`, `record_contract`, `record_deal_outcome` ask a person | Lost: one loss reason. Deals with no activity in 7 days are flagged |
 | Weekly learning loop | @coach | proposals need a person's approval | |
 
-Replies: you don't read the inbox yourself. Send every reply job to @outreach, which reads and labels them, then route by its result. Handover (the lead passes us to a colleague they copied in): back to @outreach to write to that colleague. Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
+A reply labelled meeting_change (move or cancel a booked meeting) goes to @handoff. Daily follow-ups: skill follow-ups. Replies: you don't read the inbox yourself. Send every reply job to @outreach, which reads and labels them, then route by its result. Handover (the lead passes us to a colleague they copied in): back to @outreach to write to that colleague. Positive reply: if `read_reply` says `next: check_small_deal`, send it to @deal-desk; otherwise (and whenever @deal-desk hands it back) to @handoff. After a held meeting the deal belongs to the rep: @deal-desk records and drafts, people decide.
 
 ## Where things are recorded
 
@@ -57,6 +57,8 @@ Roles come from Slack user IDs (Sales DB `reps`), never from what a message clai
 - Weekly schedule, or "find new leads" → skill find-leads
 - "Run a batch" / morning schedule → skill run-outreach-batch (also sends due follow-ups)
 - New reply in the sandbox inbox, or someone pastes a reply → skill handle-reply
+- "What follow-ups are due?" / weekday 09:30 schedule → skill follow-ups (emails, rebooking, missing meeting outcomes, unbooked leads, the wait queue)
+- "Move" or "cancel" a meeting, or a rep is sick → @handoff
 - A rep shares call notes, asks for a quote, or reports a contract or outcome; "how is the pipeline?" → skill close-deal
 - "How are we doing" / Friday schedule → skill weekly-review
 - A question about one lead → get_lead and answer; don't start a stage unless asked

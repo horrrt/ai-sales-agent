@@ -26,7 +26,7 @@ from email.utils import formataddr, parseaddr
 from zoneinfo import ZoneInfo
 
 from ..decide import decide
-from ..store import BRIEF, INBOX, LEADS, OUTBOX, REPS, clock, log_event, now, set_stage
+from ..store import BRIEF, INBOX, LEADS, OUTBOX, REPS, ask_person, clock, log_event, now, set_stage
 
 SANDBOX_OUTBOX = OUTBOX  # kept in the store, so a restart doesn't lose sent emails
 
@@ -223,7 +223,11 @@ def _deliver(m: dict, at: datetime) -> None:
     out.pop("scheduled_for", None)
     out["follow_up_due"] = (_iso(_add_working_days(at, FOLLOW_UP_WORKING_DAYS[out["follow_ups"]], _lead_tz(lead)))
                             if out["follow_ups"] < MAX_FOLLOW_UPS else None)
-    set_stage(lead, "sent", at=m["sent_at"])
+    h = lead.get("handoff") or {}
+    if h.get("follow_up_kind") == "rebook":  # this email is the rebooking follow-up
+        h.update(follow_up_due=None, follow_up_kind="rebook_sent")
+    if h.get("meeting_status") not in ("booked", "held"):
+        set_stage(lead, "sent", at=m["sent_at"])
     kind = "follow-up sent" if chasing else ("reply sent" if out.get("reply_label") else "sent")
     log_event(m["lead_id"], "outreach", "success", f"{kind}: {m['subject']!r} to {', '.join(m['to'])}"
               + (f", cc {', '.join(m['cc'])}" if m["cc"] else ""), channel="email", message_id=m["message_id"])
@@ -530,6 +534,7 @@ REPLY_OPTIONS = {
     "wrong_person": "Says they are not the right contact; may name someone else, but doesn't copy them in",
     "out_of_office": "An automatic absence reply",
     "unsubscribe": "Asks to stop emailing or to be removed",
+    "meeting_change": "Asks to move or cancel a meeting that is already booked with us (only when meeting_booked_with_us is set); proposing a first time is positive",
 }
 WHY_NEGATIVE = {
     "has_competitor": "They already use or are choosing another tool",
@@ -578,11 +583,14 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
         "reply": {k: m[k] for k in ("from", "to", "cc", "subject", "body", "received_at", "attachments")}
                  | {"from_lead": m["from_lead"]},
         "our_email_it_answers": {k: ours[k] for k in ("from", "to", "cc", "subject", "body", "sent_at")} if ours else None,
+        "meeting_booked_with_us": {k: (lead.get("handoff") or {}).get(k) for k in ("meeting_status", "meeting_start")}
+                                  if (lead.get("handoff") or {}).get("meeting_status") == "booked" else None,
         "earlier_unhandled": [p["body"] for p in pending if p is not m and p["received_at"] <= m["received_at"]],
     }
     d = decide("Which kind of reply is this, from the prospect to our sales email? Read it together with our "
                "email it answers, and note who wrote it and who is copied in.", evidence, REPLY_OPTIONS)
     if d["answer"] is None:
+        ask_person(lead, f"label the reply {m['message_id']}")
         return {"ok": True, "label": None, "decision": d, "message": _public(m), "our_email": _public(ours) if ours else None,
                 "next": "Ask a person to label this reply"}
     label = d["answer"]
@@ -605,7 +613,9 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
     out["next_cc"] = _dedupe([a for a in everyone if _addr(a) not in _ours()], drop=[m["from"]])
     out.update(reply_label=label, reply_body=m["body"], reply_from=m["from"], reply_message_id=m["message_id"],
                follow_up_due=None, follow_ups=0)
-    if label == "out_of_office":  # an auto-reply: the stage moves, but it doesn't count as the prospect's reply time
+    if label == "meeting_change":  # a booked meeting stays the stage; @handoff moves or cancels it
+        lead["updated_at"] = now()
+    elif label == "out_of_office":  # an auto-reply: the stage moves, but it doesn't count as the prospect's reply time
         lead["stage"], lead["updated_at"] = "replied", now()
     else:
         set_stage(lead, "replied", at=m["received_at"])
@@ -619,9 +629,20 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
         nxt = "check_small_deal" if (BRIEF.get("auto_close") or {}).get("enabled") else "assign_rep"
         log_event(lead_id, "reply", "success", f"positive reply{who}", channel="email", decision=gate, message_id=m["message_id"])
         return {**base, "next": nxt}
+    if label == "meeting_change":
+        booked = (lead.get("handoff") or {}).get("meeting_status") == "booked"
+        if not booked:
+            ask_person(lead, "the prospect asks to change a meeting, but none is booked")
+        log_event(lead_id, "reply", "success", f"asks to change the meeting{who}", channel="email", decision=gate,
+                  message_id=m["message_id"])
+        return {**base, "meeting": {k: (lead.get("handoff") or {}).get(k) for k in ("rep_id", "meeting_start", "meeting_status")},
+                "next": "@handoff: reschedule_meeting to the time they asked for (find_free_slots with on_date), or "
+                        "cancel_meeting if they want to call it off" if booked else
+                        "Ask a person: they ask to change a meeting, but none is booked"}
     if label == "handover":
         new = [c for c in added if c["role"] in ("cc", "handover")]
         if not new:
+            ask_person(lead, "the reply hands over to someone but gives no address")
             log_event(lead_id, "reply", "skipped", f"handover without an address{who}", channel="email", decision=gate)
             return {**base, "next": "Ask a person: the reply hands over to someone but gives no address to write to"}
         target = new[0]
@@ -663,9 +684,17 @@ def read_reply(lead_id: str, reply_body: str | None = None, message_id: str | No
 
 @mcp.tool()
 def due_follow_ups() -> list[dict]:
-    """Leads whose follow-up is due now, and leads that just ran out of follow-ups (marked lost: no_reply).
+    """Every follow-up that is due now, each with a kind and what to do next:
 
-    Follow-ups are spaced in working days. The follow-up goes into the same thread and keeps the cc.
+    email: a follow-up email is due (spaced in working days; same thread, same cc).
+    no_reply: ran out of follow-ups, marked lost (no_reply).
+    rebook: a meeting was cancelled or missed; email the prospect new times.
+    meeting_outcome: a meeting ended a working day ago and nobody recorded how it went.
+    not_booked: a lead has had a rep for a working day but no meeting.
+    needs_person: a lead is parked for a person's decision (a reply no one could label, a handover with no
+      address, a meeting cancelled for good, a second no-show).
+    quiet_deal: an open deal with no activity for 7 days.
+    queue_waiting: a positive reply has waited more than a working day for a rep.
     """
     _release_held()
     now_dt = clock()
@@ -674,13 +703,16 @@ def due_follow_ups() -> list[dict]:
         out = lead.get("outreach") or {}
         if lead.get("status") != "active" or lead.get("do_not_contact") or not out.get("sent_at") or out.get("scheduled_for"):
             continue
+        if (lead.get("handoff") or {}).get("meeting_status") in ("booked", "held"):
+            continue  # a meeting is booked or held: no outreach follow-ups
         if out.get("follow_up_due") and datetime.fromisoformat(out["follow_up_due"]) <= now_dt:
-            due.append({"lead_id": lead["lead_id"], "follow_up": out.get("follow_ups", 0) + 1,
+            due.append({"lead_id": lead["lead_id"], "kind": "email", "follow_up": out.get("follow_ups", 0) + 1,
                         "to": out.get("next_to") or lead["person"]["email"], "cc": out.get("next_cc") or [],
                         "next": "write a short follow-up (save_draft keeps the thread and cc), then record_approval and send_email"})
         elif (out.get("follow_ups", 0) >= MAX_FOLLOW_UPS and _awaiting_reply(lead["lead_id"])
               and _add_working_days(datetime.fromisoformat(out["sent_at"]), NO_REPLY_AFTER_WORKING_DAYS, _lead_tz(lead)) <= now_dt):
             lead.update(status="lost", loss_reason="no_reply")
             log_event(lead["lead_id"], "outreach", "failure", "no reply after all follow-ups", loss_reason="no_reply")
-            due.append({"lead_id": lead["lead_id"], "status": "lost", "loss_reason": "no_reply"})
-    return due
+            due.append({"lead_id": lead["lead_id"], "kind": "no_reply", "status": "lost", "loss_reason": "no_reply"})
+    from .handoff import handoff_follow_ups
+    return due + handoff_follow_ups()

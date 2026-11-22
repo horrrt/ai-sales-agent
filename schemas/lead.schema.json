@@ -66,7 +66,7 @@
         "scheduled_for": {"type": ["string", "null"], "format": "date-time", "description": "Set while an approved email is held until business hours in the lead's country"},
         "sent_count": {"type": "integer"},
         "follow_ups": {"type": "integer", "description": "Follow-ups sent since the prospect last wrote. At 2, no more follow-ups"},
-        "reply_label": {"enum": ["positive", "negative", "not_now", "handover", "wrong_person", "out_of_office", "unsubscribe", null]},
+        "reply_label": {"enum": ["positive", "negative", "not_now", "handover", "wrong_person", "out_of_office", "unsubscribe", "meeting_change", null]},
         "reply_from": {"type": "string", "description": "Who wrote the last reply. Not always the lead (an assistant, a colleague)"},
         "reply_message_id": {"type": "string"},
         "reply_body": {"type": "string"},
@@ -92,6 +92,7 @@
         }
       }
     },
+    "needs_person": {"type": "object", "description": "The lead waits for a person's decision; due_follow_ups lists it until the lead moves on", "properties": {"reason": {"type": "string"}, "since": {"type": "string", "format": "date-time"}}},
     "do_not_contact": {"type": "boolean", "description": "Set by an unsubscribe reply. send_email refuses the lead from then on"},
     "handoff": {
       "type": "object",
@@ -99,6 +100,14 @@
       "properties": {
         "rep_id": {"type": "string"},
         "meeting_start": {"type": "string", "format": "date-time"},
+        "meeting_end": {"type": "string", "format": "date-time"},
+        "event_id": {"type": "string", "description": "The meeting in the rep's calendar (store.CALENDARS)"},
+        "meeting_status": {"enum": ["booked", "cancelled", "held", "no_show", null]},
+        "assigned_at": {"type": "string", "format": "date-time"},
+        "reschedules": {"type": "integer"},
+        "no_shows": {"type": "integer"},
+        "follow_up_due": {"type": ["string", "null"], "format": "date-time", "description": "When to email the prospect new times after a cancellation or no-show"},
+        "follow_up_kind": {"enum": ["rebook", "rebook_sent", null]},
         "call_brief": {"type": "string"},
         "meeting_outcome": {"enum": ["held", "no_show", "cancelled", null], "description": "Set by the rep after the meeting with record_meeting_outcome. held counts toward the North Star (qualified meetings held)"},
         "meeting_outcome_at": {"type": ["string", "null"], "format": "date-time"}

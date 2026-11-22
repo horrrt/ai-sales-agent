@@ -27,19 +27,23 @@ def get_lead(lead_id: str) -> dict:
 
 @mcp.tool()
 def update_lead(lead_id: str, fields: dict) -> dict:
-    """Set a lead's status to insufficient_data, or add a note. Everything else is written by the stage tools.
+    """Set a lead's status to insufficient_data, add a note, or clear needs_person once a person has decided.
+    Everything else is written by the stage tools.
 
     Stage, approval, outreach, hand-off, close and loss reason can only change through their own tools,
     so no agent can mark its own draft as approved or a lead as handed off.
     """
     if lead_id not in LEADS:
         return {"error": f"unknown lead {lead_id}"}
-    allowed = {"status": {"insufficient_data"}, "notes": None}
+    allowed = {"status": {"insufficient_data"}, "notes": None, "needs_person": {None}}
     bad = [k for k, v in fields.items() if k not in allowed or (allowed[k] is not None and v not in allowed[k])]
     if bad:
         return {"ok": False, "error": "field_not_allowed", "fields": bad,
-                "allowed": "status=insufficient_data, notes. Use the stage tools for everything else."}
-    LEADS[lead_id].update(fields)
+                "allowed": "status=insufficient_data, notes, needs_person=null (a person decided). Use the stage tools for everything else."}
+    if "needs_person" in fields:
+        LEADS[lead_id].pop("needs_person", None)
+        fields = {k: v for k, v in fields.items() if k != "needs_person"} | {"needs_person_cleared": True}
+    LEADS[lead_id].update({k: v for k, v in fields.items() if k != "needs_person_cleared"})
     log_event(lead_id, "outreach", "skipped" if fields.get("status") else "success", f"update_lead: {fields}", by="agent")
     return {"ok": True, "lead": LEADS[lead_id]}
 
@@ -77,6 +81,7 @@ def tag_loss_reason(lead_id: str, reason: str, evidence: str) -> dict:
     if lead_id not in LEADS:
         return {"error": f"unknown lead {lead_id}"}
     LEADS[lead_id].update({"status": "lost", "loss_reason": reason})
+    LEADS[lead_id].pop("needs_person", None)  # the decision a person owed is made
     log_event(lead_id, "close", "failure", evidence, loss_reason=reason)
     return {"ok": True}
 

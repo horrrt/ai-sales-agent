@@ -136,6 +136,7 @@ When asked to process prospect replies:
    - `negative`: lost, with the reason (has_competitor, price or negative).
    - `wrong_person`: lost. Anyone they copied in is saved as a referral contact; include the name in your report so a person can follow it up.
    - `unsubscribe`: lost and never contacted again.
+   - `meeting_change`: they want to move or cancel the booked meeting. Return it to the Manager Agent for @handoff, with the time they asked for in their words.
 3. If `read_reply` returns no label, don't guess: return `review_required` to the Manager Agent and ask for a person to label it.
 4. Don't call `save_reply_label` or `tag_loss_reason` for a reply `read_reply` already handled.
 5. Before answering anything in a thread, call `get_thread(lead_id)` to read the whole conversation. Answer the latest question; don't ask again for something they already told you.
@@ -143,7 +144,7 @@ When asked to process prospect replies:
 
 ### Follow-ups
 
-When the manager asks for due follow-ups: call `due_follow_ups`. For each lead it lists, write a short follow-up (40-55 words, never more than 60, one new fact or proof point) and go through section 4 again. `save_draft` keeps it in the same thread and keeps everyone the prospect copied in. Follow-ups are spaced in working days (3, then 5); the tool stops after 2 and records `no_reply` itself.
+When the manager asks for due follow-ups: call `due_follow_ups`. Act only on `kind: email` items; hand every other kind (rebook, meeting_outcome, not_booked, queue_waiting) back to the Manager Agent for @handoff. For a rebook email the manager gives you the new times: offer exactly those. For each `email` lead, write a short follow-up (40-55 words, never more than 60, one new fact or proof point) and go through section 4 again. `save_draft` keeps it in the same thread and keeps everyone the prospect copied in. Follow-ups are spaced in working days (3, then 5); the tool stops after 2 and records `no_reply` itself.
 
 ## 6. Operating boundaries
 

@@ -38,10 +38,10 @@ DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:cl
                     "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
                "logs_follow_schema", "final_mentions", "final_must_not_contain", "queue_length", "proposals",
-               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox"}
+               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar"}
 # Every case runs at a pinned time (setup.now overrides it): Tuesday 10:00 in Stockholm, inside business hours.
 DEFAULT_NOW = "2026-11-24T10:00:00+01:00"
-SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now"}
+SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now", "calendars"}
 AGENTS = {"manager"} | {p.name for p in (REPO / "fleet" / "subagents").iterdir() if p.is_dir()}
 
 
@@ -230,6 +230,13 @@ def initial_state(setup: dict) -> dict:
              "clock": {"now": now}}
     if "reps" in setup:
         state["reps"] = setup["reps"]
+    # calendars: {rep_id: [{start, end, title?, kind?}]}; busy blocks unless kind says meeting
+    state["calendars"] = {rid: [{"event_id": e.get("event_id") or f"B-{rid}-{i}", "rep_id": rid, "kind": e.get("kind", "busy"),
+                                 "status": e.get("status", "booked"), "title": e.get("title", "Busy"), "lead_id": e.get("lead_id"),
+                                 "start": _utc(e["start"]), "end": _utc(e["end"]), "attendees": e.get("attendees", []),
+                                 "history": []}
+                                for i, e in enumerate(events, 1)]
+                          for rid, events in (setup.get("calendars") or {}).items()}
     if "source" in setup:
         state["source"] = {c["lead_id"]: {"customer_id": "C-demo", **c} for c in setup["source"]}
     state["brief"] = brief
@@ -317,7 +324,9 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
         for path, want in fields.items():
             got = dig(lead, path)
             # "set": not null. A list against a scalar: one of these values. A list against a list: equal.
-            ok = ((got is not None) if want == "set" else (got in want) if isinstance(want, list) and not isinstance(got, list)
+            ok = ((got is not None) if want == "set"
+                  else (isinstance(got, str) and want[1:].lower() in got.lower()) if isinstance(want, str) and want.startswith("~")
+                  else (got in want) if isinstance(want, list) and not isinstance(got, list)
                   else got == want)
             add(f"{lid}.{path} == {want}", ok, f"got {got!r}")
     for name in expect.get("delegated_to", []):
@@ -374,6 +383,25 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
                     f"thread {m['thread_id']}, in_reply_to {m.get('in_reply_to')}")
             if "scheduled_for" in e:
                 add(f"held until {e['scheduled_for']}", m.get("scheduled_for") == _utc(e["scheduled_for"]), f"got {m.get('scheduled_for')}")
+    if expect.get("no_double_booking"):  # no rep has two live events at the same time
+        clashes = []
+        for rid, evs in (state.get("calendars") or {}).items():
+            live = sorted((e for e in evs if e.get("status") != "cancelled"), key=lambda e: e["start"])
+            clashes += [f"{rid}: {a['event_id']} and {b['event_id']}" for a, b in zip(live, live[1:])
+                        if datetime.fromisoformat(b["start"]) < datetime.fromisoformat(a["end"])]
+        add("no rep is double-booked", not clashes, "; ".join(clashes))
+    for rid, want in (expect.get("calendar") or {}).items():  # {rep-1: {meetings: 1, lead: L-1, status: booked, start: ...}}
+        evs = [e for e in (state.get("calendars") or {}).get(rid, []) if e.get("kind") == "meeting"
+               and (not want.get("lead") or e.get("lead_id") == want["lead"])]
+        if "meetings" in want:
+            add(f"{rid} has {want['meetings']} meeting(s)", len([e for e in evs if e.get("status") != "cancelled"]) == want["meetings"],
+                f"got {[(e['event_id'], e['status']) for e in evs]}")
+        if evs and "status" in want:
+            add(f"{rid} meeting status {want['status']}", evs[-1]["status"] == want["status"], f"got {evs[-1]['status']}")
+        if evs and "start" in want:
+            add(f"{rid} meeting at {want['start']}", evs[-1]["start"] == _utc(want["start"]), f"got {evs[-1]['start']}")
+        if not evs and ("status" in want or "start" in want):
+            add(f"{rid} has a meeting", False, "none")
     if expect.get("outbox_only_sandbox"):  # nothing we sent or held is addressed outside the .test sandbox
         outside = [a for m in state.get("outbox", []) for a in m["to"] + m["cc"]
                    if not a.split("<")[-1].strip(" >").lower().endswith(".test")]
@@ -466,8 +494,13 @@ async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaph
                 async def call(tool, args):
                     raw = await tools[tool].ainvoke(args)
                     blocks = raw if isinstance(raw, list) else [raw]
-                    return [json.loads(b["text"]) if isinstance(b, dict) and "text" in b
-                            else json.loads(b) if isinstance(b, str) else b for b in blocks]
+                    def parse(text):
+                        try:
+                            return json.loads(text)
+                        except ValueError:  # a plain string, e.g. one slot from find_free_slots
+                            return text
+                    return [parse(b["text"]) if isinstance(b, dict) and "text" in b
+                            else parse(b) if isinstance(b, str) else b for b in blocks]
                 for lead in setup.get("leads", []):
                     got = (await call("get_lead", {"lead_id": lead["lead_id"]}))[0]
                     if got.get("lead_id") != lead["lead_id"]:
@@ -479,6 +512,10 @@ async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaph
                 for r in replies:
                     if not r.get("answers"):
                         problems.append(f"reply {r.get('message_id')} isn't linked to the email it answers")
+                for rid, evs in (setup.get("calendars") or {}).items():
+                    slots = await call("find_free_slots", {"rep_id": rid, "days_ahead": 10})
+                    if any(any(_utc(e["start"]) <= s < _utc(e["end"]) for e in evs) for s in slots):
+                        problems.append(f"find_free_slots for {rid} offers a time inside a seeded busy block")
                 if "reps" in setup:
                     reps = {r["rep_id"]: r["status"] for r in await call("get_rep_capacity", {})}
                     if reps != {k: v["status"] for k, v in setup["reps"].items()}:

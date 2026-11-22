@@ -41,6 +41,7 @@ def fresh(monkeypatch):
         obj.clear()
     for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX, store.INBOX):
         obj.clear()
+    store.CALENDARS.clear()
     store.CLOCK.clear()
     store.CLOCK["now"] = IN_HOURS  # a Tuesday morning in Stockholm: inside business hours
     store.REPS.clear()
@@ -367,6 +368,8 @@ def test_meeting_outcome_counts_toward_the_north_star():
     assert handoff.record_meeting_outcome("L-001", "held")["ok"] is False  # nothing booked yet
     handoff.book_meeting("L-001", "rep-1", handoff.find_free_slots("rep-1")[0])
     assert handoff.record_meeting_outcome("L-001", "maybe")["ok"] is False
+    assert handoff.record_meeting_outcome("L-001", "held")["error"].startswith("the meeting hasn't started")
+    after_meeting()
     assert handoff.record_meeting_outcome("L-001", "held")["ok"]
     m = shared.get_funnel_metrics()
     assert m["north_star_meetings_held"] == 1
@@ -398,12 +401,19 @@ def test_payment_amount_is_kept():
 
 # --- 6. Deal closing ---------------------------------------------------------------------------
 
+def after_meeting(lead_id="L-001"):
+    """Move the clock to an hour after the lead's booked meeting starts."""
+    start = datetime.fromisoformat(store.LEADS[lead_id]["handoff"]["meeting_start"])
+    at((start + timedelta(hours=1)).isoformat())
+
+
 def meeting_held(lead_id="L-001"):
     sent_lead(lead_id)
     stub("positive")
     outreach.read_reply(lead_id, "Yes, let's talk")
     handoff.assign_rep(lead_id)
     handoff.book_meeting(lead_id, store.LEADS[lead_id]["handoff"]["rep_id"], handoff.find_free_slots("rep-1")[0])
+    after_meeting(lead_id)
     r = handoff.record_meeting_outcome(lead_id, "held")
     assert r["deal"] == "qualification"
     return store.LEADS[lead_id]["deal"]
@@ -500,5 +510,7 @@ def test_funnel_metrics_with_a_deal_that_never_set_auto_close():
 
 def test_free_slots_follow_the_clock_and_reach_the_day_asked_for():
     at("2026-11-24T10:00:00+01:00")  # Tuesday
-    assert handoff.find_free_slots("rep-1") == [f"2026-{d}T10:00:00+00:00" for d in ("11-26", "11-27", "11-30", "12-01")]
-    assert handoff.find_free_slots("rep-1", days_ahead=7)[-1] == "2026-12-03T10:00:00+00:00"
+    slots = handoff.find_free_slots("rep-1")  # Mette, Copenhagen, 09:00-17:00: a morning and an afternoon slot a day
+    assert slots[:2] == ["2026-11-26T08:00:00+00:00", "2026-11-26T11:00:00+00:00"]  # 09:00 and 12:00 Copenhagen
+    assert {s[:10] for s in slots} == {"2026-11-26", "2026-11-27", "2026-11-30", "2026-12-01"}
+    assert handoff.find_free_slots("rep-1", days_ahead=7)[-1][:10] == "2026-12-03"

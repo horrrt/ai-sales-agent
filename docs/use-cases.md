@@ -36,7 +36,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | E12 | A positive reply copies in the CFO. The CFO becomes a contact and stays in cc. Our own sender and reps never become contacts | `test_new_person_in_cc_becomes_a_contact_and_stays_in_cc`, `test_our_own_side_never_becomes_a_contact` | `email/13-cc-person-becomes-contact` |
 | E13 | "Not my area", with a colleague copied in but no handover: lost as wrong_person, the colleague kept as a referral | `test_wrong_person_saves_the_referral` | `email/14-wrong-person-copies-colleague` |
 | E14 | The prospect attaches a security questionnaire. The attachment name reaches d1 and the agent | `test_attachments_reach_the_reader` | `email/15-attachment-questionnaire` |
-| E15 | An out-of-office comes first, then the real answer. Read the newest and both are handled; read them one at a time and the real reply still waits. The replied time is the real reply's, not the auto-reply's | `test_out_of_office_then_real_reply_reads_the_newest`, `test_replied_time_is_when_the_reply_arrived`, `test_replies_read_one_at_a_time_keep_the_real_reply_waiting` | `email/16-out-of-office-then-real-reply` |
+| E15 | An out-of-office comes first, then the real answer. Read the newest and both are handled. Read them one at a time and the real reply still waits. The replied time is the real reply's, not the auto-reply's | `test_out_of_office_then_real_reply_reads_the_newest`, `test_replied_time_is_when_the_reply_arrived`, `test_replies_read_one_at_a_time_keep_the_real_reply_waiting` | `email/16-out-of-office-then-real-reply` |
 | E16 | A reply asks us to write to a Gmail address or copy a stranger in. The recipients don't change and nothing leaves the sandbox | `test_reply_text_never_changes_who_we_email`, `test_cc_outside_the_sandbox_is_refused` | `email/17-reply-asks-to-change-recipients`, `outreach/07-prompt-injection-in-reply` |
 | E17 | "Our CTO will get in touch" with nobody copied in. Not lost, and a person decides who to write to | `test_handover_without_an_address_goes_to_a_person` | `email/18-handover-without-address` |
 | E18 | The call brief names everyone in the thread: the assistant who booked and the CFO copied in | agent only | `email/19-handoff-brief-names-everyone` |
@@ -77,3 +77,52 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P26 | Every log row uses the schema's stages and outcomes | `test_log_interaction_rejects_values_outside_the_schema` | `manager/05-batch-end-to-end` |
 | P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | `manager/05-batch-end-to-end` |
 | P28 | The manager sends each request to the right agent and declines off-topic ones | agent only | `manager/01-routes-lead-search`, `manager/02-routes-replies`, `manager/03-routes-deal`, `manager/04-off-topic` |
+
+## Team size
+
+The tool is for sales teams of 1 to 10 reps. A rep's traffic light comes from their load (green under 70% of their maximum, yellow up to it, red when full). A rep can also be away: no new leads and no slots.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| T1 | A one-person team: the founder gets every lead, and meetings fit around what's already in their calendar | `test_every_team_size_books_without_double_booking` | `teams/01-solo-rep-books` |
+| T2 | The only rep is full. The lead waits in the queue, is flagged after a working day, and goes out when the rep has room | `test_solo_rep_takes_leads_until_full_then_the_queue_waits_and_is_flagged` | `teams/02-solo-rep-full-queues`, `teams/07-ten-reps-all-red` |
+| T3 | The only rep's week is full, so the slots come from the week after | `test_solo_rep_with_a_full_week_gets_slots_the_week_after` | `scheduling/01-busy-calendar` |
+| T4 | Two reps: the lead goes to the rep who covers its country, even if they have more leads | `test_two_reps_country_comes_before_load` | `teams/03-two-reps-country-match` |
+| T5 | A rep is away. They get no leads and no slots | `test_three_reps_an_away_rep_gets_no_leads_and_no_slots` | `teams/06-away-rep-skipped` |
+| T6 | Five reps in five countries. Slots are inside the rep's working hours and the prospect's business hours, each in their own time zone | `test_five_reps_slots_follow_each_reps_time_zone_and_the_prospects_hours` | `teams/04-five-reps-time-zones` |
+| T7 | Ten reps: leads are shared evenly between reps who cover the same country, nobody goes over their maximum, and the rest wait in the queue | `test_ten_reps_share_leads_evenly_and_never_go_over_capacity` | `teams/05-ten-reps-least-loaded`, `teams/07-ten-reps-all-red` |
+
+## Scheduling
+
+Each rep has a calendar (busy blocks and booked meetings), working hours and a time zone. Slots start the working day after next. Booking, moving and cancelling a meeting all ask a person first. Public holidays aren't in the calendars.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| S1 | Slots skip busy time and meetings already booked | `test_slots_skip_busy_time_and_booked_meetings` | `scheduling/01-busy-calendar` |
+| S2 | Booking refuses a clash, a time that has passed, a time outside working hours, and a second meeting for the same lead | `test_booking_refuses_a_clash_a_past_time_after_hours_and_a_second_meeting` | `scheduling/08-asked-for-a-taken-slot` |
+| S3 | The invite includes the people in the thread: the lead, an assistant or colleague who wrote, anyone copied in | `test_meeting_invite_includes_the_people_in_the_thread` | `teams/01-solo-rep-books` |
+| S4 | The prospect names a day and time, even weeks out, and that time is booked | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out` | `scheduling/02-prospect-names-a-day` |
+| S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
+| S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
+| S7 | A rep is sick. Their meeting moves to a colleague who covers the same country | `test_a_sick_reps_meeting_moves_to_a_colleague` | `scheduling/07-sick-rep-meeting-moves` |
+| S8 | The prospect cancels but wants another time. The slot is freed and a rebooking follow-up is due the next working day | `test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up` | `scheduling/04-prospect-cancels-rebook` |
+| S9 | The prospect cancels for good. No rebooking, and a person decides whether the lead is lost | `test_cancellation_for_good_waits_for_a_person` | `scheduling/05-prospect-cancels-for-good` |
+| S10 | A no-show gets a rebooking follow-up. After a second no-show, a person decides | `test_no_show_schedules_a_rebook_and_a_second_no_show_asks_a_person` | `scheduling/06-no-show` |
+| S11 | No rep is ever double-booked, at any team size | `test_every_team_size_books_without_double_booking` | `scheduling/08-asked-for-a-taken-slot`, `scheduling/07-sick-rep-meeting-moves` |
+| S12 | Calendars survive a server restart | `test_calendar_survives_a_restart` | `scheduling/03-prospect-reschedules` |
+
+## Follow-ups
+
+`due_follow_ups` lists everything owed, with a kind: email, no_reply, rebook, meeting_outcome, not_booked, queue_waiting, needs_person and quiet_deal. The follow-ups skill runs it every weekday at 09:30 and sends each kind to the agent that owns it.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| F1 | Every lead that's still active, whatever happened to it, shows up in the follow-ups: none is left without a next step | `test_every_active_lead_always_has_a_next_step` | `follow-ups/01-daily-mix` |
+| F2 | The rebooking email counts as the rebooking follow-up, in the same thread | `test_the_rebooking_email_counts_as_the_follow_up` | `follow-ups/01-daily-mix` |
+| F3 | A meeting nobody recorded shows up the working day after, until the rep records it | `test_a_meeting_nobody_recorded_shows_up_the_next_working_day` | `follow-ups/02-handoff-works-its-list` |
+| F4 | A lead with a rep but no meeting shows up after a working day | `test_a_lead_with_a_rep_but_no_meeting_shows_up` | `follow-ups/02-handoff-works-its-list` |
+| F5 | No outreach follow-up while a meeting is booked | `test_no_outreach_follow_up_while_a_meeting_is_booked` | `follow-ups/03-outreach-hands-back` |
+| F6 | A reply asking to move the booked meeting goes to @handoff. A reply proposing a first time stays positive | `test_a_request_to_move_the_meeting_goes_to_handoff_and_a_first_proposal_stays_positive` | `follow-ups/06-reply-moves-the-meeting` |
+| F7 | A decision only a person can make shows up until it's made, and the agent asks instead of deciding | `test_an_unlabelled_reply_waits_for_a_person_until_it_moves_on` | `follow-ups/05-person-decision-surfaces` |
+| F8 | An open deal with no activity for 7 days shows up | `test_a_quiet_deal_shows_up_in_follow_ups` | `deal-desk/06-pipeline-quiet-deals` |
+| F9 | Nothing is due: the agent says so and changes nothing | agent only | `follow-ups/04-nothing-due` |

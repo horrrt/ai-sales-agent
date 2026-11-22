@@ -27,6 +27,9 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `deal-desk` | 9 | Notes, BANT, quote approved and sent; discount above the limit flagged; above the maximum nothing goes out; lost with a reason; auto-close; quiet deals; **someone claims to be the admin**; **BANT fails, no quote**; **two turns: the rep changes the quote** |
 | `coach` | 3 | Rep edits lead to one proposal; too few leads, no proposal; **losses to a competitor are cited as evidence** |
 | `email` | 20 | Who wrote, who is copied in, the thread and the time: a full first email; held at 22:00 and over the weekend; the lead's time zone; follow-ups in working days; a follow-up keeps the thread and cc; a rep copied in, asked for or added at approval; an assistant answers for the CEO; **the CEO hands over to the CTO**; **"option 2" read against our email**; a CFO copied in; a referral copied in; an attachment; out-of-office then the real reply; **a reply asks us to email outside the sandbox**; a handover with no address; the call brief names everyone; the manager routes a handover |
+| `teams` | 7 | Teams of 1, 2, 3, 5 and 10 reps: a solo founder books around their calendar; the only rep is full so the lead queues; country before load; five time zones; the least-loaded of ten; an away rep is skipped; ten reps all full |
+| `scheduling` | 9 | Booking around busy time; the day the prospect named; **a reschedule frees the old slot**; a cancellation with and without rebooking; a no-show; **a sick rep's meeting moves to a colleague**; **a second prospect asks for a taken slot**; the third move asks the rep |
+| `follow-ups` | 6 | **The daily run handles an email, a rebooking, a missing outcome and an unbooked lead**; @handoff works its list; @outreach hands back what isn't an email; nothing due; a person's decision surfaces; a reply moves the meeting |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
 
 ## Write a case
@@ -45,6 +48,7 @@ setup:
   #   {L-1: {from: "Maja <maja@x.sandbox.test>", cc: [...], subject: ..., body: ..., received_at: ..., attachments: [...]}}
   #   or a list of them. A lead with outreach.sent_at always gets its sent email in the outbox.
   now: "2026-11-24T22:00:00+01:00"            # the pinned time (default Tuesday 2026-11-24 10:00 Stockholm)
+  calendars: {rep-1: [{start: ..., end: ..., title: Board meeting}]}   # busy blocks; kind: meeting + lead_id for a booked one
   interactions: [...]                         # event log rows, e.g. for the coach
 turns:
   - What the user types
@@ -59,13 +63,16 @@ expect:
   asked_person: [record_approval]             # Fleet asked a person before this tool ran
   not_asked_person: [approve_quote]
   delegated_to: [outreach, handoff]           # manager cases
-  lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null
+  lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null,
+                                              # "~text" = contains, a list against a scalar = one of these
   logs_follow_schema: true
   final_mentions: ["L-1"]
   sent: {lead: L-1, status: scheduled, to_includes: [eva@...], cc_includes: [...], cc_excludes: [...],
          subject_startswith: "Re:", same_thread: true, scheduled_for: "...", count: 1}   # the emails sent in this run
   contacts: {L-1: [{email: eva@, role: handover}]}   # people read_reply added to the lead
   outbox_only_sandbox: true                   # nothing sent or held is addressed outside .test
+  no_double_booking: true                     # no rep has two live events at the same time
+  calendar: {rep-1: {meetings: 1, lead: L-1, status: booked, start: "..."}}   # the rep's calendar after the run
   queue_length: 1
   proposals: 1
   max_tool_calls: 1

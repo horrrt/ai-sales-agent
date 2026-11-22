@@ -16,6 +16,8 @@ database (docs/fleet-prompts-v2.md §2).
 - INBOX: every email we receive: from, to, cc, subject, body, received_at, in_reply_to, attachments.
 - CLOCK: SALES_NOW (or CLOCK["now"]) fixes the time for tests and evals; otherwise the real time.
 - QUEUE: positive replies waiting for a rep when every rep is red.
+- CALENDARS: each rep's calendar, rep_id -> events {event_id, start, end, kind busy|meeting, status, lead_id}
+  (data/calendars.json, else data/calendars.demo.json, else empty).
 - PROPOSALS: rule changes the weekly review proposes, for a person to approve.
 """
 import json
@@ -64,15 +66,20 @@ BRIEF: dict = json.loads(_brief_file.read_text())
 LEADS: dict[str, dict] = {}
 INTERACTIONS: list[dict] = []
 REPS: dict[str, dict] = _load_json("reps.json", "reps.demo.json")
+try:
+    CALENDARS_START: dict = _load_json("calendars.json", "calendars.demo.json")
+except FileNotFoundError:
+    CALENDARS_START = {}
 APPROVALS: dict[str, dict] = {}
 OUTBOX: list[dict] = []
 INBOX: list[dict] = []
 QUEUE: list[dict] = []
+CALENDARS: dict[str, list[dict]] = {k: list(v) for k, v in CALENDARS_START.items()}
 PROPOSALS: list[dict] = []
 
 STATE_FILE = os.environ.get("SALES_STATE")
 _STATE = {"leads": LEADS, "interactions": INTERACTIONS, "reps": REPS, "approvals": APPROVALS,
-          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK}
+          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK, "calendars": CALENDARS}
 
 
 def load() -> None:
@@ -128,8 +135,14 @@ def save() -> None:
 def set_stage(lead: dict, stage: str, at: str | None = None) -> None:
     """Move a lead to a stage and remember when it first got there (at: when it happened, if not now)."""
     lead["stage"] = stage
+    lead.pop("needs_person", None)  # the lead moved on, so whatever a person had to decide is settled
     lead.setdefault("stage_times", {}).setdefault(stage, at or now())
     lead["updated_at"] = now()
+
+
+def ask_person(lead: dict, reason: str) -> None:
+    """Park a lead for a person's decision. due_follow_ups lists it (kind needs_person) until the lead moves on."""
+    lead["needs_person"] = {"reason": reason, "since": now()}
 
 
 def log_event(lead_id: str, stage: str, outcome: str, message: str = "", channel: str = "internal",

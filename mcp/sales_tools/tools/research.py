@@ -15,7 +15,7 @@ import copy
 from .. import sim
 from ..app import mcp
 from ..decide import decide
-from ..store import BRIEF, LEADS, SOURCE, log_event, now, set_stage
+from ..store import BRIEF, LEADS, SOURCE, ask_person, log_event, now, set_stage
 
 MAX_RESEARCH_RETRIES = 2
 
@@ -144,6 +144,7 @@ def check_ready_to_write(lead_id: str) -> dict:
                 "research": {k: v for k, v in research.items() if k != "attempts"}}
     answers = {name: decide(q, evidence) for name, q in REQUIRED_FACTS.items()}
     if any(a["answer"] is None for a in answers.values()):
+        ask_person(lead, "decide whether the research is enough to write")
         return {"ok": True, "ready": None, "answers": answers, "next": "Ask a person whether research is enough"}
     missing = [name for name, a in answers.items() if not a["answer"]]
     if not missing:
