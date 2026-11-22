@@ -1,0 +1,33 @@
+title: The rep marks the meeting held; the deal opens
+agent: handoff
+setup:
+  leads:
+  - lead_id: L-201
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    stage: handed_off
+    handoff:
+      rep_id: rep-1
+      meeting_start: '2026-11-24T10:00:00+00:00'
+      call_brief: '...'
+turns:
+- 'Mette here: the meeting with L-201 happened today, it went well.'
+expect:
+  called_with:
+    record_meeting_outcome:
+      outcome: held
+  asked_person:
+  - record_meeting_outcome
+  lead:
+    L-201:
+      handoff.meeting_outcome: held
+      deal.stage: qualification

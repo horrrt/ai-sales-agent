@@ -1,0 +1,96 @@
+title: 'Three leads this week: too early to propose a change'
+agent: coach
+setup:
+  leads:
+  - lead_id: L-400
+    person:
+      name: Person 0
+      title: CEO
+      email: p0@co0.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 0 AB
+      domain: co0.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-401
+    person:
+      name: Person 1
+      title: CEO
+      email: p1@co1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 1 AB
+      domain: co1.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-402
+    person:
+      name: Person 2
+      title: CEO
+      email: p2@co2.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 2 AB
+      domain: co2.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  interactions:
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-400
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 0's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-401
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 1's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-402
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 2's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+turns:
+- Run the weekly review.
+expect:
+  proposals: 0

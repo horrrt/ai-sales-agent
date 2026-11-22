@@ -1,0 +1,29 @@
+title: An unsubscribe is lost and never contacted again
+agent: outreach
+setup:
+  leads:
+  - lead_id: L-204
+    person:
+      name: Ola Dahl
+      title: CEO
+      email: ola@arctic.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Arctic Signal AS
+      domain: arctic.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+  replies:
+    L-204: Please take me off your list and don't email me again.
+turns:
+- Handle new replies in the sandbox inbox.
+expect:
+  lead:
+    L-204:
+      outreach.reply_label: unsubscribe
+      status: lost
+      do_not_contact: true
+  not_called:
+  - save_draft

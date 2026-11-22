@@ -1,0 +1,352 @@
+title: 'Reps shortened 7 of 12 subject lines: one proposal'
+agent: coach
+setup:
+  leads:
+  - lead_id: L-400
+    person:
+      name: Person 0
+      title: CEO
+      email: p0@co0.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 0 AB
+      domain: co0.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-401
+    person:
+      name: Person 1
+      title: CEO
+      email: p1@co1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 1 AB
+      domain: co1.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-402
+    person:
+      name: Person 2
+      title: CEO
+      email: p2@co2.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 2 AB
+      domain: co2.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-403
+    person:
+      name: Person 3
+      title: CEO
+      email: p3@co3.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 3 AB
+      domain: co3.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-404
+    person:
+      name: Person 4
+      title: CEO
+      email: p4@co4.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 4 AB
+      domain: co4.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-405
+    person:
+      name: Person 5
+      title: CEO
+      email: p5@co5.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 5 AB
+      domain: co5.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-406
+    person:
+      name: Person 6
+      title: CEO
+      email: p6@co6.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 6 AB
+      domain: co6.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-407
+    person:
+      name: Person 7
+      title: CEO
+      email: p7@co7.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 7 AB
+      domain: co7.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-408
+    person:
+      name: Person 8
+      title: CEO
+      email: p8@co8.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 8 AB
+      domain: co8.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-409
+    person:
+      name: Person 9
+      title: CEO
+      email: p9@co9.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 9 AB
+      domain: co9.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-410
+    person:
+      name: Person 10
+      title: CEO
+      email: p10@co10.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 10 AB
+      domain: co10.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  - lead_id: L-411
+    person:
+      name: Person 11
+      title: CEO
+      email: p11@co11.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Company 11 AB
+      domain: co11.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+    stage: sent
+    outreach:
+      sent_at: '2026-11-18T09:00:00+00:00'
+  interactions:
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-400
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 0's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-401
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 1's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-402
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 2's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-403
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 3's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-404
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 4's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-405
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 5's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-406
+    stage: approval
+    channel: internal
+    message: approved with edits
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 6's security reviews and audit plans
+      body: '...'
+    edited_to:
+      subject: Security reviews
+      body: '...'
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-407
+    stage: approval
+    channel: internal
+    message: approved
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 7's security reviews and audit plans
+      body: '...'
+    edited_to: null
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-408
+    stage: approval
+    channel: internal
+    message: approved
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 8's security reviews and audit plans
+      body: '...'
+    edited_to: null
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-409
+    stage: approval
+    channel: internal
+    message: approved
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 9's security reviews and audit plans
+      body: '...'
+    edited_to: null
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-410
+    stage: approval
+    channel: internal
+    message: approved
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 10's security reviews and audit plans
+      body: '...'
+    edited_to: null
+  - timestamp: '2026-11-17T08:30:00+00:00'
+    lead_id: L-411
+    stage: approval
+    channel: internal
+    message: approved
+    outcome: success
+    loss_reason: null
+    by: rep-1
+    draft:
+      subject: Quick question about Company 11's security reviews and audit plans
+      body: '...'
+    edited_to: null
+turns:
+- Run the weekly review.
+expect:
+  called:
+  - get_event_log
+  - save_proposal
+  proposals: 1
+  not_asked_person:
+  - decide_proposal

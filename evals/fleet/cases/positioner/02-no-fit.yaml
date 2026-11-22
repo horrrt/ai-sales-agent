@@ -1,0 +1,32 @@
+title: A consumer business gets no forced angle
+agent: positioner
+setup:
+  leads:
+  - lead_id: L-220
+    person:
+      name: Lina Ek
+      title: CEO
+      email: lina@bakery.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Ek Family Bakery
+      domain: ekbakery.example
+      country: SE
+      employees: 12
+      industry: Food retail (B2C)
+    stage: researched
+    research:
+      summary: A family bakery with two shops in Malmö.
+      enough_to_personalize: true
+      facts:
+      - fact: Opened a second shop in Malmö in August 2026
+        source_url: https://ekbakery.example/news
+turns:
+- Position lead L-220 for customer_id C-demo.
+expect:
+  not_called:
+  - save_positioning
+  lead:
+    L-220:
+      status: lost
+      loss_reason: wrong_company_fit

@@ -68,6 +68,12 @@ def load() -> None:
         if key in saved:
             obj.clear()
             (obj.update if isinstance(obj, dict) else obj.extend)(saved[key])
+    # Test fixtures (evals/fleet) can also set the lead source and change the brief. Neither is saved back.
+    if "source" in saved:
+        SOURCE.clear()
+        SOURCE.update(saved["source"])
+    for k, v in (saved.get("brief") or {}).items():
+        BRIEF[k] = {**BRIEF[k], **v} if isinstance(v, dict) and isinstance(BRIEF.get(k), dict) else v
 
 
 def save() -> None:

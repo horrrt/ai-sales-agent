@@ -1,0 +1,491 @@
+"""Agent-level tests for the Fleet agent, one folder of cases per part of the pipeline.
+
+Each case (cases/<part>/*.yaml) says which agent to run (the manager, or one subagent on its own), the
+state the tool server starts with, what the user types, how a person answers each approval, and what
+must be true afterwards. The agent is built from fleet/ exactly as Fleet imports it (AGENTS.md,
+subagents, skills, tools.json approvals) and runs on LangChain deepagents against this repo's own MCP
+tool server. No Fleet LCU is used; models are called through the Anthropic API.
+
+    uv run --project evals/fleet python evals/fleet/run.py --dry-run          # check every case, no model calls
+    uv run --project evals/fleet python evals/fleet/run.py -k outreach          # run one part
+    uv run --project evals/fleet python evals/fleet/run.py --model-map ''       # Haiku for every agent
+
+Results: evals/fleet/results/<time>/report.md, results.json and a .jsonl trace per case.
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import contextlib
+import json
+import os
+import socket
+import sys
+import tempfile
+import time
+import uuid
+from datetime import datetime
+from pathlib import Path
+
+import yaml
+
+HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
+DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
+# Judgement-heavy agents on Sonnet, tool-following ones on Haiku (see the PR #3 runs: on Haiku the manager
+# often skips its subagents).
+DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:claude-sonnet-5-5," \
+                    "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5"
+EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
+               "logs_follow_schema", "final_mentions", "queue_length", "proposals", "max_tool_calls"}
+AGENTS = {"manager"} | {p.name for p in (REPO / "fleet" / "subagents").iterdir() if p.is_dir()}
+
+
+# --------------------------------------------------------------------------- the agent
+
+def gated(cfg: dict) -> dict[str, bool]:
+    return {k.split("::")[1]: True for k, v in (cfg.get("interrupt_config") or {}).items() if v and "::" in k}
+
+
+def our_tools(cfg: dict) -> list[str]:
+    return [t["name"] for t in cfg.get("tools", []) if "tools.langchain.com" not in t.get("mcp_server_url", "")]
+
+
+async def build(agent_name: str, url: str, model: str, model_map: dict, events: list):
+    from deepagents import SubAgent, create_deep_agent
+    from fleet_deepagents_export.parsers import parse_frontmatter
+    from fleet_deepagents_export.skills import StaticSkillsLoader
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+    from langgraph.checkpoint.memory import InMemorySaver
+
+    fleet = REPO / "fleet"
+    client = MultiServerMCPClient({"sales": {"transport": "streamable_http", "url": url}})
+    server = {t.name: t for t in await client.get_tools(server_name="sales")}
+
+    def pick(names, who):
+        missing = [n for n in names if n not in server]
+        if missing:
+            events.append({"event": "missing_tools", "agent": who, "names": missing})
+        return [server[n] for n in names if n in server]
+
+    if agent_name != "manager":  # one subagent on its own, with its own prompt, tools and approvals
+        d = fleet / "subagents" / agent_name
+        _, prompt = parse_frontmatter((d / "AGENTS.md").read_text())
+        cfg = json.loads((d / "tools.json").read_text())
+        return create_deep_agent(model=model_map.get(agent_name, model), tools=pick(our_tools(cfg), agent_name),
+                                 system_prompt=prompt, interrupt_on=gated(cfg), checkpointer=InMemorySaver())
+    subagents = []
+    for d in sorted((fleet / "subagents").iterdir()):
+        if not (d / "AGENTS.md").exists():
+            continue
+        meta, prompt = parse_frontmatter((d / "AGENTS.md").read_text())
+        cfg = json.loads((d / "tools.json").read_text())
+        spec = SubAgent(name=d.name, description=meta.get("description", ""), system_prompt=prompt,
+                        tools=pick(our_tools(cfg), d.name), interrupt_on=gated(cfg))
+        spec["model"] = model_map.get(d.name, model)
+        subagents.append(spec)
+    root = json.loads((fleet / "tools.json").read_text())
+    loader = StaticSkillsLoader([(fleet / "skills", "/skills")])
+    return create_deep_agent(model=model_map.get("manager", model), tools=pick(our_tools(root), "manager"),
+                             system_prompt=(fleet / "AGENTS.md").read_text(), subagents=subagents,
+                             skills=loader.skill_paths, middleware=[loader], interrupt_on=gated(root),
+                             checkpointer=InMemorySaver())
+
+
+def text_of(content) -> str:
+    if isinstance(content, str):
+        return content
+    return " ".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
+
+
+def answer(policy: dict, tool: str, args: dict) -> dict:
+    """How the person in the case answers an approval: approve, reject (with a note), or edit some arguments."""
+    rule = policy.get(tool, policy.get("default", "approve"))
+    if isinstance(rule, str):
+        rule = {"action": rule}
+    if rule.get("reject_weekend"):
+        try:
+            if datetime.fromisoformat(args.get("start", "")).weekday() >= 5:
+                return {"type": "reject", "message": rule.get("message", "That's a weekend. Pick a weekday slot.")}
+        except ValueError:
+            pass
+        return {"type": "approve"}
+    if rule.get("action") == "reject":
+        return {"type": "reject", "message": rule.get("message", "Rejected.")}
+    if rule.get("action") == "edit":
+        return {"type": "edit", "edited_action": {"name": tool, "args": {**args, **rule.get("args", {})}}}
+    if rule.get("action") == "reject_first":  # reject once, then approve
+        if not rule.get("_done"):
+            rule["_done"] = True
+            policy[tool] = rule
+            return {"type": "reject", "message": rule.get("message", "Rejected.")}
+        return {"type": "approve"}
+    return {"type": "approve"}
+
+
+async def run_turns(agent, turns: list[str], approvals: dict, events: list):
+    from langgraph.types import Command
+
+    approvals = json.loads(json.dumps(approvals))  # reject_first keeps state per case
+    config = {"configurable": {"thread_id": str(uuid.uuid4())}, "recursion_limit": 150}
+    for turn in turns:
+        events.append({"event": "user", "text": turn})
+        payload = {"messages": [{"role": "user", "content": turn}]}
+        while True:
+            interrupts = []
+            async for ns, update in agent.astream(payload, config, stream_mode="updates", subgraphs=True):
+                who = "manager" if not ns else ns[-1].split(":")[0]
+                for node, val in (update or {}).items():
+                    if node == "__interrupt__":
+                        interrupts.extend(val)
+                        continue
+                    for m in (val.get("messages", []) if isinstance(val, dict) else []):
+                        um = getattr(m, "usage_metadata", None)
+                        if m.type == "ai" and um:
+                            d = um.get("input_token_details") or {}
+                            events.append({"event": "usage", "input": um.get("input_tokens", 0),
+                                           "output": um.get("output_tokens", 0), "cache_read": d.get("cache_read", 0) or 0})
+                        for tc in getattr(m, "tool_calls", None) or []:
+                            events.append({"event": "tool_call", "agent": who, "tool": tc["name"], "args": tc["args"]})
+                        if m.type == "tool":
+                            events.append({"event": "tool_result", "agent": who, "tool": m.name, "result": text_of(m.content)[:1500]})
+                        elif m.type == "ai" and not getattr(m, "tool_calls", None) and text_of(m.content):
+                            events.append({"event": "ai_message", "agent": who, "text": text_of(m.content)})
+            if not interrupts:
+                break
+            interrupts = list({it.id: it for it in interrupts}.values())
+            resume = {}
+            for it in interrupts:
+                decisions = []
+                for r in (it.value or {}).get("action_requests", []):
+                    dec = answer(approvals, r["name"], r["args"])
+                    events.append({"event": "asked_person", "tool": r["name"], "args": r["args"], "decision": dec["type"]})
+                    decisions.append(dec)
+                resume[it.id] = {"decisions": decisions}
+            payload = Command(resume=resume)
+
+
+# --------------------------------------------------------------------------- state and server
+
+def initial_state(setup: dict) -> dict:
+    """The case's setup as a store snapshot. Leads get defaults; replies become sent emails with a reply waiting."""
+    now = datetime.now().astimezone().isoformat()
+    leads = {}
+    for lead in setup.get("leads", []):
+        lead = {"customer_id": "C-demo", "stage": "new", "status": "active", "loss_reason": None,
+                "created_at": now, "updated_at": now, **lead}
+        lead.setdefault("stage_times", {lead["stage"]: now})
+        leads[lead["lead_id"]] = lead
+    outbox = []
+    for lid, body in (setup.get("replies") or {}).items():
+        lead = leads[lid]
+        out = lead.setdefault("outreach", {})
+        out.setdefault("draft_subject", "Earlier email")
+        out.setdefault("draft_body", "(sent)")
+        out.setdefault("sent_at", now)
+        outbox.append({"lead_id": lid, "to": lead["person"]["email"], "draft_subject": out["draft_subject"],
+                       "draft_body": out["draft_body"], "sent_at": out["sent_at"], "reply": {"body": body}})
+    state = {"leads": leads, "outbox": outbox, "interactions": setup.get("interactions", []),
+             "queue": setup.get("queue", []), "proposals": setup.get("proposals", []), "approvals": {}}
+    if "reps" in setup:
+        state["reps"] = setup["reps"]
+    if "source" in setup:
+        state["source"] = {c["lead_id"]: {"customer_id": "C-demo", **c} for c in setup["source"]}
+    brief = json.loads((REPO / "data/customer_brief.demo.json").read_text())  # every case starts from the demo customer
+    for k, v in (setup.get("brief") or {}).items():
+        brief[k] = {**brief[k], **v} if isinstance(v, dict) and isinstance(brief.get(k), dict) else v
+    state["brief"] = brief
+    return state
+
+
+def free_port() -> int:
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+@contextlib.asynccontextmanager
+async def tool_server(state: dict, logdir: Path, name: str):
+    """Start this repo's tool server with SALES_STATE pointing at the case's snapshot. It saves after every tool call."""
+    port, state_file = free_port(), logdir / f"{name}.state.json"
+    state_file.write_text(json.dumps(state, default=str))
+    log = open(logdir / f"{name}.server.log", "w")
+    env = {**os.environ, "SALES_STATE": str(state_file), "PORT": str(port), "HOST": "127.0.0.1"}
+    proc = await asyncio.create_subprocess_exec("uv", "run", "--quiet", "--project", str(REPO / "mcp"), "python", "-m",
+                                                "sales_tools.server", cwd=str(REPO / "mcp"), env=env, stdout=log, stderr=log)
+    try:
+        for _ in range(240):
+            await asyncio.sleep(0.25)
+            text = (logdir / f"{name}.server.log").read_text()
+            if "Uvicorn running" in text:
+                break
+            if proc.returncode is not None or "Traceback" in text:
+                raise RuntimeError(f"tool server failed, see {name}.server.log")
+        else:
+            raise RuntimeError("tool server did not start in 60s")
+        yield f"http://127.0.0.1:{port}/mcp", state_file
+    finally:
+        with contextlib.suppress(ProcessLookupError):
+            proc.terminate()
+        await proc.wait()
+        log.close()
+
+
+# --------------------------------------------------------------------------- checks
+
+def dig(obj, path: str):
+    for part in path.split("."):
+        obj = obj.get(part) if isinstance(obj, dict) else None
+    return obj
+
+
+def matches(args: dict, want: dict) -> bool:
+    for k, v in want.items():
+        got = args.get(k)
+        if isinstance(v, str) and v.startswith("~"):  # ~text: contains, case-insensitive
+            if v[1:].lower() not in str(got).lower():
+                return False
+        elif got != v:
+            return False
+    return True
+
+
+def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
+    calls = [e for e in events if e["event"] == "tool_call"]
+    called = [c["tool"] for c in calls]
+    asked = [e["tool"] for e in events if e["event"] == "asked_person"]
+    out = []
+
+    def add(name, ok, detail=""):
+        out.append({"check": name, "ok": bool(ok), "detail": "" if ok else detail})
+
+    for t in expect.get("called", []):
+        add(f"called {t}", t in called, f"tools called: {sorted(set(called))}")
+    for t in expect.get("not_called", []):
+        add(f"did not call {t}", t not in called, f"called {called.count(t)}x")
+    for t, want in (expect.get("called_with") or {}).items():
+        args = [c["args"] for c in calls if c["tool"] == t]
+        add(f"called {t} with {want}", any(matches(a, want) for a in args), f"got {args[:3]}")
+    for t in expect.get("asked_person", []):
+        add(f"asked a person before {t}", t in asked, f"asked for: {asked}")
+    for t in expect.get("not_asked_person", []):
+        add(f"never asked a person about {t}", t not in asked)
+    for lid, fields in (expect.get("lead") or {}).items():
+        lead = state.get("leads", {}).get(lid, {})
+        for path, want in fields.items():
+            got = dig(lead, path)
+            ok = (got is not None) if want == "set" else (got in want) if isinstance(want, list) else got == want
+            add(f"{lid}.{path} == {want}", ok, f"got {got!r}")
+    for name in expect.get("delegated_to", []):
+        add(f"manager delegated to @{name}",
+            any(c["tool"] == "task" and c["args"].get("subagent_type") == name for c in calls),
+            f"delegated to {[c['args'].get('subagent_type') for c in calls if c['tool'] == 'task']}")
+    if expect.get("logs_follow_schema") and enums:
+        bad = [c["args"] for c in calls if c["tool"] == "log_interaction"
+               and (c["args"].get("stage") not in enums["stage"] or c["args"].get("outcome") not in enums["outcome"])]
+        add("log_interaction calls use schema values", not bad, str(bad[:2]))
+    for phrase in expect.get("final_mentions", []):
+        final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
+        add(f"final message mentions {phrase!r}", final and phrase.lower() in final[-1].lower())
+    if "queue_length" in expect:
+        add(f"wait queue has {expect['queue_length']}", len(state.get("queue", [])) == expect["queue_length"],
+            f"got {len(state.get('queue', []))}")
+    if "proposals" in expect:
+        add(f"{expect['proposals']} proposal(s) saved", len(state.get("proposals", [])) == expect["proposals"],
+            f"got {len(state.get('proposals', []))}")
+    if "max_tool_calls" in expect:
+        add(f"at most {expect['max_tool_calls']} tool calls", len(calls) <= expect["max_tool_calls"], f"{len(calls)} calls")
+    return out
+
+
+# --------------------------------------------------------------------------- run
+
+def load_cases(k: str) -> list[tuple[str, Path, dict]]:
+    cases = []
+    for p in sorted((HERE / "cases").glob("*/*.yaml")):
+        name = f"{p.parent.name}/{p.stem}"
+        if k in name:
+            cases.append((name, p, yaml.safe_load(p.read_text())))
+    return cases
+
+
+def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
+    """Static checks a case must pass before it is worth a model call."""
+    problems = []
+    for key in ("title", "agent", "turns", "expect"):
+        if key not in case:
+            problems.append(f"missing {key}")
+    if case.get("agent") not in AGENTS:
+        problems.append(f"agent {case.get('agent')!r} is not manager or a subagent in fleet/subagents/")
+    unknown = set(case.get("expect", {})) - EXPECT_KEYS
+    if unknown:
+        problems.append(f"unknown expect keys {sorted(unknown)}")
+    named = set(case.get("approvals", {})) - {"default"}
+    for key in ("called", "not_called", "asked_person", "not_asked_person"):
+        named |= set(case.get("expect", {}).get(key, []))
+    named |= set((case.get("expect", {}).get("called_with") or {}))
+    named -= {"task", "read_file", "write_todos"}
+    if server_tools and named - server_tools:
+        problems.append(f"tools not on the server: {sorted(named - server_tools)}")
+    try:
+        state = initial_state(case.get("setup", {}))
+        json.dumps(state, default=str)
+    except Exception as e:  # noqa: BLE001
+        problems.append(f"setup does not load: {type(e).__name__}: {e}")
+    if case.get("agent", "manager") != "manager":
+        tools = {t["name"] for t in json.loads((REPO / "fleet/subagents" / case["agent"] / "tools.json").read_text())["tools"]}
+        need = set(case.get("expect", {}).get("called", [])) - {"task", "read_file", "write_todos"}
+        if need - tools:
+            problems.append(f"@{case['agent']} doesn't have {sorted(need - tools)} in its tools.json")
+    return problems
+
+
+async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaphore) -> list[str]:
+    """Start the tool server with the case's state and read it back over MCP. No model calls."""
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+
+    setup, problems = case.get("setup", {}), []
+    async with sem:
+        try:
+            async with tool_server(initial_state(setup), logdir, name.replace("/", "__")) as (url, _):
+                client = MultiServerMCPClient({"sales": {"transport": "streamable_http", "url": url}})
+                tools = {t.name: t for t in await client.get_tools(server_name="sales")}
+
+                async def call(tool, args):
+                    raw = await tools[tool].ainvoke(args)
+                    blocks = raw if isinstance(raw, list) else [raw]
+                    return [json.loads(b["text"]) if isinstance(b, dict) and "text" in b
+                            else json.loads(b) if isinstance(b, str) else b for b in blocks]
+                for lead in setup.get("leads", []):
+                    got = (await call("get_lead", {"lead_id": lead["lead_id"]}))[0]
+                    if got.get("lead_id") != lead["lead_id"]:
+                        problems.append(f"lead {lead['lead_id']} not loaded")
+                replies = await call("get_replies", {}) if setup.get("replies") else []
+                if len(replies) != len(setup.get("replies") or {}):
+                    problems.append(f"{len(replies)} replies in the inbox, expected {len(setup.get('replies') or {})}")
+                if "reps" in setup:
+                    reps = {r["rep_id"]: r["status"] for r in await call("get_rep_capacity", {})}
+                    if reps != {k: v["status"] for k, v in setup["reps"].items()}:
+                        problems.append(f"reps loaded as {reps}")
+                if "source" in setup:
+                    found = {c["lead_id"] for c in await call("find_leads", {"customer_id": "C-demo", "limit": 50})}
+                    expected = {c["lead_id"] for c in setup["source"]}
+                    known = {(l.get("person") or {}).get("email") for l in setup.get("leads", [])}
+                    expected -= {c["lead_id"] for c in setup["source"] if (c.get("person") or {}).get("email") in known}
+                    if found != expected:
+                        problems.append(f"find_leads returned {sorted(found)}, expected {sorted(expected)}")
+                brief = (await call("get_customer_brief", {"customer_id": "C-demo"}))[0]
+                if brief.get("company_name") != "Kvitto ApS":
+                    problems.append("the demo brief didn't load")
+                for k, v in (setup.get("brief") or {}).items():
+                    if isinstance(v, dict) and any(brief.get(k, {}).get(kk) != vv for kk, vv in v.items()):
+                        problems.append(f"brief override {k} didn't apply")
+        except Exception as e:  # noqa: BLE001
+            problems.append(f"{type(e).__name__}: {e}")
+    return problems
+
+
+async def run_case(name: str, path: Path, case: dict, args, enums: dict, logdir: Path, sem: asyncio.Semaphore) -> dict:
+    events, started, safe = [], time.time(), name.replace("/", "__")
+    async with sem:
+        try:
+            async with tool_server(initial_state(case.get("setup", {})), logdir, safe) as (url, state_file):
+                agent = await build(case["agent"], url, args.model, args.model_map, events)
+                await run_turns(agent, case["turns"], case.get("approvals", {}), events)
+            state = json.loads(state_file.read_text())
+            checks, error = check(case["expect"], events, state, enums), None
+        except Exception as e:  # noqa: BLE001  one failing case doesn't stop the others
+            checks, error = [], f"{type(e).__name__}: {e}"
+    (logdir / f"{safe}.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in events))
+    usage = [e for e in events if e["event"] == "usage"]
+    final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
+    return {"case": name, "title": case["title"], "agent": case["agent"], "error": error,
+            "passed": not error and all(c["ok"] for c in checks), "checks": checks,
+            "tools": [e["tool"] for e in events if e["event"] == "tool_call"],
+            "asked_person": [e["tool"] for e in events if e["event"] == "asked_person"],
+            "final_message": final[-1][:800] if final else "",
+            "tokens": {k: sum(u[k] for u in usage) for k in ("input", "cache_read", "output")},
+            "seconds": round(time.time() - started)}
+
+
+def report(results: list, args) -> str:
+    lines = ["# Fleet test results", "", f"Model `{args.model}`, overrides `{args.model_map}`",
+             f"Passed {sum(r['passed'] for r in results)}/{len(results)}", ""]
+    by_part: dict[str, list] = {}
+    for r in results:
+        by_part.setdefault(r["case"].split("/")[0], []).append(r)
+    lines += ["| Part | Passed |", "|---|---|"] + [f"| {p} | {sum(r['passed'] for r in rs)}/{len(rs)} |" for p, rs in by_part.items()] + [""]
+    for r in results:
+        lines.append(f"## {'✅' if r['passed'] else '❌'} {r['case']}: {r['title']}")
+        if r["error"]:
+            lines.append(f"- Error: {r['error']}")
+        lines += [f"- {'✅' if c['ok'] else '❌'} {c['check']}" + (f" ({c['detail']})" if c["detail"] else "") for c in r["checks"]]
+        t = r["tokens"]
+        lines += [f"- Tools: {', '.join(r['tools']) or 'none'}", f"- Asked a person: {', '.join(r['asked_person']) or 'no'}",
+                  f"- Tokens: {t['input']:,} in ({t['cache_read']:,} cached), {t['output']:,} out; {r['seconds']}s", "",
+                  "> " + r["final_message"].replace("\n", "\n> "), ""]
+    return "\n".join(lines)
+
+
+def schema_enums() -> dict:
+    props = json.loads((REPO / "schemas/interaction.schema.json").read_text())["properties"]
+    return {"stage": set(props["stage"]["enum"]), "outcome": set(props["outcome"]["enum"])}
+
+
+def server_tool_names() -> set[str]:
+    import re
+    return set(re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)", "".join(p.read_text() for p in (REPO / "mcp/sales_tools/tools").glob("*.py"))))
+
+
+async def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("-k", default="", help="only cases whose part/name contains this")
+    ap.add_argument("--dry-run", action="store_true", help="validate every case without starting a model")
+    ap.add_argument("--check-fixtures", action="store_true", help="start the tool server for each case and read its data back; no model calls")
+    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--model-map", default=DEFAULT_MODEL_MAP, help="per-agent models; '' for --model everywhere")
+    ap.add_argument("--parallel", type=int, default=4)
+    args = ap.parse_args()
+    cases = load_cases(args.k)
+    if not cases:
+        sys.exit("No cases matched")
+    tools = server_tool_names()
+    problems = {name: validate(name, case, tools) for name, _, case in cases}
+    for name, probs in problems.items():
+        print(f"{'OK ' if not probs else 'BAD'}  {name}" + (f": {'; '.join(probs)}" if probs else ""))
+    if args.check_fixtures and not any(problems.values()):
+        logdir = HERE / "results" / ("fixtures-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+        logdir.mkdir(parents=True, exist_ok=True)
+        sem = asyncio.Semaphore(args.parallel)
+        found = await asyncio.gather(*(check_fixture(n, c, logdir, sem) for n, _, c in cases))
+        print()
+        for (n, _, _), probs in zip(cases, found):
+            print(f"{'OK ' if not probs else 'BAD'}  fixture {n}" + (f": {'; '.join(probs)}" if probs else ""))
+        print(f"\n{sum(not p for p in found)}/{len(cases)} fixtures load (no model calls)")
+        sys.exit(1 if any(found) else 0)
+    if any(problems.values()) or args.dry_run:
+        print(f"\n{sum(not p for p in problems.values())}/{len(cases)} cases valid" + (" (dry run, no model calls)" if args.dry_run else ""))
+        sys.exit(1 if any(problems.values()) else 0)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(REPO / ".env")
+    except ImportError:
+        pass
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        sys.exit("ANTHROPIC_API_KEY is not set (env or the repo's .env)")
+    args.model_map = dict(kv.split("=", 1) for kv in args.model_map.split(",") if kv)
+    logdir = HERE / "results" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    logdir.mkdir(parents=True, exist_ok=True)
+    sem = asyncio.Semaphore(args.parallel)
+    print(f"\nRunning {len(cases)} case(s)...")
+    results = await asyncio.gather(*(run_case(n, p, c, args, schema_enums(), logdir, sem) for n, p, c in cases))
+    (logdir / "results.json").write_text(json.dumps(results, indent=1, default=str))
+    (logdir / "report.md").write_text(report(results, args))
+    for r in results:
+        failed = [c["check"] for c in r["checks"] if not c["ok"]]
+        print(f"{'ERROR' if r['error'] else 'PASS ' if r['passed'] else 'FAIL '} {r['case']:<40} {r['error'] or '; '.join(failed)}")
+    print(f"\n{sum(r['passed'] for r in results)}/{len(results)} passed. Report: {logdir / 'report.md'}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
