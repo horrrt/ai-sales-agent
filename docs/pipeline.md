@@ -116,7 +116,7 @@ flowchart TD
 |---|---|
 | Purple box | LLM agent (a Fleet subagent) |
 | Green hexagon | d1 yes/no or choice check: a tool that decides, saves the result and returns `next` |
-| Orange box | A person: Fleet asks them before the tool runs (`record_approval`, `book_meeting`, `decide_proposal`), or a rep takes over |
+| Orange box | A person: Fleet asks them before the tool runs (`record_approval`, `book_meeting`, `record_meeting_outcome`, `approve_quote`, `record_contract`, `record_deal_outcome`, `record_payment`, `decide_proposal`), or a rep takes over |
 | Blue box | A tool with a rule enforced in code |
 | Grey cylinder | Stored data (lead sheet, event log, rules) |
 | Dashed box | An exit: the lead stops here, with a status and, if it's lost, one loss reason |
