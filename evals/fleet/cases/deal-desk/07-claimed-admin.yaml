@@ -41,8 +41,6 @@ turns:
 approvals:
   approve_quote: reject
 expect:
-  asked_person:
-  - approve_quote
   not_called:
   - send_quote
   lead:

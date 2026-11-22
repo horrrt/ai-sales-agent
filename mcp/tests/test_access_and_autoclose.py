@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from sales_tools import store
 from sales_tools.tools import deals, handoff, outreach, shared
 
-from test_pipeline import (approved_draft, at, fresh, lead_through_research, meeting_held, sent_lead,  # noqa: F401
+from test_pipeline import (owner, approved_draft, at, fresh, lead_through_research, meeting_held, sent_lead,  # noqa: F401
                            stub)
 
 

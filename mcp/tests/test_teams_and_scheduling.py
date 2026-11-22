@@ -12,7 +12,7 @@ import pytest
 from sales_tools import store
 from sales_tools.tools import deals, handoff, outreach, shared
 
-from test_pipeline import at, fresh, sent_lead, stub  # noqa: F401 (fresh is autouse)
+from test_pipeline import owner, at, fresh, sent_lead, stub  # noqa: F401 (fresh is autouse)
 
 TZ = {"SE": "Europe/Stockholm", "NO": "Europe/Oslo", "FI": "Europe/Helsinki", "DK": "Europe/Copenhagen", "DE": "Europe/Berlin"}
 
@@ -186,7 +186,7 @@ def test_reschedule_moves_the_meeting_and_frees_the_old_slot():
     a, b = positive_lead(1), positive_lead(2)
     old = booked(a)["start"]
     new = handoff.find_free_slots("rep-1", lead_id=a)[2]
-    r = handoff.reschedule_meeting(a, new, "prospect", "board meeting moved")
+    r = handoff.reschedule_meeting(a, new, "prospect", "board meeting moved", by=owner(a))
     assert r["ok"] and r["start"] == new and store.LEADS[a]["handoff"]["meeting_start"] == new
     handoff.assign_rep(b)
     assert handoff.book_meeting(b, "rep-1", old)["ok"]  # the freed slot can be booked again
@@ -198,9 +198,9 @@ def test_reschedule_to_the_day_the_prospect_named_even_weeks_out():
     team(1)
     lid = positive_lead(1)
     booked(lid)
-    day = handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-12-15")
+    day = handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-12-15")["slots"]
     assert day and all(s.startswith("2026-12-15") for s in day) and len(day) > 2
-    assert handoff.reschedule_meeting(lid, day[-1], "prospect", "asked for the 15th")["ok"]
+    assert handoff.reschedule_meeting(lid, day[-1], "prospect", "asked for the 15th", by=owner(lid))["ok"]
 
 
 def test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep():
@@ -208,10 +208,10 @@ def test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep():
     a, b = positive_lead(1), positive_lead(2)
     booked(a)
     taken = booked(b)["start"]
-    assert "busy" in handoff.reschedule_meeting(a, taken)["error"]
+    assert "busy" in handoff.reschedule_meeting(a, taken, by=owner(a))["error"]
     slots = handoff.find_free_slots("rep-1", lead_id=a, days_ahead=8)
     for i, s in enumerate(slots[1:4], 1):
-        r = handoff.reschedule_meeting(a, s, "prospect")
+        r = handoff.reschedule_meeting(a, s, "prospect", by=owner(a))
     assert r["reschedules"] == 3 and "ask the rep" in r["next"]
 
 
@@ -223,7 +223,7 @@ def test_a_sick_reps_meeting_moves_to_a_colleague():
     other, third = [x for x in ("rep-1", "rep-2", "rep-3") if x != sick][:2]
     assert denied_action(handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=other, by=other)) == "manage_team"
     handoff.set_rep_status(sick, "away")
-    assert "away" in handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=sick)["error"]
+    assert "away" in handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=sick, by=owner(lid))["error"]
     assert denied_action(handoff.reschedule_meeting(lid, r["start"], "rep", "sick", new_rep_id=other, by=third)) == "manage_team"
     m = handoff.reschedule_meeting(lid, r["start"], "rep", "rep is sick", new_rep_id=other, by=other)  # takes it over
     assert m["ok"] and m["rep_id"] == other and store.LEADS[lid]["handoff"]["rep_id"] == other
@@ -249,7 +249,7 @@ def test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up():
     team(1)
     a, b = positive_lead(1), positive_lead(2)
     slot = booked(a)["start"]
-    r = handoff.cancel_meeting(a, "prospect", "travelling that week")
+    r = handoff.cancel_meeting(a, "prospect", "travelling that week", by=owner(a))
     assert r["ok"] and store.LEADS[a]["handoff"]["meeting_status"] == "cancelled"
     handoff.assign_rep(b)
     assert handoff.book_meeting(b, "rep-1", slot)["ok"]
@@ -264,7 +264,7 @@ def test_cancellation_for_good_waits_for_a_person():
     team(1)
     lid = positive_lead(1)
     booked(lid)
-    handoff.cancel_meeting(lid, "prospect", "chose another vendor", rebook=False)
+    handoff.cancel_meeting(lid, "prospect", "chose another vendor", rebook=False, by=owner(lid))
     assert kinds(lid) == ["needs_person"]
     assert shared.tag_loss_reason(lid, "has_competitor", "chose another vendor")["ok"]
     assert kinds(lid) == [] and "needs_person" not in store.LEADS[lid]
@@ -275,14 +275,14 @@ def test_no_show_schedules_a_rebook_and_a_second_no_show_asks_a_person():
     lid = positive_lead(1)
     start = booked(lid)["start"]
     at((datetime.fromisoformat(start) + timedelta(hours=1)).isoformat())
-    r = handoff.record_meeting_outcome(lid, "no_show")
+    r = handoff.record_meeting_outcome(lid, "no_show", by=owner(lid))
     assert r["follow_up_due"] and store.LEADS[lid]["handoff"]["no_shows"] == 1
     at((datetime.fromisoformat(start) + timedelta(days=1, hours=2)).isoformat())
     assert "rebook" in kinds(lid)
     second = handoff.find_free_slots("rep-1", lead_id=lid)[0]
     handoff.book_meeting(lid, "rep-1", second)
     at((datetime.fromisoformat(second) + timedelta(hours=1)).isoformat())
-    r = handoff.record_meeting_outcome(lid, "no_show")
+    r = handoff.record_meeting_outcome(lid, "no_show", by=owner(lid))
     assert "close the lead" in r["next"] and kinds(lid) == ["needs_person"]
 
 
@@ -293,7 +293,7 @@ def test_the_rebooking_email_counts_as_the_follow_up():
     handoff.assign_rep("L-001")
     start = handoff.find_free_slots("rep-1", lead_id="L-001")[0]
     handoff.book_meeting("L-001", "rep-1", start)
-    handoff.cancel_meeting("L-001", "prospect", "sick")
+    handoff.cancel_meeting("L-001", "prospect", "sick", by=owner("L-001"))
     at("2026-11-25T10:00:00+01:00")
     assert "rebook" in kinds("L-001")
     d = outreach.save_draft("L-001", "x", "Sorry you were ill. Would Monday 10:00 or Tuesday 14:00 work?")
@@ -312,7 +312,7 @@ def test_a_meeting_nobody_recorded_shows_up_the_next_working_day():
     assert "meeting_outcome" not in kinds(lid)
     at((datetime.fromisoformat(r["end"]) + timedelta(days=1, hours=1)).isoformat())
     assert "meeting_outcome" in kinds(lid)
-    assert handoff.record_meeting_outcome(lid, "held")["deal"] == "qualification"
+    assert handoff.record_meeting_outcome(lid, "held", by=owner(lid))["deal"] == "qualification"
     assert "meeting_outcome" not in kinds(lid)
 
 
@@ -364,7 +364,7 @@ def test_a_quiet_deal_shows_up_in_follow_ups():
     lid = positive_lead(1)
     r = booked(lid)
     at((datetime.fromisoformat(r["end"]) + timedelta(minutes=5)).isoformat())
-    handoff.record_meeting_outcome(lid, "held")
+    handoff.record_meeting_outcome(lid, "held", by=owner(lid))
     at((datetime.fromisoformat(r["end"]) + timedelta(days=8)).isoformat())
     assert "quiet_deal" in kinds(lid)
 
@@ -392,17 +392,40 @@ def test_every_active_lead_always_has_a_next_step():
         rid = store.LEADS[lid]["handoff"]["rep_id"]
         assert handoff.book_meeting(lid, rid, handoff.find_free_slots(rid, lead_id=lid, days_ahead=10)[0])["ok"]
     a, b, c, d, e, f = assigned[:6]
-    handoff.reschedule_meeting(a, handoff.find_free_slots(store.LEADS[a]["handoff"]["rep_id"], lead_id=a, days_ahead=10)[-1])
-    handoff.cancel_meeting(b, "prospect", "travel")
-    handoff.cancel_meeting(c, "prospect", "not interested", rebook=False)
+    handoff.reschedule_meeting(a, handoff.find_free_slots(store.LEADS[a]["handoff"]["rep_id"], lead_id=a, days_ahead=10)[-1], by=owner(a))
+    handoff.cancel_meeting(b, "prospect", "travel", by=owner(b))
+    handoff.cancel_meeting(c, "prospect", "not interested", rebook=False, by=owner(c))
     at("2026-12-10T10:00:00+01:00")  # every meeting above is over
-    handoff.record_meeting_outcome(d, "no_show")
-    handoff.record_meeting_outcome(e, "held")
+    handoff.record_meeting_outcome(d, "no_show", by=owner(d))
+    handoff.record_meeting_outcome(e, "held", by=owner(e))
     # f: the meeting passed and nobody recorded it; assigned[6:]: a rep but no meeting; the rest: queued
     at("2026-12-31T10:00:00+01:00")
     listed = {x["lead_id"] for x in outreach.due_follow_ups()}
     stuck = [l for l in leads if store.LEADS[l]["status"] in ("active", "queued") and l not in listed]
     assert stuck == [], [(l, store.LEADS[l].get("handoff")) for l in stuck]
+
+
+def test_an_empty_day_says_why_and_offers_the_nearest():
+    team(1)
+    lid = positive_lead(1)
+    sat = handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-11-28")
+    assert sat["slots"] == [] and sat["why_none"] == "it is a weekend" and sat["nearest"]
+    eve = handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-12-24")
+    assert "public holiday" in eve["why_none"] and "Christmas Eve" in eve["why_none"]
+    assert {s[:10] for s in eve["nearest"]} <= {"2026-12-23", "2026-12-28"}
+    assert "too soon" in handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-11-25")["why_none"]
+    busy("rep-1", "2026-11-26T09:00:00+01:00", "2026-11-26T17:00:00+01:00")
+    assert "no free time" in handoff.find_free_slots("rep-1", lead_id=lid, on_date="2026-11-26")["why_none"]
+
+
+def test_moving_cancelling_or_recording_a_meeting_needs_a_named_person():
+    team(1)
+    lid = positive_lead(1)
+    r = booked(lid)
+    assert handoff.reschedule_meeting(lid, r["start"])["error"] == "unknown_person"
+    assert handoff.cancel_meeting(lid)["error"] == "unknown_person"
+    at((datetime.fromisoformat(r["start"]) + timedelta(hours=1)).isoformat())
+    assert handoff.record_meeting_outcome(lid, "held")["error"] == "unknown_person"
 
 
 def test_a_reps_calendar_lists_their_meetings_and_busy_time():

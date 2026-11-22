@@ -198,17 +198,17 @@ def send_quote(lead_id: str) -> dict:
 
 
 @mcp.tool()
-def record_contract(lead_id: str, status: str, by: str | None = None) -> dict:
+def record_contract(lead_id: str, status: str, by: str = "") -> dict:
     """Record the contract status: sent or signed. This tool always asks a person first."""
     lead, deal, err = _deal(lead_id)
     if err:
         return {"ok": False, "error": err}
     if status not in ("sent", "signed"):
         return {"ok": False, "error": "status must be sent or signed"}
-    denied = access.check(by or deal.get("owner"), "record_contract", owner=deal.get("owner"), lead_id=lead_id, stage="deal")
+    denied = access.check(by, "record_contract", owner=deal.get("owner"), lead_id=lead_id, stage="deal")
     if denied:
         return denied
-    by = access.resolve(by or deal.get("owner"))
+    by = access.resolve(by)
     deal["contract"] = {"status": status, "signed_at": now() if status == "signed" else None}
     log_event(lead_id, "deal", "success", f"contract {status}", by=by)
     return {"ok": True, "next": "record_deal_outcome" if status == "signed" else "wait for the signature"}

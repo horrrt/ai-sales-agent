@@ -101,7 +101,7 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | S1 | Slots skip busy time and meetings already booked | `test_slots_skip_busy_time_and_booked_meetings` | `scheduling/01-busy-calendar` |
 | S2 | Booking refuses a clash, a time that has passed, a time outside working hours, and a second meeting for the same lead | `test_booking_refuses_a_clash_a_past_time_after_hours_and_a_second_meeting` | `scheduling/08-asked-for-a-taken-slot` |
 | S3 | The invite includes the people in the thread: the lead, an assistant or colleague who wrote, anyone copied in | `test_meeting_invite_includes_the_people_in_the_thread` | `teams/01-solo-rep-books` |
-| S4 | The prospect names a day and time, even weeks out, and that time is booked | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out` | `scheduling/02-prospect-names-a-day` |
+| S4 | The prospect names a day and time, even weeks out, and that time is booked. A day with nothing free says why (weekend, holiday, too soon, fully booked) and offers the nearest | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out`, `test_an_empty_day_says_why_and_offers_the_nearest` | `scheduling/02-prospect-names-a-day` |
 | S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
 | S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
 | S7 | A rep is sick. Their meetings are listed from their calendar and a colleague takes them over. The owner can hand a meeting over too; anyone else needs an admin | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_the_owner_can_hand_a_meeting_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
@@ -134,7 +134,7 @@ Each person in the team roster has a role (admin, rep, junior, finance, viewer) 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
 | R1 | A junior or a viewer can't approve an email. A rep can, and only then does it go out | `test_a_junior_or_viewer_cannot_approve_an_email_and_a_rep_can` | `access/01-junior-cannot-approve-email`, `access/02-rep-approves-email` |
-| R2 | Someone who isn't in the team, or who only claims a role ("I'm the CEO", "admin"), is refused | `test_an_unknown_person_or_a_claimed_role_is_refused` | `deal-desk/07-claimed-admin` |
+| R2 | Someone who isn't in the team, or who only claims a role ("I'm the CEO", "admin"), is refused. Moving, cancelling or recording a meeting, a contract and a payment need a named person | `test_an_unknown_person_or_a_claimed_role_is_refused`, `test_moving_cancelling_or_recording_a_meeting_needs_a_named_person` | `deal-desk/07-claimed-admin` |
 | R3 | One person's allow or deny list changes what their role lets them do, and deny wins even for an admin | `test_per_person_allow_and_deny_override_the_role` | `access/01-junior-cannot-approve-email` |
 | R4 | A refusal is logged with who was refused, and says who can do it instead | `test_a_refusal_is_logged_with_who_was_refused_and_who_can` | `access/03-rep-discount-needs-admin` |
 | R5 | A discount above the limit needs an admin, even on the rep's own deal | `test_a_discount_above_the_limit_needs_an_admin` | `access/03-rep-discount-needs-admin`, `deal-desk/02-discount-needs-admin` |

@@ -14,7 +14,7 @@ import pytest
 from sales_tools import store, workdays
 from sales_tools.tools import handoff, outreach
 
-from test_pipeline import approved_draft, at, fresh, sent_lead, stub  # noqa: F401
+from test_pipeline import owner, approved_draft, at, fresh, sent_lead, stub  # noqa: F401
 
 OSLO, STOCKHOLM = ZoneInfo("Europe/Oslo"), ZoneInfo("Europe/Stockholm")
 
@@ -98,7 +98,7 @@ def test_a_rebook_follow_up_after_a_friday_cancellation_is_due_monday():
     handoff.assign_rep("L-001")
     handoff.book_meeting("L-001", "rep-1", handoff.find_free_slots("rep-1", lead_id="L-001")[0])
     at("2026-11-27T16:30:00+01:00")  # Friday afternoon
-    handoff.cancel_meeting("L-001", "prospect", "sick")
+    handoff.cancel_meeting("L-001", "prospect", "sick", by=owner("L-001"))
     due = datetime.fromisoformat(store.LEADS["L-001"]["handoff"]["follow_up_due"]).astimezone(STOCKHOLM)
     assert due.date() == date(2026, 11, 30) and due.hour == 9
 

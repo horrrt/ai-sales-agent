@@ -365,12 +365,12 @@ def test_meeting_outcome_counts_toward_the_north_star():
     stub("positive")
     outreach.read_reply("L-001", "Yes, let's talk")
     handoff.assign_rep("L-001")
-    assert handoff.record_meeting_outcome("L-001", "held")["ok"] is False  # nothing booked yet
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["ok"] is False  # nothing booked yet
     handoff.book_meeting("L-001", "rep-1", handoff.find_free_slots("rep-1")[0])
-    assert handoff.record_meeting_outcome("L-001", "maybe")["ok"] is False
-    assert handoff.record_meeting_outcome("L-001", "held")["error"].startswith("the meeting hasn't started")
+    assert handoff.record_meeting_outcome("L-001", "maybe", by=owner("L-001"))["ok"] is False
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["error"].startswith("the meeting hasn't started")
     after_meeting()
-    assert handoff.record_meeting_outcome("L-001", "held")["ok"]
+    assert handoff.record_meeting_outcome("L-001", "held", by=owner("L-001"))["ok"]
     m = shared.get_funnel_metrics()
     assert m["north_star_meetings_held"] == 1
     assert m["median_hours_reply_to_handoff"] is not None and m["median_hours_reply_to_handoff"] >= 0
@@ -401,6 +401,11 @@ def test_payment_amount_is_kept():
 
 # --- 6. Deal closing ---------------------------------------------------------------------------
 
+def owner(lead_id: str) -> str:
+    """The rep who owns the lead's meeting: the person passed as by for meeting changes."""
+    return (store.LEADS[lead_id].get("handoff") or {}).get("rep_id") or "rep-1"
+
+
 def after_meeting(lead_id="L-001"):
     """Move the clock to an hour after the lead's booked meeting starts."""
     start = datetime.fromisoformat(store.LEADS[lead_id]["handoff"]["meeting_start"])
@@ -414,7 +419,7 @@ def meeting_held(lead_id="L-001"):
     handoff.assign_rep(lead_id)
     handoff.book_meeting(lead_id, store.LEADS[lead_id]["handoff"]["rep_id"], handoff.find_free_slots("rep-1")[0])
     after_meeting(lead_id)
-    r = handoff.record_meeting_outcome(lead_id, "held")
+    r = handoff.record_meeting_outcome(lead_id, "held", by=owner(lead_id))
     assert r["deal"] == "qualification"
     return store.LEADS[lead_id]["deal"]
 

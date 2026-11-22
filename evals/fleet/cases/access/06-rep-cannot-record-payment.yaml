@@ -4,6 +4,7 @@ setup:
   brief:
     auto_close:
       enabled: true
+      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:

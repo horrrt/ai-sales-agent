@@ -4,6 +4,7 @@ setup:
   brief:
     auto_close:
       enabled: true
+      max_annual_value_eur: 10000
   leads:
   - lead_id: L-201
     person:
@@ -47,8 +48,8 @@ turns:
 approvals:
   default: approve
 expect:
-  called:
-  - check_small_deal
   not_called:
   - send_offer
+  final_mentions:
+  - rep
   logs_follow_schema: true

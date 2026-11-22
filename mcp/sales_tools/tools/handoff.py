@@ -15,7 +15,7 @@ Slack messages use Fleet's built-in Slack tools, not this server.
 STUB: the roster is data/reps.demo.json and calendars are in the store. Replace with the team's sheet
 and Google Calendar free/busy; the rules stay.
 """
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from .. import access
@@ -207,7 +207,9 @@ def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None
     """Free slots in a rep's calendar: up to two a day (the first free morning slot and the first free
     afternoon slot), on working days up to days_ahead working days out, skipping the next working day so the
     rep gets a day's notice. With lead_id, only times inside the prospect's business hours too.
-    on_date (YYYY-MM-DD) returns every free slot that day, for a prospect who asked for a day."""
+    on_date (YYYY-MM-DD) returns {date, slots, why_none, nearest}: every free slot that day, and if there are
+    none, why (a weekend, a public holiday for the rep or the prospect, the notice day, fully booked) and the
+    nearest slots on other days."""
     rep = REPS.get(rep_id)
     if rep is None:
         return []
@@ -225,7 +227,11 @@ def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None
             days.append(day.date())
     days = days[1:]  # a working day's notice
     if on_date:
-        days = [d for d in days if d.isoformat() == on_date]
+        try:
+            asked = date.fromisoformat(on_date)
+        except ValueError:
+            return {"date": on_date, "slots": [], "why_none": "on_date must be YYYY-MM-DD", "nearest": []}
+        all_days, days = days, [d for d in days if d == asked]
     out = []
     for d in days:
         t, picked = datetime.combine(d, h0, tz), []
@@ -235,7 +241,21 @@ def find_free_slots(rep_id: str, days_ahead: int = 5, lead_id: str | None = None
                     picked.append(t)
             t += timedelta(minutes=30)
         out += [_iso(x) for x in picked]
-    return out
+    if not on_date:
+        return out
+    if out:
+        return {"date": on_date, "slots": out, "why_none": None, "nearest": []}
+    rc, lc = _rep_country(rep), _lead_country(lead)
+    why = ("it is a weekend" if asked.weekday() >= 5 else
+           f"it is a public holiday where {rep.get('name', rep_id)} works ({holiday(asked, rc)})" if holiday(asked, rc) else
+           f"it is a public holiday for the prospect ({holiday(asked, lc)})" if lc and holiday(asked, lc) else
+           "it is too soon: slots start the working day after next" if asked <= clock().astimezone(tz).date() or (all_days and asked < all_days[0]) else
+           f"{rep.get('name', rep_id)} has no free time that day")
+    before, after = [d for d in all_days if d < asked], [d for d in all_days if d > asked]
+    nearest = ([before[-1]] if before else []) + after[:1 if before else 2]  # the day before and the day after
+    near = [s for d in sorted(nearest) for s in find_free_slots(rep_id, lead_id=lead_id, duration_minutes=duration_minutes,
+                                                                 on_date=d.isoformat())["slots"][:2]]
+    return {"date": on_date, "slots": [], "why_none": why, "nearest": near}
 
 
 @mcp.tool()
@@ -308,7 +328,7 @@ def book_meeting(lead_id: str, rep_id: str, start: str, duration_minutes: int = 
 
 @mcp.tool()
 def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospect", reason: str = "",
-                       new_rep_id: str | None = None, by: str | None = None) -> dict:
+                       new_rep_id: str | None = None, by: str = "") -> dict:
     """Move a booked meeting to a new time (same rules as book_meeting). This tool always asks a person first.
 
     requested_by: prospect or rep. new_rep_id moves it to another rep too (the rep is sick or away); check
@@ -327,7 +347,9 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
         return {"ok": False, "error": "new_start must be an ISO date-time from find_free_slots"}
     minutes = int((_parse(e["end"]) - _parse(e["start"])).total_seconds() // 60)
     to_rep = new_rep_id or h["rep_id"]
-    approver = by or h["rep_id"]
+    if not by:
+        return {"ok": False, "error": "unknown_person", "next": "pass by: who is asking (rep_id or name)"}
+    approver = by
     who, owner = access.resolve(approver), h["rep_id"]
     if to_rep == owner or who == owner:
         # the same rep, or the owner handing their own meeting to a colleague
@@ -371,7 +393,7 @@ def reschedule_meeting(lead_id: str, new_start: str, requested_by: str = "prospe
 
 @mcp.tool()
 def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "", rebook: bool = True,
-                   by: str | None = None) -> dict:
+                   by: str = "") -> dict:
     """Cancel a booked meeting and free the rep's slot. This tool always asks a person first.
 
     rebook true (the prospect still wants to talk): a follow-up to offer new times is due the next working
@@ -382,7 +404,7 @@ def cancel_meeting(lead_id: str, cancelled_by: str = "prospect", reason: str = "
     h, e = lead.get("handoff") or {}, _meeting(lead)
     if h.get("meeting_status") != "booked":
         return {"ok": False, "error": "no booked meeting to cancel"}
-    denied = access.check(by or h.get("rep_id"), "change_meeting", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
+    denied = access.check(by, "change_meeting", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
     if denied:
         return denied
     if e is not None:
@@ -407,7 +429,7 @@ def _rebook_follow_up(lead: dict, rebook: bool) -> None:
 
 
 @mcp.tool()
-def record_meeting_outcome(lead_id: str, outcome: str, by: str | None = None) -> dict:
+def record_meeting_outcome(lead_id: str, outcome: str, by: str = "") -> dict:
     """The rep reports how the booked meeting went: held, no_show or cancelled. This tool always asks a person first.
 
     held is the North Star: a qualified meeting that actually happened. The rep takes the deal from here.
@@ -422,10 +444,10 @@ def record_meeting_outcome(lead_id: str, outcome: str, by: str | None = None) ->
         return {"ok": False, "error": "no meeting was booked for this lead"}
     if outcome not in ("held", "no_show", "cancelled"):
         return {"ok": False, "error": "outcome must be held, no_show or cancelled"}
-    denied = access.check(by or h.get("rep_id"), "record_meeting_outcome", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
+    denied = access.check(by, "record_meeting_outcome", owner=h.get("rep_id"), lead_id=lead_id, stage="handoff")
     if denied:
         return denied
-    by = access.resolve(by or h.get("rep_id"))
+    by = access.resolve(by)
     if outcome in ("held", "no_show") and _parse(h["meeting_start"]) > clock():
         return {"ok": False, "error": f"the meeting hasn't started yet ({h['meeting_start']})",
                 "next": "record the outcome after the meeting; to call it off now, use cancel_meeting"}
