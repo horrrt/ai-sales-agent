@@ -42,6 +42,7 @@ def fresh(monkeypatch):
     for obj in (store.INTERACTIONS, store.QUEUE, store.OUTBOX, store.INBOX):
         obj.clear()
     store.CALENDARS.clear()
+    store.WEBSITES.clear()
     store.CLOCK.clear()
     store.CLOCK["now"] = IN_HOURS  # a Tuesday morning in Stockholm: inside business hours
     store.REPS.clear()

@@ -1,0 +1,119 @@
+title: Who should we sell to? The ICP is proposed from what the customer won and lost
+agent: onboarding
+setup:
+  leads:
+  - lead_id: L-90
+    stage: closed
+    status: won
+    loss_reason: null
+    person:
+      name: Sam Lee
+      title: CTO
+      email: sam@l-90.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 0
+      domain: co0.example
+      country: SE
+      employees: 25
+      industry: B2B SaaS
+  - lead_id: L-91
+    stage: closed
+    status: won
+    loss_reason: null
+    person:
+      name: Sam Lee
+      title: CTO
+      email: sam@l-91.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 1
+      domain: co1.example
+      country: SE
+      employees: 32
+      industry: B2B SaaS
+  - lead_id: L-92
+    stage: closed
+    status: won
+    loss_reason: null
+    person:
+      name: Sam Lee
+      title: CEO
+      email: sam@l-92.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 2
+      domain: co2.example
+      country: 'NO'
+      employees: 18
+      industry: B2B SaaS
+  - lead_id: L-93
+    stage: closed
+    status: won
+    loss_reason: null
+    person:
+      name: Sam Lee
+      title: CTO
+      email: sam@l-93.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 3
+      domain: co3.example
+      country: SE
+      employees: 40
+      industry: IT services
+  - lead_id: L-94
+    stage: closed
+    status: lost
+    loss_reason: wrong_company_fit
+    person:
+      name: Sam Lee
+      title: CFO
+      email: sam@l-94.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 4
+      domain: co4.example
+      country: DE
+      employees: 400
+      industry: Manufacturing
+  - lead_id: L-95
+    stage: closed
+    status: lost
+    loss_reason: price
+    person:
+      name: Sam Lee
+      title: CEO
+      email: sam@l-95.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 5
+      domain: co5.example
+      country: FI
+      employees: 12
+      industry: B2B SaaS
+  - lead_id: L-96
+    stage: closed
+    status: lost
+    loss_reason: wrong_company_fit
+    person:
+      name: Sam Lee
+      title: CIO
+      email: sam@l-96.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Co 6
+      domain: co6.example
+      country: US
+      employees: 900
+      industry: Retail
+turns:
+- Mette here (rep-1, our admin). Who should we really be selling to? Look at what we've won and lost so far.
+approvals:
+  default: approve
+expect:
+  called:
+  - suggest_icp_from_deals
+  final_mentions:
+  - CTO
+  logs_follow_schema: true

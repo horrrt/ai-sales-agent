@@ -1,0 +1,27 @@
+title: Per-user pricing is set up from what the customer says, and small deals can close alone
+agent: onboarding
+setup:
+  customer: byggtid-contractors
+  brief:
+    pricing:
+      plans:
+        TODO-plan:
+          price_per_month: 0
+          min_term_months: 1
+    auto_close:
+      enabled: false
+      plans: []
+turns:
+- Mette here (rep-1, our admin). We charge EUR 12 per user per month, at least 5 users, or EUR 10 per user on a
+  yearly plan. Discounts up to 5% are fine for reps, never more than 15%. We'd like small deals, under EUR 1,500
+  a year, to close on their own.
+approvals:
+  default: approve
+expect:
+  called:
+  - review_pricing
+  - update_brief
+  brief:
+    pricing.plans: ~12
+    auto_close.enabled: true
+  logs_follow_schema: true

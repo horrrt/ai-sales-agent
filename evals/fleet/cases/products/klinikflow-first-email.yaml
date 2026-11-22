@@ -1,0 +1,64 @@
+title: 'Klinikflow AS: the first email is about their product, not another customer''s'
+agent: outreach
+setup:
+  customer: klinikflow-dental
+  leads:
+  - lead_id: P-E1
+    person:
+      name: Kim Berg
+      title: Clinic owner
+      email: kim@p-e1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: NordE1 Dental
+      domain: p-e1.example
+      country: 'NO'
+      employees: 16
+      industry: Dental clinics
+    stage: positioned
+    research:
+      summary: A Dental clinics company in NO.
+      enough_to_personalize: true
+      facts:
+      - fact: 'Opening a new clinic: announced in November 2026'
+        source_url: https://p-e1.example/news
+      - fact: About 16 people, growing
+        source_url: https://p-e1.example/about
+    positioning:
+      angle: 'Opening a new clinic: announced in November 2026; Klinikflow cuts no-shows and phone time for private
+        clinics with online booking, deposits and SMS reminders.'
+      evidence:
+      - 'Opening a new clinic: announced in November 2026'
+      confidence: 0.75
+      variant: research
+turns:
+- Write and send the first email to lead P-E1 (customer_id C-klinikflow-dental).
+approvals:
+  default: approve
+expect:
+  called:
+  - save_draft
+  - record_approval
+  - send_email
+  email:
+    lead: P-E1
+    max_words: 130
+    mentions_any:
+    - booking
+    - no-show
+    - patients
+    - Klinikflow
+    must_not_contain:
+    - '!'
+    - Bokfør
+    - Byggtid
+    - ISO 27001
+    - Kvitto
+    - Lagerlys
+    - SOC 2
+    - VAT return
+    - bookkeeping
+    - overselling
+    - stock-out
+    - timesheet
+  logs_follow_schema: true

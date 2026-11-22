@@ -35,13 +35,14 @@ DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Judgement-heavy agents on Sonnet, tool-following ones on Haiku (see the PR #3 runs: on Haiku the manager
 # often skips its subagents).
 DEFAULT_MODEL_MAP = "manager=anthropic:claude-sonnet-5-5,positioner=anthropic:claude-sonnet-5-5," \
-                    "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5"
+                    "outreach=anthropic:claude-sonnet-5-5,deal-desk=anthropic:claude-sonnet-5-5," \
+                    "onboarding=anthropic:claude-sonnet-5-5"
 EXPECT_KEYS = {"called", "not_called", "called_with", "asked_person", "not_asked_person", "lead", "delegated_to",
                "logs_follow_schema", "final_mentions", "final_must_not_contain", "queue_length", "proposals",
-               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar"}
+               "max_tool_calls", "email", "events", "times_called", "sent", "contacts", "outbox_only_sandbox", "no_double_booking", "calendar", "brief"}
 # Every case runs at a pinned time (setup.now overrides it): Tuesday 10:00 in Stockholm, inside business hours.
 DEFAULT_NOW = "2026-11-24T10:00:00+01:00"
-SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now", "calendars"}
+SETUP_KEYS = {"brief", "reps", "source", "leads", "replies", "interactions", "queue", "proposals", "no_decisions", "now", "calendars", "customer", "websites"}
 AGENTS = {"manager"} | {p.name for p in (REPO / "fleet" / "subagents").iterdir() if p.is_dir()}
 
 
@@ -191,13 +192,15 @@ def initial_state(setup: dict) -> dict:
     """The case's setup as a store snapshot. Leads get defaults. A lead with outreach.sent_at gets our email in
     the outbox; setup.replies become the prospect's emails in the inbox, answering it."""
     now = _utc(setup.get("now") or DEFAULT_NOW)
-    brief = json.loads((REPO / "data/customer_brief.demo.json").read_text())  # every case starts from the demo customer
+    # every case starts from the demo customer, or from one of the test customer types in data/customers/
+    base = REPO / "data/customers" / f"{setup['customer']}.json" if setup.get("customer") else REPO / "data/customer_brief.demo.json"
+    brief = json.loads(base.read_text())
     for k, v in (setup.get("brief") or {}).items():
         brief[k] = {**brief[k], **v} if isinstance(v, dict) and isinstance(brief.get(k), dict) else v
     sender = brief.get("sender") or {"name": "Kvitto", "email": "outreach@sandbox.test"}
     leads = {}
     for lead in setup.get("leads", []):
-        lead = {"customer_id": "C-demo", "stage": "new", "status": "active", "loss_reason": None,
+        lead = {"customer_id": brief["customer_id"], "stage": "new", "status": "active", "loss_reason": None,
                 "created_at": now, "updated_at": now, **lead}
         lead.setdefault("stage_times", {lead["stage"]: now})
         leads[lead["lead_id"]] = lead
@@ -238,8 +241,9 @@ def initial_state(setup: dict) -> dict:
                                 for i, e in enumerate(events, 1)]
                           for rid, events in (setup.get("calendars") or {}).items()}
     if "source" in setup:
-        state["source"] = {c["lead_id"]: {"customer_id": "C-demo", **c} for c in setup["source"]}
+        state["source"] = {c["lead_id"]: {"customer_id": brief["customer_id"], **c} for c in setup["source"]}
     state["brief"] = brief
+    state["websites"] = setup.get("websites") or {}
     return state
 
 
@@ -319,13 +323,16 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
         add(f"asked a person before {t}", t in asked, f"asked for: {asked}")
     for t in expect.get("not_asked_person", []):
         add(f"never asked a person about {t}", t not in asked)
-    for lid, fields in (expect.get("lead") or {}).items():
-        lead = state.get("leads", {}).get(lid, {})
+    targets = [(lid, state.get("leads", {}).get(lid, {}), fields) for lid, fields in (expect.get("lead") or {}).items()]
+    if expect.get("brief"):  # the customer brief after the run (onboarding), same rules as lead
+        targets.append(("brief", state.get("brief") or {}, expect["brief"]))
+    for lid, lead, fields in targets:
         for path, want in fields.items():
             got = dig(lead, path)
             # "set": not null. A list against a scalar: one of these values. A list against a list: equal.
             ok = ((got is not None) if want == "set"
-                  else (isinstance(got, str) and want[1:].lower() in got.lower()) if isinstance(want, str) and want.startswith("~")
+                  else (want[1:].lower() in json.dumps(got, ensure_ascii=False).lower() if got is not None else False)
+                  if isinstance(want, str) and want.startswith("~")
                   else (got in want) if isinstance(want, list) and not isinstance(got, list)
                   else got == want)
             add(f"{lid}.{path} == {want}", ok, f"got {got!r}")
@@ -521,15 +528,16 @@ async def check_fixture(name: str, case: dict, logdir: Path, sem: asyncio.Semaph
                     if reps != {k: v["status"] for k, v in setup["reps"].items()}:
                         problems.append(f"reps loaded as {reps}")
                 if "source" in setup:
-                    found = {c["lead_id"] for c in await call("find_leads", {"customer_id": "C-demo", "limit": 50})}
+                    found = {c["lead_id"] for c in await call("find_leads", {"customer_id": initial_state(setup)["brief"]["customer_id"], "limit": 50})}
                     expected = {c["lead_id"] for c in setup["source"]}
                     known = {(l.get("person") or {}).get("email") for l in setup.get("leads", [])}
                     expected -= {c["lead_id"] for c in setup["source"] if (c.get("person") or {}).get("email") in known}
                     if found != expected:
                         problems.append(f"find_leads returned {sorted(found)}, expected {sorted(expected)}")
-                brief = (await call("get_customer_brief", {"customer_id": "C-demo"}))[0]
-                if brief.get("company_name") != "Kvitto ApS":
-                    problems.append("the demo brief didn't load")
+                want_brief = initial_state(setup)["brief"]
+                brief = (await call("get_customer_brief", {"customer_id": want_brief["customer_id"]}))[0]
+                if brief.get("customer_id") != want_brief["customer_id"] or brief.get("company_name") != want_brief.get("company_name"):
+                    problems.append(f"the brief didn't load (got {brief.get('customer_id')})")
                 for k, v in (setup.get("brief") or {}).items():
                     if isinstance(v, dict) and any(brief.get(k, {}).get(kk) != vv for kk, vv in v.items()):
                         problems.append(f"brief override {k} didn't apply")

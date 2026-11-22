@@ -75,11 +75,12 @@ OUTBOX: list[dict] = []
 INBOX: list[dict] = []
 QUEUE: list[dict] = []
 CALENDARS: dict[str, list[dict]] = {k: list(v) for k, v in CALENDARS_START.items()}
+WEBSITES: dict[str, dict] = {}  # domain -> {title, pages: [{path, text}]}: sites import_website can read (sandbox)
 PROPOSALS: list[dict] = []
 
 STATE_FILE = os.environ.get("SALES_STATE")
 _STATE = {"leads": LEADS, "interactions": INTERACTIONS, "reps": REPS, "approvals": APPROVALS,
-          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK, "calendars": CALENDARS}
+          "outbox": OUTBOX, "inbox": INBOX, "queue": QUEUE, "proposals": PROPOSALS, "clock": CLOCK, "calendars": CALENDARS, "websites": WEBSITES, "brief": BRIEF}
 
 
 def load() -> None:
@@ -88,7 +89,7 @@ def load() -> None:
         return
     saved = json.loads(Path(STATE_FILE).read_text())
     for key, obj in _STATE.items():
-        if key in saved:
+        if key in saved and key != "brief":  # the brief is merged below, so a fixture can change part of it
             obj.clear()
             (obj.update if isinstance(obj, dict) else obj.extend)(saved[key])
     _upgrade_old_outbox()

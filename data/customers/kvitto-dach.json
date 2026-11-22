@@ -1,0 +1,79 @@
+{
+  "customer_id": "C-kvitto-dach",
+  "_note": "Test customer type: German fintechs facing bank and regulator questionnaires. Product kvitto, pricing flat (flat plans, annual or monthly, plus a self-serve tier). Fictional.",
+  "company_name": "Kvitto ApS",
+  "website": "https://www.kvitto.example",
+  "approvers": {
+    "emails": "rep-1",
+    "payments": "fin-1"
+  },
+  "sender": {
+    "name": "Sales, Kvitto ApS",
+    "email": "sales@kvitto.sandbox.test",
+    "timezone": "Europe/Copenhagen"
+  },
+  "offer": "Kvitto gets small B2B software companies audit-ready for SOC 2 Type I or ISO 27001 in about 8 weeks, without hiring a compliance person.",
+  "icp": {
+    "countries": [
+      "DE"
+    ],
+    "employees_min": 20,
+    "employees_max": 150,
+    "industries": [
+      "Fintech",
+      "Insurtech"
+    ],
+    "titles": [
+      "CTO",
+      "Head of IT Security",
+      "CISO"
+    ],
+    "triggers": [
+      "BaFin or DORA requirements",
+      "Bank partners asking for ISO 27001"
+    ]
+  },
+  "product_info": "Kvitto connects to the customer's cloud, Google Workspace or Microsoft 365, GitHub and HR system, collects audit evidence automatically and generates the policies an auditor expects for SOC 2 Type I or ISO 27001. A named compliance lead answers security questionnaires with the customer for three months. Median 9 weeks from kickoff to audit-ready.",
+  "won_deals": [],
+  "exclusions": [
+    "Vanta",
+    "Drata"
+  ],
+  "tone": "Plain, short and specific. No hype words and no exclamation marks. One clear ask. Max 120 words for a first email.",
+  "keywords": [
+    "SOC 2",
+    "ISO 27001",
+    "audit"
+  ],
+  "auto_close": {
+    "enabled": true,
+    "max_annual_value_eur": 2000,
+    "plans": [
+      "starter"
+    ],
+    "standard_terms": "List price, standard terms, no custom contract",
+    "checkout_url": "https://checkout.sandbox.test/kvitto"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "plans": {
+      "annual": {
+        "price_per_month": 650,
+        "min_term_months": 12
+      },
+      "monthly": {
+        "price_per_month": 790,
+        "min_term_months": 1
+      },
+      "starter": {
+        "price_per_month": 99,
+        "min_term_months": 1,
+        "max_quantity": 1,
+        "for": "Companies up to 10 people, self-serve"
+      }
+    },
+    "max_discount_pct_without_approval": 10,
+    "max_discount_pct": 20,
+    "deal_policy": "Discounts above 10% need an admin. Never above 20%."
+  }
+}

@@ -1,0 +1,44 @@
+title: 'Small Nordic SaaS companies selling upmarket: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: kvitto-nordic
+  source:
+  - lead_id: P-71
+    person:
+      name: Kim Berg
+      title: CEO
+      email: kim@p-71.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord71 B2B
+      domain: p-71.example
+      country: SE
+      employees: 30
+      industry: B2B SaaS
+  - lead_id: P-72
+    person:
+      name: Kim Berg
+      title: CEO
+      email: kim@p-72.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd72 Restaurants
+      domain: p-72.example
+      country: SE
+      employees: 30
+      industry: Restaurants
+turns:
+- Find new leads for customer_id C-kvitto-nordic.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-71:
+      status: active
+    P-72:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

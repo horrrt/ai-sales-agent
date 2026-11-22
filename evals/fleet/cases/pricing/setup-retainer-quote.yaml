@@ -1,0 +1,67 @@
+title: 'Bokfør ApS (setup retainer): the quote follows their price list'
+agent: deal-desk
+setup:
+  customer: bokfor-startups
+  leads:
+  - lead_id: P-Q1
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-q1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: NordQ1 Software
+      domain: p-q1.example
+      country: DK
+      employees: 13
+      industry: Software
+    stage: handed_off
+    research:
+      summary: A Software company in DK.
+      enough_to_personalize: true
+      facts:
+      - fact: 'Just raised a seed round: announced in November 2026'
+        source_url: https://p-q1.example/news
+      - fact: About 13 people, growing
+        source_url: https://p-q1.example/about
+    positioning:
+      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off
+        a founder''s desk with a named accountant for a fixed monthly fee.'
+      evidence:
+      - 'Just raised a seed round: announced in November 2026'
+      confidence: 0.75
+      variant: research
+    handoff:
+      rep_id: rep-1
+      meeting_outcome: held
+      meeting_start: '2026-11-23T10:00:00+00:00'
+      meeting_status: held
+    deal:
+      stage: qualification
+      owner: rep-1
+      auto_close: false
+      probability: 20
+      call_notes: []
+      bant: {}
+      contract:
+        status: none
+        signed_at: null
+      paid: false
+      amount_eur: null
+      closed_at: null
+      expected_close_date: null
+turns:
+- Mette here (rep-1, our admin). P-Q1's meeting went well. Draft and send a quote for the standard plan, the minimum
+  term.
+approvals:
+  default: approve
+expect:
+  called:
+  - draft_quote
+  - send_quote
+  asked_person:
+  - approve_quote
+  lead:
+    P-Q1:
+      deal.quote.total_eur: 2600.0
+  logs_follow_schema: true

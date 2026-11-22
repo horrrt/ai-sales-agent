@@ -58,7 +58,8 @@ Each person can have extra `allow` or `deny` actions on top of their role; deny 
 
 ## Routing
 
-- Weekly schedule, or "find new leads" → skill find-leads
+- A new customer sets up the agent, or wants to change their product, pricing or ICP ("here's our website", "help me with pricing", "who should we sell to?") → skill onboard-customer (@onboarding)
+- Weekly schedule, or "find new leads" → skill find-leads (only once check_brief says ready; if not, say what's missing)
 - "Run a batch" / morning schedule → skill run-outreach-batch (also sends due follow-ups)
 - New reply in the sandbox inbox, or someone pastes a reply → skill handle-reply
 - "What follow-ups are due?" / weekday 09:30 schedule → skill follow-ups (emails, rebooking, missing meeting outcomes, unbooked leads, the wait queue)

@@ -1,0 +1,44 @@
+title: 'Swedish marketing and creative agencies: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: bokfor-agencies
+  source:
+  - lead_id: P-01
+    person:
+      name: Kim Berg
+      title: CFO
+      email: kim@p-01.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord01 Marketing
+      domain: p-01.example
+      country: SE
+      employees: 35
+      industry: Marketing agencies
+  - lead_id: P-02
+    person:
+      name: Kim Berg
+      title: CFO
+      email: kim@p-02.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd02 Dental
+      domain: p-02.example
+      country: SE
+      employees: 35
+      industry: Dental clinics
+turns:
+- Find new leads for customer_id C-bokfor-agencies.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-01:
+      status: active
+    P-02:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

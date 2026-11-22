@@ -1,0 +1,62 @@
+{
+  "tools": [
+    {
+      "name": "get_customer_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get customer brief"
+    },
+    {
+      "name": "check_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Check brief"
+    },
+    {
+      "name": "import_website",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Import website"
+    },
+    {
+      "name": "review_pricing",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Review pricing"
+    },
+    {
+      "name": "suggest_icp_from_deals",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Suggest icp from deals"
+    },
+    {
+      "name": "update_brief",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Update brief"
+    },
+    {
+      "name": "get_rep_capacity",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Get rep capacity"
+    },
+    {
+      "name": "log_interaction",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "Sales tools (sandbox)",
+      "display_name": "Log interaction"
+    }
+  ],
+  "interrupt_config": {
+    "https://sales-tools.invalid/mcp::get_customer_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::check_brief::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::import_website::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::review_pricing::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::suggest_icp_from_deals::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::update_brief::Sales tools (sandbox)": true,
+    "https://sales-tools.invalid/mcp::get_rep_capacity::Sales tools (sandbox)": false,
+    "https://sales-tools.invalid/mcp::log_interaction::Sales tools (sandbox)": false
+  }
+}

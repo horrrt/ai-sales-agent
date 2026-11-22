@@ -33,7 +33,19 @@ By default the manager, positioner, outreach and deal-desk run on Sonnet 5.5, an
 | `access` | 9 | A junior's email approval is refused, a rep's counts; 15% off needs an admin; a rep can't close a colleague's deal or record a payment; finance can; a junior moves her own meeting; a rep can't cancel a colleague's; a viewer is read-only |
 | `auto-close` | 14 | The offer in the thread; paid and won; over the cap; custom terms; no decision; **an offer at night**; an unpaid reminder; expired to a rep; a declined card; a partial payment; **a discount request after the offer**; a refund; switched off; a duplicate payment |
 | `times` | 8 | Christmas Eve; 17 May in Norway but not Sweden; a Saturday yes; follow-ups late on Friday; a prospect asking for Christmas Eve; **booking after the clock change**; Midsummer Eve; Finnish Independence Day |
+| `onboarding` | 9 | Product info from a description and from the website; a site that can't be read; per-user pricing with auto-close; **a cap below every plan**; the ICP from won deals; the ICP company and person; a brief that isn't ready blocks the lead search; a rep can't change the brief |
+| `customers` | 10 | One per customer type (5 products, 10 ICPs): an ICP fit is added and a near miss skipped, with the real d1 |
+| `products` | 5 | The first email is about that customer's product and never mentions another's |
+| `pricing` | 4 | Flat, per user, setup fee plus monthly, and a custom Enterprise that a rep prices |
 | `manager` | 6 | Routing to @lead-search, @outreach then @handoff, @deal-desk; off-topic; **a whole batch end to end**; **another rep tries to close someone else's deal** |
+
+## Package for Fleet
+
+```bash
+python3 scripts/package_fleet.py --mcp-url https://<your-tool-server>/mcp
+```
+
+Checks `fleet/` (layout, descriptions, every tool on the server, approvals on every tool that commits the company, no secrets) and writes `dist/sales-assistant-fleet.zip` with your server's URL. `--check` only validates. Import it in Fleet's sidebar (+ > Import) and add the printed schedules by hand.
 
 ## Write a case
 
@@ -50,6 +62,8 @@ setup:
   replies: {L-1: "Yes, let's talk"}           # a sent email to L-1 with this reply waiting in the inbox, or a full email:
   #   {L-1: {from: "Maja <maja@x.sandbox.test>", cc: [...], subject: ..., body: ..., received_at: ..., attachments: [...]}}
   #   or a list of them. A lead with outreach.sent_at always gets its sent email in the outbox.
+  customer: lagerlys-ecom                     # start from a test customer type in data/customers/ instead of the demo
+  websites: {lagerlys.example: {title: ..., pages: [{path: /, text: ...}]}}   # sites import_website can read
   now: "2026-11-24T22:00:00+01:00"            # the pinned time (default Tuesday 2026-11-24 10:00 Stockholm)
   calendars: {rep-1: [{start: ..., end: ..., title: Board meeting}]}   # busy blocks; kind: meeting + lead_id for a booked one
   interactions: [...]                         # event log rows, e.g. for the coach
@@ -73,6 +87,7 @@ expect:
   sent: {lead: L-1, status: scheduled, to_includes: [eva@...], cc_includes: [...], cc_excludes: [...],
          subject_startswith: "Re:", same_thread: true, scheduled_for: "...", count: 1}   # the emails sent in this run
   contacts: {L-1: [{email: eva@, role: handover}]}   # people read_reply added to the lead
+  brief: {product_info: "~stock", icp.countries: [NO]}   # the customer brief after the run (onboarding)
   outbox_only_sandbox: true                   # nothing sent or held is addressed outside .test
   no_double_booking: true                     # no rep has two live events at the same time
   calendar: {rep-1: {meetings: 1, lead: L-1, status: booked, start: "..."}}   # the rep's calendar after the run

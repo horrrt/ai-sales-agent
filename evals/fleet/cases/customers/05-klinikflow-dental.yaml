@@ -1,0 +1,44 @@
+title: 'Private dental clinics in Norway: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: klinikflow-dental
+  source:
+  - lead_id: P-41
+    person:
+      name: Kim Berg
+      title: Clinic owner
+      email: kim@p-41.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord41 Dental
+      domain: p-41.example
+      country: 'NO'
+      employees: 16
+      industry: Dental clinics
+  - lead_id: P-42
+    person:
+      name: Kim Berg
+      title: Clinic owner
+      email: kim@p-42.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd42 Wholesale
+      domain: p-42.example
+      country: 'NO'
+      employees: 16
+      industry: Wholesale
+turns:
+- Find new leads for customer_id C-klinikflow-dental.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-41:
+      status: active
+    P-42:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

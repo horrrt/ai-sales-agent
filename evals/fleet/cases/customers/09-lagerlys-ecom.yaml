@@ -1,0 +1,44 @@
+title: 'Nordic online brands on several sales channels: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: lagerlys-ecom
+  source:
+  - lead_id: P-81
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-81.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord81 E-commerce
+      domain: p-81.example
+      country: SE
+      employees: 21
+      industry: E-commerce
+  - lead_id: P-82
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-82.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd82 Dental
+      domain: p-82.example
+      country: SE
+      employees: 21
+      industry: Dental clinics
+turns:
+- Find new leads for customer_id C-lagerlys-ecom.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-81:
+      status: active
+    P-82:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

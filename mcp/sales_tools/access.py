@@ -40,6 +40,7 @@ ACTIONS = {
     "set_own_status": "set their own traffic light or away",
     "manage_team": "set someone else's status, or move a meeting to another rep",
     "any_lead": "act on another rep's lead or deal",
+    "manage_brief": "change the customer brief: product, offer, ICP, pricing, auto-close",
 }
 OWN = {"book_meeting", "change_meeting", "record_meeting_outcome", "approve_quote", "record_contract", "record_deal_outcome"}
 

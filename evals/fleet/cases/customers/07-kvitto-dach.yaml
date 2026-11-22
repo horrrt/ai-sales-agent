@@ -1,0 +1,44 @@
+title: 'German fintechs facing bank and regulator questionnaires: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: kvitto-dach
+  source:
+  - lead_id: P-61
+    person:
+      name: Kim Berg
+      title: CTO
+      email: kim@p-61.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord61 Fintech
+      domain: p-61.example
+      country: DE
+      employees: 85
+      industry: Fintech
+  - lead_id: P-62
+    person:
+      name: Kim Berg
+      title: CTO
+      email: kim@p-62.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd62 Construction
+      domain: p-62.example
+      country: DE
+      employees: 85
+      industry: Construction
+turns:
+- Find new leads for customer_id C-kvitto-dach.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-61:
+      status: active
+    P-62:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

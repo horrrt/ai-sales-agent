@@ -1,0 +1,72 @@
+{
+  "customer_id": "C-bokfor-startups",
+  "_note": "Test customer type: Early startups without a finance person. Product bokfor, pricing setup_retainer (one-off setup fee plus a monthly fee, minimum term). Fictional.",
+  "company_name": "Bokfør ApS",
+  "website": "https://www.bokfor.example",
+  "approvers": {
+    "emails": "rep-1",
+    "payments": "fin-1"
+  },
+  "sender": {
+    "name": "Sales, Bokfør ApS",
+    "email": "sales@bokfor.sandbox.test",
+    "timezone": "Europe/Copenhagen"
+  },
+  "offer": "Bokfør takes bookkeeping, VAT and payroll off a founder's desk with a named accountant for a fixed monthly fee.",
+  "icp": {
+    "countries": [
+      "DK",
+      "NO"
+    ],
+    "employees_min": 2,
+    "employees_max": 25,
+    "industries": [
+      "Software",
+      "Startups"
+    ],
+    "titles": [
+      "Founder",
+      "CEO"
+    ],
+    "triggers": [
+      "Just raised a seed round",
+      "Hiring the first employees"
+    ]
+  },
+  "product_info": "Bokfør is an outsourced bookkeeping and finance team for small companies. A named accountant does the monthly books, VAT returns, payroll and the year-end report, in the customer's own accounting system, and answers questions within a working day. A service, not software.",
+  "won_deals": [],
+  "exclusions": [],
+  "tone": "Plain, short and specific. No hype words and no exclamation marks. One clear ask. Max 120 words for a first email.",
+  "keywords": [
+    "bookkeeping",
+    "VAT",
+    "accountant"
+  ],
+  "auto_close": {
+    "enabled": false,
+    "max_annual_value_eur": 0,
+    "plans": [],
+    "standard_terms": "List price, standard terms, no custom contract",
+    "checkout_url": "https://checkout.sandbox.test/bokfor"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "plans": {
+      "standard": {
+        "price_per_month": 350,
+        "min_term_months": 6,
+        "setup_fee": 500,
+        "for": "Monthly service after a one-off setup"
+      },
+      "plus": {
+        "price_per_month": 600,
+        "min_term_months": 6,
+        "setup_fee": 500,
+        "for": "Adds payroll and monthly reporting"
+      }
+    },
+    "max_discount_pct_without_approval": 0,
+    "max_discount_pct": 10,
+    "deal_policy": "No discount without an admin; the setup fee is never discounted."
+  }
+}

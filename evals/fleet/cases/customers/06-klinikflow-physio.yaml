@@ -1,0 +1,44 @@
+title: 'Small physiotherapy clinics in Finland: an ICP fit is added, a near miss is skipped'
+agent: lead-search
+setup:
+  customer: klinikflow-physio
+  source:
+  - lead_id: P-51
+    person:
+      name: Kim Berg
+      title: Owner
+      email: kim@p-51.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nord51 Physiotherapy
+      domain: p-51.example
+      country: FI
+      employees: 11
+      industry: Physiotherapy
+  - lead_id: P-52
+    person:
+      name: Kim Berg
+      title: Owner
+      email: kim@p-52.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Syd52 Fintech
+      domain: p-52.example
+      country: FI
+      employees: 11
+      industry: Fintech
+turns:
+- Find new leads for customer_id C-klinikflow-physio.
+approvals:
+  default: approve
+expect:
+  called:
+  - find_leads
+  - add_lead
+  lead:
+    P-51:
+      status: active
+    P-52:
+      status: lost
+      loss_reason: wrong_company_fit
+  logs_follow_schema: true

@@ -86,18 +86,25 @@ def _price(plan: str, quantity: int, term_months: int | None, discount_pct: floa
     if plan not in plans:
         return {"error": f"unknown plan {plan!r}; the brief has {sorted(plans)}"}
     spec = plans[plan]
+    if spec.get("custom") or spec.get("price_per_month") is None:
+        return {"error": f"{plan} has a custom price: the rep sets it with the customer, not draft_quote"}
     term = term_months or spec.get("min_term_months", 1)
     if term < spec.get("min_term_months", 1):
         return {"error": f"{plan} needs at least {spec['min_term_months']} months"}
     if quantity < 1:
         return {"error": "quantity must be at least 1"}
+    if quantity < spec.get("min_quantity", 1):
+        return {"error": f"{plan} needs at least {spec['min_quantity']} (seats, users or locations)"}
     if spec.get("max_quantity") and quantity > spec["max_quantity"]:
         return {"error": f"{plan} is for at most {spec['max_quantity']}; use a bigger plan"}
     if discount_pct < 0 or discount_pct > p.get("max_discount_pct", 0):
         return {"error": f"discount must be between 0 and {p.get('max_discount_pct', 0)}%"}
-    list_total = round(spec["price_per_month"] * quantity * term, 2)
+    recurring = round(spec["price_per_month"] * quantity * term, 2)
+    setup = float(spec.get("setup_fee") or 0)  # one-off; discounts apply to the recurring part only
+    list_total = round(recurring + setup, 2)
     return {"plan": plan, "quantity": quantity, "term_months": term, "list_total_eur": list_total,
-            "discount_pct": discount_pct, "total_eur": round(list_total * (1 - discount_pct / 100), 2),
+            "setup_fee_eur": setup, "recurring_eur": recurring,
+            "discount_pct": discount_pct, "total_eur": round(recurring * (1 - discount_pct / 100) + setup, 2),
             "needs_admin": discount_pct > p.get("max_discount_pct_without_approval", 0)}
 
 
@@ -278,6 +285,11 @@ def get_pipeline(rep_id: str | None = None) -> dict:
 
 # --- Auto-close: the agent closes a small, standard deal alone (off unless the brief enables it) --------
 
+def _brand() -> str:
+    """The customer's name as prospects know it ("Lagerlys AB" is "Lagerlys")."""
+    return (BRIEF.get("company_name") or "our").replace(" ApS", "").replace(" AB", "").replace(" AS", "").replace(" Oy", "")
+
+
 def _auto_close() -> dict:
     return BRIEF.get("auto_close") or {}
 
@@ -336,7 +348,7 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
     plan = plan or (allowed[0] if allowed else None)
     if plan and plan not in allowed:
         return {"ok": False, "error": f"{plan} isn't an auto-close plan (the brief allows {allowed}); a rep sells it"}
-    q = _price(plan, 1, None, 0) if plan else {"error": "the brief has no pricing"}
+    q = _price(plan, plans[plan].get("min_quantity", 1), None, 0) if plan else {"error": "the brief has no pricing"}
     if "error" in q:
         return {"ok": False, "error": q["error"]}
     if (deal.get("quote") or {}).get("checkout_url"):
@@ -350,9 +362,11 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
     deal["quote"] = q
     deal.update(payment_status="unpaid", offer_reminders=0)
     from .outreach import send_policy_email
+    seats = f", {q['quantity']} users" if q["quantity"] > 1 else ""
+    setup = f", including the EUR {q['setup_fee_eur']:,.2f} setup" if q.get("setup_fee_eur") else ""
     body = (f"Thanks, {lead['person']['name'].split()[0]}. Here is the standard {plan} plan at EUR {q['total_eur']:,.2f} "
-            f"({q['term_months']} months). You can start straight away here: {link}")
-    mail = send_policy_email(lead_id, "Your Kvitto offer", body, "offer")
+            f"({q['term_months']} months{seats}{setup}). You can start straight away here: {link}")
+    mail = send_policy_email(lead_id, f"Your {_brand()} offer", body, "offer")
     if not mail.get("ok"):
         return {"ok": False, "error": mail.get("error"), "addresses": mail.get("addresses")}
     _set_deal_stage(lead, "negotiation")
@@ -442,8 +456,8 @@ def send_offer_reminder(lead_id: str) -> dict:
     from .outreach import send_policy_email
     first = lead["person"]["name"].split()[0]
     body = (f"Hi {first}, the payment didn't go through. You can try again here: {q['checkout_url']}" if failed else
-            f"Hi {first}, a quick reminder: your Kvitto offer (EUR {q['total_eur']:,.2f}) is ready whenever you are: {q['checkout_url']}")
-    mail = send_policy_email(lead_id, "Your Kvitto offer", body, "offer_reminder")
+            f"Hi {first}, a quick reminder: your {_brand()} offer (EUR {q['total_eur']:,.2f}) is ready whenever you are: {q['checkout_url']}")
+    mail = send_policy_email(lead_id, f"Your {_brand()} offer", body, "offer_reminder")
     if failed and mail.get("ok"):
         deal.update(payment_status="unpaid", payment_retry_due=None)
     return {**mail, "reminders": deal.get("offer_reminders", 0)}

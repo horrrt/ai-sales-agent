@@ -104,7 +104,7 @@ Each rep has a calendar (busy blocks and booked meetings), working hours and a t
 | S4 | The prospect names a day and time, even weeks out, and that time is booked. A day with nothing free says why (weekend, holiday, too soon, fully booked) and offers the nearest | `test_reschedule_to_the_day_the_prospect_named_even_weeks_out`, `test_an_empty_day_says_why_and_offers_the_nearest` | `scheduling/02-prospect-names-a-day` |
 | S5 | The prospect asks to move the meeting. It moves, the old slot is free for someone else, and the history is kept | `test_reschedule_moves_the_meeting_and_frees_the_old_slot` | `scheduling/03-prospect-reschedules` |
 | S6 | Moving onto a taken slot is refused. After the second move, the rep is asked whether to keep the meeting | `test_reschedule_refuses_a_clash_and_after_two_moves_asks_the_rep` | `scheduling/09-third-reschedule` |
-| S7 | A rep is sick. Their meetings are listed from their calendar and a colleague takes them over. The owner can hand a meeting over too; anyone else needs an admin | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_the_owner_can_hand_a_meeting_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
+| S7 | A rep is sick. Their meetings are listed from their calendar and a colleague takes them over. The owner can hand a meeting over too, and anyone else needs an admin | `test_a_sick_reps_meeting_moves_to_a_colleague`, `test_the_owner_can_hand_a_meeting_to_a_colleague`, `test_a_reps_calendar_lists_their_meetings_and_busy_time` | `scheduling/07-sick-rep-meeting-moves` |
 | S8 | The prospect cancels but wants another time. The slot is freed, no time is picked for them, and a rebooking follow-up is due the next working day | `test_cancellation_frees_the_slot_and_schedules_a_rebooking_follow_up` | `scheduling/04-prospect-cancels-rebook` |
 | S9 | The prospect cancels for good. No rebooking, and a person decides whether the lead is lost | `test_cancellation_for_good_waits_for_a_person` | `scheduling/05-prospect-cancels-for-good` |
 | S10 | A no-show gets a rebooking follow-up. After a second no-show, a person decides | `test_no_show_schedules_a_rebook_and_a_second_no_show_asks_a_person` | `scheduling/06-no-show` |
@@ -183,3 +183,32 @@ Nothing goes out, falls due or is booked outside working time: weekends, nights 
 | W7 | Slots keep their local time across the switch to summer time | `test_slots_keep_local_time_across_the_daylight_saving_change` | `times/06-booking-after-the-clock-change` |
 | W8 | A cancellation late on Friday: the rebooking follow-up is due Monday morning | `test_a_rebook_follow_up_after_a_friday_cancellation_is_due_monday` | `scheduling/04-prospect-cancels-rebook` |
 | W9 | The same flow at 14 times (from 07:59 to 23:59, weekends, Christmas, New Year's Eve, Easter, the clock change, Midsummer, 17 May, 6 December) in 5 countries: nothing goes out, falls due or is offered at the wrong time | `test_time_sweep_nothing_goes_out_or_is_booked_at_the_wrong_time` | `times/04-friday-night-follow-ups` |
+
+## Onboarding a customer
+
+The customer who buys the agent gives three things: their product or service (in their words or from their website), their offer and pricing, and their ICP (the company and the person inside it). @onboarding helps with each and saves the brief section by section. Every save asks a person, and only an admin may change the brief. The lead search doesn't start while `check_brief` says something is missing.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| O1 | The demo brief is complete. An empty one lists what the customer still has to give | `test_the_demo_brief_is_ready`, `test_an_empty_brief_lists_what_the_customer_still_has_to_give` | `onboarding/08-not-ready-blocks-lead-search` |
+| O2 | The customer describes their product, and the agent drafts and saves the product info and offer | `test_only_an_admin_can_change_the_brief_and_it_survives_a_restart` | `onboarding/01-product-from-a-description` |
+| O3 | The customer gives their website: product info comes from its pages. A site that can't be read means asking for the text, not inventing it | `test_the_website_is_read_when_stored_and_otherwise_the_customer_is_asked` | `onboarding/02-product-from-the-website`, `onboarding/03-website-not-reachable` |
+| O4 | Help with pricing: the agent turns what the customer says into plans and checks them before saving | `test_pricing_review_catches_inconsistent_discounts_and_custom_auto_close_plans` | `onboarding/04-help-with-pricing` |
+| O5 | Auto-close with a cap below every plan can never fire: the review says so and offers fixes, and a broken pricing change is refused | `test_pricing_review_finds_a_cap_auto_close_can_never_reach`, `test_a_broken_pricing_change_is_refused_with_the_reasons` | `onboarding/05-cap-below-every-plan` |
+| O6 | Help with the ICP from results: won and lost leads by country, size, industry and title | `test_icp_evidence_comes_from_won_and_lost_leads` | `onboarding/06-icp-from-won-deals` |
+| O7 | The ICP covers both the company and the person inside it | `test_the_icp_needs_both_the_company_and_the_person` | `onboarding/07-icp-company-and-person` |
+| O8 | Only an admin changes the brief, and the brief survives a restart | `test_only_an_admin_can_change_the_brief_and_it_survives_a_restart` | `onboarding/09-rep-cannot-change-the-brief` |
+| O9 | An upload-ready Fleet zip: the folder is checked (layout, descriptions, tools on the server, approvals, secrets) and the tool server's URL is set | `test_the_package_script_validates_and_builds_an_upload_ready_zip`, `test_the_package_script_refuses_a_broken_fleet_folder` | unit only |
+
+## Customer types
+
+`data/customers/` has 10 customer types, two per product: 5 products (compliance software, inventory software, clinic booking, construction timesheets, a bookkeeping service), 10 ICPs (Nordic and German, 2 to 500 people, from SaaS to dental clinics) and 4 pricing models (flat plans with a self-serve tier, per user, tiered with a custom Enterprise, a setup fee plus a monthly fee). A Fleet case can start from any of them with `setup.customer`.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| C1 | The test customers cover 10 ICPs, 5 products and 4 pricing models | `test_the_test_customers_cover_10_icps_5_products_and_4_pricing_models` | unit only |
+| C2 | Each customer type runs end to end: brief ready, pricing sound, ICP fit added and near miss skipped, a draft, a quote on every plan, auto-close on its own plan or never | `test_each_customer_type_runs_end_to_end` | `customers/01-bokfor-agencies`, `customers/02-bokfor-startups`, `customers/03-byggtid-contractors`, `customers/04-byggtid-electricians`, `customers/05-klinikflow-dental`, `customers/06-klinikflow-physio`, `customers/07-kvitto-dach`, `customers/08-kvitto-nordic`, `customers/09-lagerlys-ecom`, `customers/10-lagerlys-wholesale` |
+| C3 | Every ICP with every product and every pricing model (200 briefs): the right ICP reaches the gate, and quotes and auto-close follow the price list | `test_matrix_every_icp_with_every_product_and_pricing` | unit only |
+| C4 | Quotes follow each pricing model: per user with a minimum, a custom Enterprise left to a rep, a setup fee that's never discounted | `test_quotes_follow_each_pricing_model` | `pricing/flat-quote`, `pricing/per-seat-quote`, `pricing/setup-retainer-quote`, `pricing/tiered-enterprise-is-custom` |
+| C5 | One customer's brief never drafts for another customer's lead | `test_a_brief_for_one_customer_never_drafts_for_another_customers_lead` | unit only |
+| C6 | The first email is about this customer's product, never another customer's | agent only | `products/bokfor-first-email`, `products/byggtid-first-email`, `products/klinikflow-first-email`, `products/kvitto-first-email`, `products/lagerlys-first-email` |

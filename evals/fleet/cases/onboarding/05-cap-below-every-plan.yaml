@@ -1,0 +1,29 @@
+title: 'Auto-close is asked for with a cap below every plan: the agent explains it can never fire and offers fixes'
+agent: onboarding
+setup:
+  brief:
+    pricing:
+      plans:
+        annual:
+          price_per_month: 650
+          min_term_months: 12
+        monthly:
+          price_per_month: 790
+          min_term_months: 1
+    auto_close:
+      enabled: false
+      max_annual_value_eur: 2000
+      plans:
+      - monthly
+turns:
+- Mette here (rep-1, our admin). Switch auto-close on, with deals up to EUR 2,000 a year closing on their own.
+approvals:
+  default: approve
+expect:
+  called:
+  - review_pricing
+  brief:
+    auto_close.enabled: false
+  final_mentions:
+  - cap
+  logs_follow_schema: true

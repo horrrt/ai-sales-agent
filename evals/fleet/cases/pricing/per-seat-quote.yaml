@@ -1,0 +1,66 @@
+title: 'Byggtid AB (per seat): the quote follows their price list'
+agent: deal-desk
+setup:
+  customer: byggtid-contractors
+  leads:
+  - lead_id: P-Q1
+    person:
+      name: Kim Berg
+      title: CEO
+      email: kim@p-q1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: NordQ1 Construction
+      domain: p-q1.example
+      country: SE
+      employees: 105
+      industry: Construction
+    stage: handed_off
+    research:
+      summary: A Construction company in SE.
+      enough_to_personalize: true
+      facts:
+      - fact: 'Winning a public tender: announced in November 2026'
+        source_url: https://p-q1.example/news
+      - fact: About 105 people, growing
+        source_url: https://p-q1.example/about
+    positioning:
+      angle: 'Winning a public tender: announced in November 2026; Byggtid replaces paper timesheets on building
+        sites: hours and materials logged per job on the phone, ready for payroll and invoicing.'
+      evidence:
+      - 'Winning a public tender: announced in November 2026'
+      confidence: 0.75
+      variant: research
+    handoff:
+      rep_id: rep-1
+      meeting_outcome: held
+      meeting_start: '2026-11-23T10:00:00+00:00'
+      meeting_status: held
+    deal:
+      stage: qualification
+      owner: rep-1
+      auto_close: false
+      probability: 20
+      call_notes: []
+      bant: {}
+      contract:
+        status: none
+        signed_at: null
+      paid: false
+      amount_eur: null
+      closed_at: null
+      expected_close_date: null
+turns:
+- Mette here (rep-1, our admin). P-Q1's meeting went well. Draft and send a quote for 8 users on the yearly plan.
+approvals:
+  default: approve
+expect:
+  called:
+  - draft_quote
+  - send_quote
+  asked_person:
+  - approve_quote
+  lead:
+    P-Q1:
+      deal.quote.total_eur: 960.0
+  logs_follow_schema: true

@@ -1,0 +1,63 @@
+title: 'Bokfør ApS: the first email is about their product, not another customer''s'
+agent: outreach
+setup:
+  customer: bokfor-startups
+  leads:
+  - lead_id: P-E1
+    person:
+      name: Kim Berg
+      title: Founder
+      email: kim@p-e1.sandbox.test
+      linkedin_url: ''
+    company:
+      name: NordE1 Software
+      domain: p-e1.example
+      country: DK
+      employees: 13
+      industry: Software
+    stage: positioned
+    research:
+      summary: A Software company in DK.
+      enough_to_personalize: true
+      facts:
+      - fact: 'Just raised a seed round: announced in November 2026'
+        source_url: https://p-e1.example/news
+      - fact: About 13 people, growing
+        source_url: https://p-e1.example/about
+    positioning:
+      angle: 'Just raised a seed round: announced in November 2026; Bokfør takes bookkeeping, VAT and payroll off
+        a founder''s desk with a named accountant for a fixed monthly fee.'
+      evidence:
+      - 'Just raised a seed round: announced in November 2026'
+      confidence: 0.75
+      variant: research
+turns:
+- Write and send the first email to lead P-E1 (customer_id C-bokfor-startups).
+approvals:
+  default: approve
+expect:
+  called:
+  - save_draft
+  - record_approval
+  - send_email
+  email:
+    lead: P-E1
+    max_words: 130
+    mentions_any:
+    - bookkeeping
+    - VAT
+    - accountant
+    - Bokfør
+    must_not_contain:
+    - '!'
+    - Byggtid
+    - ISO 27001
+    - Klinikflow
+    - Kvitto
+    - Lagerlys
+    - SOC 2
+    - no-show
+    - overselling
+    - stock-out
+    - timesheet
+  logs_follow_schema: true
