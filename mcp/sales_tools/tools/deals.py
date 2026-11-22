@@ -449,7 +449,7 @@ def send_offer(lead_id: str, plan: str | None = None) -> dict:
             f"({q['term_months']} months{seats}{setup}). You can start straight away here: {link}")
     mail = send_policy_email(lead_id, f"Your {_brand()} offer", body, "offer")
     if not mail.get("ok"):
-        return {"ok": False, "error": mail.get("error"), "addresses": mail.get("addresses")}
+        return {"ok": False, "error": mail.get("error"), "addresses": mail.get("addresses"), "detail": mail.get("detail")}
     _set_deal_stage(lead, "negotiation")
     set_stage(lead, "offer_sent")
     log_event(lead_id, "deal", "success", f"standard offer with checkout link {link}: {mail['status']}", channel="email")
