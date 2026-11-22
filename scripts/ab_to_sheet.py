@@ -56,9 +56,12 @@ def main():
     ap.add_argument("--counts-only", action="store_true", help="only the count columns, for pasting at F5")
     args = ap.parse_args()
 
-    path = args.path or max(RESULTS.glob("ab-*.jsonl"), default=None)
+    real_runs = [p for p in RESULTS.glob("ab-*.jsonl") if "OFFLINE" not in p.name]
+    path = args.path or max(real_runs, default=None)
     if not path or not path.exists():
-        sys.exit("no A/B results found; run evals/ab_test.py first")
+        sys.exit("no A/B results found; run evals/ab_test.py first (with ANTHROPIC_API_KEY set)")
+    if "OFFLINE" in path.name:
+        sys.exit(f"{path.name} is an offline run: its replies are stubs and its numbers mean nothing")
 
     personas = load_personas()
     counts = collections.defaultdict(collections.Counter)
@@ -70,6 +73,8 @@ def main():
         if run.get("error"):
             errors += 1
             continue
+        if (run.get("reply") or {}).get("source") == "stub":
+            sys.exit(f"{path.name} has stub replies (no model calls); its numbers mean nothing")
         if run["lead_id"] not in personas:
             sys.exit(f"{run['lead_id']} is not one of the personas in simulator/personas/")
         counts[(run["lead_id"], run["arm"])][outcome(run)] += 1
