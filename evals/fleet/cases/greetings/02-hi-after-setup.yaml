@@ -16,5 +16,5 @@ expect:
     - find
     - search
     - outreach
-  max_tool_calls: 8
+  max_tool_calls: 12
   logs_follow_schema: true

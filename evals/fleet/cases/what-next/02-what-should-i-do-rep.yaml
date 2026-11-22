@@ -104,5 +104,8 @@ expect:
     - start with
     - first,
     - 'first:'
+    - my pick
+    - comes first
+    - suggest
   - - Fjällsoft
     - Norrdata

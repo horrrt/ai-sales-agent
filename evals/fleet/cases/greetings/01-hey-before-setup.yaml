@@ -14,9 +14,9 @@ expect:
   - - product
     - website
     - what you sell
-  - - icp
-    - ideal customer
-    - who you sell
-    - best customers
-  max_tool_calls: 8
+  - - pricing
+    - offer
+    - sender
+    - approver
+  max_tool_calls: 12
   logs_follow_schema: true

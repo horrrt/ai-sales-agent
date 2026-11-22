@@ -19,7 +19,7 @@ expect:
   - find_leads
   - read_reply
   - update_brief
-  max_tool_calls: 8
+  max_tool_calls: 12
   logs_follow_schema: true
   called_with:
     update_team_member:

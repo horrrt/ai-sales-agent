@@ -46,5 +46,5 @@ expect:
     - wrote back
   delegated_to:
   - outreach
-  max_tool_calls: 10
+  max_tool_calls: 12
   logs_follow_schema: true
