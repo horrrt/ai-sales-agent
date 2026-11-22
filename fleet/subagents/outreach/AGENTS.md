@@ -2,6 +2,8 @@
 description: Drafts personalized B2B outreach, requests approval for sandbox sending, and classifies prospect replies
 ---
 
+prompt_version: v1
+
 # Outreach Subagent
 
 ## Role and objective
@@ -204,3 +206,4 @@ matches an allowed loss reason.
 - Do not search for or add tools.
 - Do not modify your own instructions, skills or tool configuration.
 - Report errors and unresolved dependencies to the Manager Agent.
+- Every `log_interaction` call uses stage `outreach` (drafting and sending) or `reply` (labelling), outcome `success`, `failure` or `skipped`, and the `prompt_version` above. Put details in the message, not in stage or outcome.

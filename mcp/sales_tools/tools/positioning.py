@@ -10,14 +10,20 @@ from .positioning_checks import check_positioning
 
 
 @mcp.tool()
-def save_positioning(lead_id: str, angle: str, evidence: list[str], confidence: float) -> dict:
-    """Save the positioning angle for a lead. evidence must be fact strings copied from the lead's research.facts."""
+def save_positioning(lead_id: str, angle: str, evidence: list[str], confidence: float, variant: str = "research") -> dict:
+    """Save the positioning angle for a lead. evidence must be fact strings copied from the lead's research.facts.
+
+    variant is the A/B arm: research (default) or template.
+    """
     lead = LEADS.get(lead_id)
     if lead is None:
         return {"ok": False, "error": f"unknown lead {lead_id}"}
     problems = check_positioning(lead, angle, evidence, confidence)
+    if variant not in ("research", "template"):
+        problems.append("variant must be research or template")
     if problems:
         return {"ok": False, "error": "invalid_positioning", "problems": problems}
-    lead["positioning"] = {"angle": angle.strip(), "evidence": [e.strip() for e in evidence], "confidence": float(confidence)}
+    lead["positioning"] = {"angle": angle.strip(), "evidence": [e.strip() for e in evidence], "confidence": float(confidence),
+                          "variant": variant}
     lead["stage"] = "positioned"
     return {"ok": True, "lead_id": lead_id, "low_confidence": confidence < 0.4}
