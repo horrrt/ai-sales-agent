@@ -5,7 +5,8 @@ restarts: set SALES_STATE=path/to/state.json. The snapshot is written after ever
 server.py). On Cloud Run the filesystem is wiped on restart, so a deployed server still needs a real
 database (docs/fleet-prompts-v2.md §2).
 
-- SOURCE: candidate leads the lead search can find (the personas with SALES_LEADS=personas, otherwise
+- SOURCE: candidate leads the lead search can find (the personas with SALES_LEADS=personas, Apollo with
+  SALES_LEADS=apollo (data/apollo/*.csv), otherwise
   data/sample_leads.json). Not the record: a candidate only becomes a lead through add_lead.
 - LEADS: the lead sheet, keyed by lead_id. add_lead skips duplicates by email and domain.
 - INTERACTIONS: the event log, append-only.
@@ -26,7 +27,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import sim
+from . import apollo, sim
 
 DATA = Path(__file__).resolve().parents[2] / "data"
 
@@ -55,13 +56,15 @@ def _load_json(*names: str):
     raise FileNotFoundError(f"none of {names} in {DATA}")
 
 
-# SALES_LEADS=personas: the simulated prospects are the lead source (see sim.py).
-SOURCE: dict[str, dict] = sim.leads() if sim.ENABLED else {l["lead_id"]: l for l in _load_json("sample_leads.json")}
-
 _brief_file = DATA / "customer_brief.json"
 if not _brief_file.exists():  # personas are written for the demo customer; otherwise the TODO example
     _brief_file = DATA / ("customer_brief.demo.json" if sim.ENABLED else "customer_brief.example.json")
 BRIEF: dict = json.loads(_brief_file.read_text())
+
+# SALES_LEADS=personas: the simulated prospects are the lead source (see sim.py).
+# SALES_LEADS=apollo: the Apollo CSV exports in data/apollo/, topped up by the API if there's a key (see apollo.py).
+SOURCE: dict[str, dict] = (sim.leads() if sim.ENABLED else apollo.load_csvs(BRIEF.get("customer_id", "")) if apollo.ENABLED
+                           else {l["lead_id"]: l for l in _load_json("sample_leads.json")})
 
 LEADS: dict[str, dict] = {}
 INTERACTIONS: list[dict] = []

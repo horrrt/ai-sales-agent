@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 .DS_Store
 dist/
-data/clay/
+data/apollo/
 data/customer_brief.json
 simulator/out/
 data/state.json

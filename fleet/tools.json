@@ -37,10 +37,10 @@
       "display_name": "Get funnel metrics"
     },
     {
-      "name": "get_targets_from_clay",
+      "name": "get_targets_from_apollo",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
-      "display_name": "Get targets from clay"
+      "display_name": "Get targets from apollo"
     },
     {
       "name": "research_target",
@@ -374,7 +374,7 @@
     "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
     "https://sales-tools.invalid/mcp::tag_loss_reason::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_funnel_metrics::sales_tools": false,
-    "https://sales-tools.invalid/mcp::get_targets_from_clay::sales_tools": false,
+    "https://sales-tools.invalid/mcp::get_targets_from_apollo::sales_tools": false,
     "https://sales-tools.invalid/mcp::research_target::sales_tools": false,
     "https://sales-tools.invalid/mcp::save_positioning::sales_tools": false,
     "https://sales-tools.invalid/mcp::save_draft::sales_tools": false,

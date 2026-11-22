@@ -5,7 +5,7 @@ Written by Ayaan in PR #1. The prompts themselves live in `fleet/` (section 5 sa
 
 Contents
 1. What's wrong today
-2. System of Record (2a. Lead source: Salesforce in the build, Clay in the pitch)
+2. System of Record (2a. Lead source: Salesforce in the build, Apollo in the pitch)
 3. Hill-climbing on traces
 4. Shared rules block (every subagent)
 5. Where each prompt lives, and what's applied
@@ -39,7 +39,7 @@ Contents
 | Data | System of Record | Who writes | Notes |
 |---|---|---|---|
 | Customer brief (offer, ICP, product info, tone, exclusions) | **Sales DB** `customers` | Humans only (seed file / admin) | Read-only to agents via `get_customer_brief` |
-| Leads (person, company, research, positioning, outreach, handoff, stage, status, loss_reason) | **Sales DB** `leads` | Only the owning stage's tool (table below) | The lead source (Salesforce in the build, Clay in the pitch) is a *source*, not the record: `get_targets` copies into `leads` (§2a) |
+| Leads (person, company, research, positioning, outreach, handoff, stage, status, loss_reason) | **Sales DB** `leads` | Only the owning stage's tool (table below) | The lead source (Salesforce in the build, Apollo in the pitch) is a *source*, not the record: `get_targets` copies into `leads` (§2a) |
 | Interactions (business events per lead) | **Sales DB** `interactions`, append-only | Tools log facts automatically; agents log decisions with `log_interaction` | Never updated or deleted |
 | Emails and replies | Sandbox mailbox, mirrored to **Sales DB** `messages` | `send_email`, `get_replies` | Holds the exact text that was sent and approved |
 | Meetings | **Calendar** owns the slot; `leads.handoff` stores the event ID | `book_meeting` | Calendar wins if they disagree |
@@ -66,9 +66,9 @@ Contents
 
 **Facts by code, judgements by the agent.** `send_email`, `save_reply_label`, `book_meeting` and `tag_loss_reason` write their own interaction rows, so the log doesn't depend on the LLM remembering. `log_interaction` is for the agent's *decision and reason* ("skipped: competitor in exclusions").
 
-### 2a. Lead source: Salesforce in the build, Clay in the pitch
+### 2a. Lead source: Salesforce in the build, Apollo in the pitch
 
-For the submission the agent pulls targets from a **Salesforce Developer Edition org** (free) instead of Clay. Pitch line: *"In production targets come from Clay. For the build we used Salesforce because it was faster to integrate. The source is one adapter, so switching back is one tool."*
+For the submission the agent pulls targets from a **Salesforce Developer Edition org** (free) instead of Apollo. Pitch line: *"In production targets come from Apollo. For the build we used Salesforce because it was faster to integrate. The source is one adapter, so switching back is one tool."*
 
 **How it's wired: an adapter tool in our MCP server, not Fleet's Salesforce connector.**
 
@@ -77,7 +77,7 @@ For the submission the agent pulls targets from a **Salesforce Developer Edition
 | Code | ~50 lines in `research.py` (e.g. `simple_salesforce`) | None |
 | Output | Already in Lead-schema shape, written to the Sales DB by code | Raw Salesforce records; the LLM has to copy fields into the DB |
 | Determinism | Same query, same leads every run (needed for the replay in §3.3) | The agent writes its own queries, so runs can differ |
-| Switching to Clay later | Replace the function body; prompts, schema and evals stay the same | Rewrite the researcher prompt and tools |
+| Switching to Apollo later | Replace the function body; prompts, schema and evals stay the same | Rewrite the researcher prompt and tools |
 | Writes to Salesforce | Not needed | Not possible (read-only) |
 
 The native connector is the fallback if the adapter isn't ready by week 3. Then copying fields into the DB becomes an LLM step that you also have to trace and evaluate.
@@ -85,7 +85,7 @@ The native connector is the fallback if the adapter isn't ready by week 3. Then 
 **Setting up the org (one person, about half a day):**
 1. Sign up for a Salesforce Developer Edition org. Create an integration user or connected app for the MCP server. Keep the credentials (`SF_USERNAME`, `SF_PASSWORD`, `SF_TOKEN`, or an OAuth client ID and secret) in `.env`, never in git.
 2. Add custom fields on Lead: `LinkedIn_URL__c` and `ICP_Customer_Id__c` (which customer the lead belongs to). Standard fields cover the rest.
-3. Import the 50-lead test set from a CSV with the Data Import Wizard, with `LeadSource = "Clay export"`. The leads can still come from a Clay export or the sample data; only the integration changes. Use sandbox email addresses so nothing real can be emailed.
+3. Import the 50-lead test set from a CSV with the Data Import Wizard, with `LeadSource = "Apollo export"`. The leads can still come from an Apollo export or the sample data; only the integration changes. Use sandbox email addresses so nothing real can be emailed.
 4. Add existing customers and competitors as Accounts with `Type = Customer` or `Competitor`. `get_targets` drops leads whose company matches one, so exclusions come from CRM data instead of a hand-written list.
 
 **Field mapping (inside `get_targets`):**
@@ -96,7 +96,7 @@ The native connector is the fallback if the adapter isn't ready by week 3. Then 
 | FirstName + LastName, Title, Email, LinkedIn_URL__c | `person.name`, `.title`, `.email`, `.linkedin_url` |
 | Company, Website, Country, NumberOfEmployees, Industry | `company.name`, `.domain`, `.country` (ISO-2), `.employees`, `.industry` |
 
-**What Clay did that Salesforce doesn't, and how the build covers it:**
+**What Apollo does that Salesforce doesn't, and how the build covers it:**
 - **Finding new companies:** done once, by hand, when you import the 50 leads. That's fine for a fixed test set.
 - **Enrichment (LinkedIn data, tech stack, headcount growth):** `research_target` uses the company website, blog and news instead. LinkedIn data is limited to the URL stored on the lead; don't scrape LinkedIn.
 
@@ -169,7 +169,7 @@ The prompt text lives only in `fleet/`, so this doc can't drift from what Fleet 
 | Prompt | File | State |
 |---|---|---|
 | Manager | `fleet/AGENTS.md` | Applied: where things are recorded, roles, routing, Slack reporting, subagent failures, `prompt_version` |
-| Researcher | `fleet/subagents/researcher/AGENTS.md` | Applied, adapted to today's tools: `get_targets_from_clay` instead of `get_targets`, and `research_target` saves the profile itself (no `save_research` yet) |
+| Researcher | `fleet/subagents/researcher/AGENTS.md` | Applied, adapted to today's tools: `get_targets_from_apollo` instead of `get_targets`, and `research_target` saves the profile itself (no `save_research` yet) |
 | Positioner | `fleet/subagents/positioner/AGENTS.md` | Gyula's prompt (the one the positioning evals run on), plus `prompt_version` and `variant` |
 | Outreach | `fleet/subagents/outreach/AGENTS.md` | JD's prompt from PR #2, plus `prompt_version` and schema-valid logging. Not applied from PR #1: follow-up mode B, the country channel rules and the loss-reason table for replies. Those need a team decision, because PR #2 deliberately doesn't tag most replies as lost |
 | Handoff | `fleet/subagents/handoff/AGENTS.md` | Applied: rep choice and tie-breaks, a slot at least one working day out, call brief format, the all-red path |
@@ -185,9 +185,9 @@ The prompt text lives only in `fleet/`, so this doc can't drift from what Fleet 
 |---|---|---|
 | Replace in-memory dicts with Postgres/Supabase tables: customers, leads, interactions, messages, reps, changes | `mcp/sales_tools/store.py` | Ayaan |
 | Salesforce Developer Edition org: custom fields, 50-lead CSV import, customer and competitor Accounts (§2a) | Salesforce, `.env` | Kyriakos |
-| Rename `get_targets_from_clay` → `get_targets`; implement it with `simple_salesforce`: query Leads by `ICP_Customer_Id__c`, drop matches against customer and competitor Accounts, map to the Lead schema with `source`/`source_id`, write to the Sales DB | `research.py`, `pyproject.toml`, all `tools.json` | Kyriakos |
+| Rename `get_targets_from_apollo` → `get_targets`; implement it with `simple_salesforce`: query Leads by `ICP_Customer_Id__c`, drop matches against customer and competitor Accounts, map to the Lead schema with `source`/`source_id`, write to the Sales DB | `research.py`, `pyproject.toml`, all `tools.json` | Kyriakos |
 | ~~Lead schema: add `source`, `source_id`~~ done | `schemas/lead.schema.json` | Ayaan |
-| Replace "Clay" with "lead source" in `fleet/AGENTS.md` (pipeline table) and `docs/architecture.md`; keep Clay in the pitch deck | `fleet/`, `docs/` | Ayaan |
+| Replace "Apollo" with "lead source" in `fleet/AGENTS.md` (pipeline table) and `docs/architecture.md`; keep Apollo in the pitch deck | `fleet/`, `docs/` | Ayaan |
 | Replace `update_lead` with `save_research`; keep stage/status writes inside tools | `shared.py`, `research.py`, subagent `tools.json` | Ayaan, Kyriakos |
 | ~~`log_interaction` gains `prompt_version`~~ done, and it now rejects stage and outcome values outside the schema. Still to do: send/label/book/tag tools write their own interaction rows | `shared.py`, `outreach.py`, `handoff.py` | Ayaan |
 | ~~`interaction.schema.json`: add `prompt_version`, `variant`; Lead schema: add `positioning.variant`~~ done | `schemas/` | Ayaan |

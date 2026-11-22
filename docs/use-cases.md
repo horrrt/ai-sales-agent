@@ -77,6 +77,7 @@ Every email is a message record: from, to, cc, subject, body, thread and time, f
 | P26 | Every log row uses the schema's stages and outcomes | `test_log_interaction_rejects_values_outside_the_schema` | `manager/05-batch-end-to-end` |
 | P27 | The lead sheet survives a server restart, and a snapshot from before message records still loads | `test_state_snapshot_round_trip`, `test_old_snapshot_outbox_is_upgraded` | unit only |
 | P28 | The manager sends each request to the right agent and declines off-topic ones | agent only | `manager/01-routes-lead-search`, `manager/02-routes-replies`, `manager/03-routes-deal`, `manager/04-off-topic` |
+| P29 | With SALES_LEADS=apollo, find_leads searches Apollo with the ICP's titles, countries and size, enriches only the shortfall (credits), never someone already in the lead source or sheet or without an email, and maps them to the Lead schema. No key is a clear error | `test_search_query_from_icp`, `test_to_lead_maps_the_schema`, `test_find_leads_pulls_from_apollo_and_skips_known`, `test_people_without_an_email_are_not_bought`, `test_no_key_is_a_clear_error` | unit only |
 
 ## Team size
 

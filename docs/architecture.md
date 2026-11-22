@@ -1,7 +1,7 @@
 # Architecture
 
 ```
-Customer brief (offer, ICP, product info)     Lead source (Salesforce in the build, Clay in the pitch)
+Customer brief (offer, ICP, product info)     Lead source (Salesforce in the build, Apollo in the pitch)
         │                                               │ get_targets
         ▼                                               ▼
 @researcher ──► @positioner ──► @outreach ──► sandbox inbox ──► simulated prospect

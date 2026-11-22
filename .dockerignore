@@ -5,5 +5,5 @@
 dist
 evals/results
 simulator/out
-data/clay
+data/apollo
 data/customer_brief.json

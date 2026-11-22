@@ -6,13 +6,13 @@
    check_ready_to_write asks d1 "enough to write?" per required fact. Missing info: research again,
    at most 2 retries, then the lead goes on hold (not lost).
 
-STUB: the lead source is the sample leads or the personas (SALES_LEADS=personas). Swap find_leads for
-Clay, Salesforce or a web search agent, and research_target for real web research; the gates stay.
+Lead source: Apollo with SALES_LEADS=apollo (CSV exports in data/apollo/, plus the API with a key; see apollo.py), the personas with
+SALES_LEADS=personas, otherwise the sample leads. STUB: research_target still needs real web research.
 Screenshots of the company site (the diagram's VLM step) are not built yet.
 """
 import copy
 
-from .. import sim
+from .. import apollo, sim
 from ..app import mcp
 from .. import industries
 from ..decide import decide
@@ -38,6 +38,13 @@ def find_leads(customer_id: str, limit: int = 10) -> list[dict]:
     Pass each one to add_lead; nothing is saved until then.
     """
     known = {k for lead in LEADS.values() for k in _key(lead) if k}
+    if apollo.api_enabled():  # top up the lead source from Apollo's API, paying only for the shortfall
+        waiting = [c for c in SOURCE.values() if c.get("customer_id") == customer_id and c["lead_id"] not in LEADS
+                   and not any(k and k in known for k in _key(c))]
+        if len(waiting) < limit:
+            have = {l.get("source_id") for l in (*SOURCE.values(), *LEADS.values()) if l.get("source") == "apollo"}
+            for cand in apollo.find(BRIEF.get("icp") or {}, customer_id, limit=limit - len(waiting), skip_ids=have):
+                SOURCE.setdefault(cand["lead_id"], cand)
     out = []
     for cand in SOURCE.values():
         if cand.get("customer_id") != customer_id or any(k and k in known for k in _key(cand)):
@@ -101,7 +108,7 @@ def next_lead(customer_id: str) -> dict:
 
 
 @mcp.tool()
-def get_targets_from_clay(customer_id: str, limit: int = 10) -> list[dict]:
+def get_targets_from_apollo(customer_id: str, limit: int = 10) -> list[dict]:
     """Leads in the lead sheet for this customer that still need research (stage new, status active)."""
     return [l for l in LEADS.values() if l["customer_id"] == customer_id and l.get("stage") == "new"
             and l.get("status") == "active"][:limit]

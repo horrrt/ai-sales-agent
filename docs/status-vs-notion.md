@@ -2,7 +2,7 @@
 
 As of 22 November 2026, on `main` (PRs #2 to #8 merged). Compared with the Notion pages "Sales Assistant Agent (Applied AI)" and "AI Sales Agent: Business Case".
 
-The whole pipeline from the Notion page runs end to end in the sandbox: setup, finding leads, research, positioning, approved outreach, replies, routing to a rep, booking, the call brief, follow-ups, closing deals and small-deal auto-close, plus the weekly review. Every step is checked by 484 unit tests and 175 Fleet cases run against the real models. The gap is everything that touches the outside world. The lead source and research are stubs, the tool server isn't deployed, and Slack isn't connected, so the week 3 goal ("one Clay lead all the way to a booked slot in Slack") isn't met yet. Four of the five one-pagers and the pitch deck haven't been started.
+The whole pipeline from the Notion page runs end to end in the sandbox: setup, finding leads, research, positioning, approved outreach, replies, routing to a rep, booking, the call brief, follow-ups, closing deals and small-deal auto-close, plus the weekly review. Every step is checked by 484 unit tests and 175 Fleet cases run against the real models. The gap is everything that touches the outside world. The lead source and research are stubs, the tool server isn't deployed, and Slack isn't connected, so the week 3 goal ("one Apollo lead all the way to a booked slot in Slack") isn't met yet. Four of the five one-pagers and the pitch deck haven't been started.
 
 ## What the customer gives
 
@@ -22,7 +22,7 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 | Helps with pricing | Done | `review_pricing`: first-year value per plan, discount rules, whether auto-close can ever fire |
 | Helps discover the ICP | Done | `suggest_icp_from_deals` (won and lost by country, size, industry, title), or options when there's no history |
 | A first-time customer sets it all up and starts | Done | `get_setup_status` checklist, team setup tools, the lead search waits until it's ready |
-| Collects targets from Clay | **Stub** | `get_targets_from_clay` and `find_leads` read sample leads or the simulated personas. No Clay API |
+| Collects targets from Apollo | Built, waiting for a real export | `SALES_LEADS=apollo` reads Apollo CSV exports from `data/apollo/` (free plan). The API path needs a paid plan. Without it, sample leads or the simulated personas |
 | Finds the decision maker | Partly | The ICP gate checks the title. Nothing searches for people inside a company |
 | Research: LinkedIn, website, blogs (Instagram dropped) | **Stub** | `research_target` returns fixture or persona research. No real web or LinkedIn research. Screenshots of the site (the diagram's VLM step) are not built |
 | Custom positioning per person | Done | Positioner on Sonnet, evidence must come from research facts, positioning eval and LLM judge in `evals/` |
@@ -53,7 +53,7 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 | Lead object | Done: `schemas/lead.schema.json` (with deal, contacts, meetings, payments) |
 | Interaction log entry | Done: `schemas/interaction.schema.json` |
 | One LangGraph / LangSmith setup, one node per stage | Changed: Fleet agents (a manager and 8 subagents) on one MCP tool server, plus a local runner on LangChain deepagents for testing without Fleet credits |
-| A test set of 50 real Clay leads | **Not done**: 12 simulated personas and fixture leads instead |
+| A test set of 50 real Apollo leads | **Not done**: 12 simulated personas and fixture leads instead |
 
 ## Weekly plan
 
@@ -61,15 +61,15 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 |---|---|---|
 | 1 (12-18 Nov) | Runs end to end with stubs | Done |
 | 2 (19-25 Nov) | Real versions, measured | The logic is real and measured. Research and the lead source are still stubs |
-| 3 (26 Nov-2 Dec) | One Clay lead all the way to a booked slot in Slack, through the sandbox | **Not yet**: needs Clay, the deployed tool server and Slack |
+| 3 (26 Nov-2 Dec) | One Apollo lead all the way to a booked slot in Slack, through the sandbox | **Not yet**: needs Apollo, the deployed tool server and Slack |
 | 4 (3-9 Dec) | Show it working and improving. Feature freeze 6 Dec | Auto-close (the stretch goal) is already built. Still needed: the before/after loop example |
 
 ## MVP scope (business case §12)
 
 | Item | Status |
 |---|---|
-| Must: Clay import | Stub |
-| Must: research agent (website, blog, LinkedIn via Clay) | Stub |
+| Must: Apollo import | Built (CSV export), waiting for a real export |
+| Must: research agent (website, blog, LinkedIn via Apollo) | Stub |
 | Must: positioning per target | Done |
 | Must: drafting with approve-before-send | Done |
 | Must: sandbox sending | Done |
@@ -94,8 +94,8 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 
 1. **Deploy the tool server.** The `Dockerfile` is ready (Cloud Run). The deployed server keeps state in a JSON file, which a Cloud Run restart wipes, so a demo that runs for several days needs a database. Then register it in Fleet (Integrations > + Custom MCP, named `sales_tools`, no auth), build with `python3 scripts/package_fleet.py --mcp-url https://<server>/mcp` and import the zip. Without the registered custom MCP the imported agent sees none of our tools. Tested on 22 November through a cloudflared tunnel: "Sales Assistant v2" in Fleet ran `get_setup_status` and added two leads through @lead-search. The server needs `ANTHROPIC_API_KEY` (or the d1 key) in its environment, or every ICP check comes back as needs a person.
 2. **Connect Slack:** the `#sales-desk` channel ID, the reps' Slack user IDs, and the agent name in `config.json` (the TODO list at the end of `fleet/AGENTS.md`).
-3. **Clay import and the 50-lead test set** from the beachhead (Danish B2B SaaS).
-4. **Real research:** the website and blog, and LinkedIn data through Clay.
+3. **Apollo import and the 50-lead test set** from the beachhead (Danish B2B SaaS).
+4. **Real research:** the website and blog, and LinkedIn data through Apollo.
 5. **Link the event log to LangSmith traces**, and a funnel dashboard on top of `get_funnel_metrics`.
 6. **One before/after example of the loop**: a proposal from @coach, approved, and the metric moving.
 7. **One-pagers:** only JD's is written. Kyriakos, Gyula, Slava and Ayaan's are still the template.

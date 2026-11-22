@@ -177,7 +177,7 @@ Every gate records which backend answered and how confident it was (d1 only), in
 ## Not built yet
 
 - Screenshots of the company site for the ICP and research checks (the diagram's VLM step). The checks use the lead's fields and research facts.
-- A real lead source (Clay, Salesforce or web search) and real research. Both are stubs, or the simulated prospects with `SALES_LEADS=personas`.
+- Real research. `research_target` is a stub, or the simulated prospects with `SALES_LEADS=personas`. The lead source is real with `SALES_LEADS=apollo`: Apollo CSV exports in `data/apollo/` (`mcp/sales_tools/apollo.py`). Apollo's industry names aren't mapped to ours, so the ICP gate in `add_lead` filters industry.
 - Google Sheets for the lead sheet and event log. State is in memory, with an optional local JSON snapshot (`SALES_STATE=path`). A deployed server still needs a database.
 - A payment provider in test mode. `record_payment` is set by a person.
 - Regional public holidays (German states, for example). National ones are in `mcp/sales_tools/workdays.py`.
@@ -189,4 +189,14 @@ Every gate records which backend answered and how confident it was (d1 only), in
 ```bash
 cd mcp && uv run --extra dev pytest -q                                  # unit tests, no model calls
 SALES_LEADS=personas SALES_STATE=../data/state.json uv run --extra sim python -m sales_tools.server
+SALES_LEADS=apollo SALES_STATE=../data/state.json uv run python -m sales_tools.server   # leads from the Apollo CSVs in data/apollo/
 ```
+
+**Getting leads from Apollo (free plan).** In Apollo, search People with the brief's ICP (titles, company
+locations, employee range), select the people, and export them as CSV. Put the file in `data/apollo/` (or
+`data/apollo/<customer_id>/` for another customer's brief); the folder is git-ignored because it holds personal
+data. The server reads every CSV there at start. Rows without an email are skipped.
+
+The API path in the same module (search, then enrichment) needs a paid Apollo plan: on the free plan the key form
+greys out `mixed_people/api_search` and `people/bulk_match`. With a paid key, set `APOLLO_API_KEY` in `.env` and
+`find_leads` tops up the CSV leads from the API, at about 1 credit per new person.
