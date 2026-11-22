@@ -18,6 +18,7 @@ Checks (any error stops the build):
 - every tool on our server that a tools.json lists exists in mcp/sales_tools, and has an approval entry
 - the tools that commit the company (APPROVAL_TOOLS) ask a person in every tools.json that lists them
 - no secrets (API keys, tokens, .env files) anywhere in the zip
+- only files that belong in Fleet's export layout go in (a stray notes file in subagents/ is left out, with a warning)
 Warnings (printed, not fatal): TODO placeholders such as the Slack channel ID, and the placeholder URL.
 """
 import argparse
@@ -50,6 +51,18 @@ def frontmatter(text: str) -> dict:
             k, v = line.split(":", 1)
             out[k.strip()] = v.strip()
     return out
+
+
+def belongs(rel: str) -> bool:
+    """Whether a file is part of Fleet's export layout (as in an export from Fleet itself)."""
+    parts = rel.split("/")
+    if len(parts) == 1:
+        return rel in ("AGENTS.md", "config.json", "tools.json")
+    if parts[0] == "subagents":
+        return len(parts) == 3 and parts[2] in ("AGENTS.md", "tools.json")
+    if parts[0] == "skills":
+        return len(parts) >= 3  # SKILL.md and any files the skill keeps next to it
+    return False
 
 
 def server_tools() -> set[str]:
@@ -121,6 +134,9 @@ def validate(root: Path) -> tuple[list[str], list[str]]:
             if k not in listed:
                 warnings.append(f"{rel}: approval entry for a tool that isn't listed: {k}")
     for p in sorted(root.rglob("*")):
+        if p.is_file() and not belongs(str(p.relative_to(root))):
+            warnings.append(f"{p.relative_to(root)}: not part of Fleet's export layout, left out of the zip")
+    for p in sorted(root.rglob("*")):
         if p.is_file():
             if p.name.startswith(".env"):
                 errors.append(f"{p.relative_to(root)}: an .env file must never be uploaded")
@@ -159,7 +175,7 @@ def build(out: Path, url: str | None, name: str) -> dict:
         if errors:
             return {"ok": False, "errors": errors, "warnings": warnings}
         out.parent.mkdir(parents=True, exist_ok=True)
-        files = sorted(p for p in copy.rglob("*") if p.is_file())
+        files = sorted(p for p in copy.rglob("*") if p.is_file() and belongs(str(p.relative_to(copy))))
         with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
             for p in files:
                 info = zipfile.ZipInfo(str(p.relative_to(copy)), date_time=(2026, 1, 1, 0, 0, 0))  # reproducible zips

@@ -115,6 +115,11 @@ def test_the_package_script_validates_and_builds_an_upload_ready_zip(tmp_path):
         assert {"AGENTS.md", "config.json", "tools.json", "subagents/onboarding/AGENTS.md", "skills/onboard-customer/SKILL.md"} <= names
         tools = json.loads(z.read("subagents/outreach/tools.json"))
     assert all(t["mcp_server_url"] == "https://tools.example.run.app/mcp" for t in tools["tools"])
+    # only Fleet's export layout: what Fleet itself exports (see ai-sales-agent.zip, an export from Fleet)
+    for n in names:
+        parts = n.split("/")
+        assert (n in ("AGENTS.md", "config.json", "tools.json") or (parts[0] == "subagents" and len(parts) == 3 and
+                parts[2] in ("AGENTS.md", "tools.json")) or (parts[0] == "skills" and n.endswith(".md"))), n
     assert all("invalid" not in k for k in tools["interrupt_config"])
     assert subprocess.run([sys.executable, str(REPO / "scripts/package_fleet.py")], capture_output=True).returncode == 2  # no URL
 
