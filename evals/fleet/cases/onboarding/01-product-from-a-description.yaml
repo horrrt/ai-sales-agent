@@ -1,4 +1,4 @@
-title: 'The customer describes their product in chat: product info and offer are drafted and saved'
+title: 'The customer describes their product: a draft is shown, and saved once they confirm'
 agent: onboarding
 setup:
   customer: lagerlys-ecom
@@ -9,6 +9,7 @@ turns:
 - 'Mette here (rep-1, our admin). We make Lagerlys: inventory software for online brands. It keeps Shopify, Amazon
   and the warehouse on one live stock count, warns before something sells out and suggests how much to reorder.
   Most customers set it up in a day. Please write our product info and offer.'
+- That's right, nothing to add. Please save it.
 approvals:
   default: approve
 expect:

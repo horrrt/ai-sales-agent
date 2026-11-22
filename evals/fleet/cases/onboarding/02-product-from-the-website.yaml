@@ -1,4 +1,4 @@
-title: 'The customer gives their website: product info comes from its pages'
+title: 'The customer gives their website: product info comes from its pages, saved once they confirm'
 agent: onboarding
 setup:
   customer: lagerlys-ecom
@@ -18,6 +18,7 @@ setup:
         text: 'Basic EUR 49 a month for one shop. Pro EUR 290 a month on a yearly plan. Enterprise: talk to us.'
 turns:
 - Mette here (rep-1, our admin). Our site is www.lagerlys.example. Fill in our product info and offer from it.
+- That's right, nothing to add. Please save it.
 approvals:
   default: approve
 expect:
