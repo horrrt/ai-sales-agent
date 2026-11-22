@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="680" height="1658" viewBox="0 0 680 1658" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="1870" viewBox="0 0 680 1870" role="img">
 <title>Full system: automatic lead search through hand-off, plus the weekly learning loop</title>
-<desc>Phase 1 find leads, phase 2 research, phase 3 write, phase 4 human check, phase 5 reply and hand-off with optional auto-close for small deals, and a weekly learning loop that updates SKILL.md and search criteria.</desc>
+<desc>Six stages from lead search to deal closing, with the subagent that owns each, the d1 gates and exits, the optional auto-close for small deals, and the weekly learning loop where the coach proposes one change and a person approves it.</desc>
 <style>
 text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
 .th{font-size:14px;font-weight:500;fill:#2C2C2A}
@@ -16,33 +16,34 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 .c-coral>.th{fill:#712B13}.c-coral>.ts{fill:#993C1D}
 </style>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#73726C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect x="0" y="0" width="680" height="1658" fill="#FFFFFF"/>
+<rect x="0" y="0" width="680" height="1870" fill="#FFFFFF"/>
 
 <rect class="phase" x="40" y="30" width="600" height="272" rx="12"/>
-<text class="th" x="56" y="50" dominant-baseline="central">1. Find leads <tspan class="ts" dominant-baseline="central">· agent + d1</tspan></text>
+<text class="th" x="56" y="50" dominant-baseline="central">1. Find leads</text><text class="ts" x="624" y="50" text-anchor="end" dominant-baseline="central">@lead-search, weekly</text>
 <rect class="phase" x="40" y="322" width="600" height="272" rx="12"/>
-<text class="th" x="56" y="342" dominant-baseline="central">2. Research <tspan class="ts" dominant-baseline="central">· agents + d1</tspan></text>
+<text class="th" x="56" y="342" dominant-baseline="central">2. Research</text><text class="ts" x="624" y="342" text-anchor="end" dominant-baseline="central">@researcher, daily</text>
 <rect class="phase" x="40" y="614" width="600" height="192" rx="12"/>
-<text class="th" x="56" y="634" dominant-baseline="central">3. Write <tspan class="ts" dominant-baseline="central">· agents</tspan></text>
+<text class="th" x="56" y="634" dominant-baseline="central">3. Write</text><text class="ts" x="624" y="634" text-anchor="end" dominant-baseline="central">@positioner, @outreach</text>
 <rect class="phase" x="40" y="826" width="600" height="112" rx="12"/>
-<text class="th" x="56" y="846" dominant-baseline="central">4. Human check <tspan class="ts" dominant-baseline="central">· a person</tspan></text>
+<text class="th" x="56" y="846" dominant-baseline="central">4. Human check</text><text class="ts" x="624" y="846" text-anchor="end" dominant-baseline="central">the rep, in Slack</text>
 <rect class="phase" x="40" y="958" width="600" height="492" rx="12"/>
-<text class="th" x="56" y="978" dominant-baseline="central">5. Reply and hand-off <tspan class="ts" dominant-baseline="central">· d1, agent or rep</tspan></text>
-<rect class="phase" x="40" y="1474" width="600" height="134" rx="12"/>
-<text class="th" x="56" y="1494" dominant-baseline="central">Weekly learning loop <tspan class="ts" dominant-baseline="central">· runs across all leads</tspan></text>
+<text class="th" x="56" y="978" dominant-baseline="central">5. Reply and hand-off</text><text class="ts" x="624" y="978" text-anchor="end" dominant-baseline="central">@outreach, @deal-desk, @handoff</text>
+<rect class="phase" x="40" y="1474" width="600" height="192" rx="12"/>
+<text class="th" x="56" y="1494" dominant-baseline="central">6. Deal closing</text><text class="ts" x="624" y="1494" text-anchor="end" dominant-baseline="central">@deal-desk drafts, people decide</text>
+<rect class="phase" x="40" y="1686" width="600" height="132" rx="12"/>
+<text class="th" x="56" y="1706" dominant-baseline="central">Weekly learning loop</text><text class="ts" x="624" y="1706" text-anchor="end" dominant-baseline="central">@coach, runs across all leads</text>
 
 <g class="c-purple"><rect x="215" y="70" width="250" height="56" rx="8"/><text class="th" x="340" y="89" text-anchor="middle" dominant-baseline="central">Lead search agent</text><text class="ts" x="340" y="108" text-anchor="middle" dominant-baseline="central">Weekly, searches by our ICP</text></g>
 <g class="c-teal"><rect x="215" y="150" width="250" height="56" rx="8"/><text class="th" x="340" y="169" text-anchor="middle" dominant-baseline="central">d1: fits our ICP?</text><text class="ts" x="340" y="188" text-anchor="middle" dominant-baseline="central">Site screenshot + key facts</text></g>
-<g><rect class="box" x="495" y="150" width="135" height="56" rx="8"/><text class="th" x="562" y="169" text-anchor="middle" dominant-baseline="central">Skipped</text><text class="ts" x="562" y="188" text-anchor="middle" dominant-baseline="central">Not a fit</text></g>
-<g><rect class="box" x="215" y="230" width="250" height="56" rx="8"/><text class="th" x="340" y="249" text-anchor="middle" dominant-baseline="central">Add to lead sheet</text><text class="ts" x="340" y="268" text-anchor="middle" dominant-baseline="central">Skips duplicates</text></g>
+<g><rect class="box" x="495" y="150" width="135" height="56" rx="8"/><text class="th" x="562.5" y="169" text-anchor="middle" dominant-baseline="central">Skipped</text><text class="ts" x="562.5" y="188" text-anchor="middle" dominant-baseline="central">Not a fit or duplicate</text></g>
+<g><rect class="box" x="215" y="230" width="250" height="56" rx="8"/><text class="th" x="340" y="249" text-anchor="middle" dominant-baseline="central">Add to lead sheet</text><text class="ts" x="340" y="268" text-anchor="middle" dominant-baseline="central">Sales DB, status new</text></g>
 <line x1="340" y1="126" x2="340" y2="148" class="arr" marker-end="url(#arrow)"/>
 <line x1="340" y1="206" x2="340" y2="228" class="arr" marker-end="url(#arrow)"/>
 <line x1="465" y1="178" x2="493" y2="178" class="arr" marker-end="url(#arrow)"/>
-
 <g class="c-purple"><rect x="215" y="362" width="250" height="56" rx="8"/><text class="th" x="340" y="381" text-anchor="middle" dominant-baseline="central">Manager picks next lead</text><text class="ts" x="340" y="400" text-anchor="middle" dominant-baseline="central">Runs daily in Fleet</text></g>
 <g class="c-purple"><rect x="215" y="442" width="250" height="56" rx="8"/><text class="th" x="340" y="461" text-anchor="middle" dominant-baseline="central">Research the company</text><text class="ts" x="340" y="480" text-anchor="middle" dominant-baseline="central">Web pages + screenshots (VLM)</text></g>
 <g class="c-teal"><rect x="215" y="522" width="250" height="56" rx="8"/><text class="th" x="340" y="541" text-anchor="middle" dominant-baseline="central">d1: enough to write?</text><text class="ts" x="340" y="560" text-anchor="middle" dominant-baseline="central">Yes/no per required fact</text></g>
-<g><rect class="box" x="495" y="522" width="135" height="56" rx="8"/><text class="th" x="562" y="541" text-anchor="middle" dominant-baseline="central">On hold</text><text class="ts" x="562" y="560" text-anchor="middle" dominant-baseline="central">After 2 retries</text></g>
+<g><rect class="box" x="495" y="522" width="135" height="56" rx="8"/><text class="th" x="562.5" y="541" text-anchor="middle" dominant-baseline="central">On hold</text><text class="ts" x="562.5" y="560" text-anchor="middle" dominant-baseline="central">After 2 retries</text></g>
 <line x1="340" y1="286" x2="340" y2="360" class="arr" marker-end="url(#arrow)"/>
 <line x1="340" y1="418" x2="340" y2="440" class="arr" marker-end="url(#arrow)"/>
 <line x1="340" y1="498" x2="340" y2="520" class="arr" marker-end="url(#arrow)"/>
@@ -50,32 +51,29 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <path d="M215 550 L197 550 L197 470 L213 470" class="arr" marker-end="url(#arrow)"/>
 <text class="ts" x="185" y="502" text-anchor="end" dominant-baseline="central">Missing info:</text>
 <text class="ts" x="185" y="518" text-anchor="end" dominant-baseline="central">retry, max 2</text>
-
 <g class="c-purple"><rect x="215" y="654" width="250" height="56" rx="8"/><text class="th" x="340" y="673" text-anchor="middle" dominant-baseline="central">Find the angle</text><text class="ts" x="340" y="692" text-anchor="middle" dominant-baseline="central">Match to our value props</text></g>
+<g><rect class="box" x="495" y="654" width="135" height="56" rx="8"/><text class="th" x="562.5" y="673" text-anchor="middle" dominant-baseline="central">Dropped</text><text class="ts" x="562.5" y="692" text-anchor="middle" dominant-baseline="central">No angle found</text></g>
 <g class="c-purple"><rect x="215" y="734" width="250" height="56" rx="8"/><text class="th" x="340" y="753" text-anchor="middle" dominant-baseline="central">Write the email</text><text class="ts" x="340" y="772" text-anchor="middle" dominant-baseline="central">Draft in the rep's voice</text></g>
 <line x1="340" y1="578" x2="340" y2="652" class="arr" marker-end="url(#arrow)"/>
 <line x1="340" y1="710" x2="340" y2="732" class="arr" marker-end="url(#arrow)"/>
-
+<line x1="465" y1="682" x2="493" y2="682" class="arr" marker-end="url(#arrow)"/>
 <g class="c-coral"><rect x="215" y="866" width="250" height="56" rx="8"/><text class="th" x="340" y="885" text-anchor="middle" dominant-baseline="central">Rep approves in Slack</text><text class="ts" x="340" y="904" text-anchor="middle" dominant-baseline="central">Approve, edit or reject</text></g>
 <line x1="340" y1="790" x2="340" y2="864" class="arr" marker-end="url(#arrow)"/>
 <path d="M215 894 L197 894 L197 762 L213 762" class="arr" marker-end="url(#arrow)"/>
 <text class="ts" x="185" y="774" text-anchor="end" dominant-baseline="central">Rejected:</text>
 <text class="ts" x="185" y="790" text-anchor="end" dominant-baseline="central">redraft</text>
-
 <g class="c-teal"><rect x="215" y="998" width="250" height="56" rx="8"/><text class="th" x="340" y="1017" text-anchor="middle" dominant-baseline="central">Send, d1 reads the reply</text><text class="ts" x="340" y="1036" text-anchor="middle" dominant-baseline="central">Positive continues below</text></g>
-<g><rect class="box" x="495" y="998" width="135" height="56" rx="8"/><text class="th" x="562" y="1017" text-anchor="middle" dominant-baseline="central">Other replies</text><text class="ts" x="562" y="1036" text-anchor="middle" dominant-baseline="central">Stop or follow up</text></g>
+<g><rect class="box" x="495" y="998" width="135" height="56" rx="8"/><text class="th" x="562.5" y="1017" text-anchor="middle" dominant-baseline="central">Other replies</text><text class="ts" x="562.5" y="1036" text-anchor="middle" dominant-baseline="central">Stop or follow up</text></g>
 <line x1="340" y1="922" x2="340" y2="996" class="arr" marker-end="url(#arrow)"/>
 <line x1="465" y1="1026" x2="493" y2="1026" class="arr" marker-end="url(#arrow)"/>
-
 <g class="c-teal"><rect x="215" y="1088" width="250" height="56" rx="8"/><text class="th" x="340" y="1107" text-anchor="middle" dominant-baseline="central">d1: small, standard deal?</text><text class="ts" x="340" y="1126" text-anchor="middle" dominant-baseline="central">Under price cap, no custom terms</text></g>
 <line x1="340" y1="1054" x2="340" y2="1086" class="arr" marker-end="url(#arrow)"/>
 <path d="M340 1144 L340 1164 L190 1164 L190 1196" class="arr" marker-end="url(#arrow)"/>
 <path d="M340 1164 L490 1164 L490 1196" class="arr" marker-end="url(#arrow)"/>
 <text class="ts" x="200" y="1182" dominant-baseline="central">Yes</text>
 <text class="ts" x="500" y="1182" dominant-baseline="central">No</text>
-
 <g class="c-purple"><rect x="60" y="1198" width="260" height="56" rx="8"/><text class="th" x="190" y="1217" text-anchor="middle" dominant-baseline="central">Auto-close agent</text><text class="ts" x="190" y="1236" text-anchor="middle" dominant-baseline="central">Sends offer + checkout link</text></g>
-<g class="c-coral"><rect x="360" y="1198" width="260" height="56" rx="8"/><text class="th" x="490" y="1217" text-anchor="middle" dominant-baseline="central">Hand to a free rep</text><text class="ts" x="490" y="1236" text-anchor="middle" dominant-baseline="central">Green first, then yellow</text></g>
+<g class="c-coral"><rect x="360" y="1198" width="260" height="56" rx="8"/><text class="th" x="490" y="1217" text-anchor="middle" dominant-baseline="central">Book a free rep</text><text class="ts" x="490" y="1236" text-anchor="middle" dominant-baseline="central">Green rep, slot + call brief</text></g>
 <g class="c-teal"><rect x="60" y="1288" width="260" height="56" rx="8"/><text class="th" x="190" y="1307" text-anchor="middle" dominant-baseline="central">d1: deal done?</text><text class="ts" x="190" y="1326" text-anchor="middle" dominant-baseline="central">Paid: close. Else: to a rep</text></g>
 <g><rect class="box" x="360" y="1288" width="260" height="56" rx="8"/><text class="th" x="490" y="1307" text-anchor="middle" dominant-baseline="central">Wait queue</text><text class="ts" x="490" y="1326" text-anchor="middle" dominant-baseline="central">If all reps red</text></g>
 <g><rect class="box" x="60" y="1378" width="260" height="56" rx="8"/><text class="th" x="190" y="1397" text-anchor="middle" dominant-baseline="central">Closed automatically</text><text class="ts" x="190" y="1416" text-anchor="middle" dominant-baseline="central">Rep gets a summary in Slack</text></g>
@@ -85,18 +83,23 @@ text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,san
 <path d="M320 1316 L340 1316 L340 1226 L358 1226" class="arr" marker-end="url(#arrow)"/>
 <text class="ts" x="490" y="1398" text-anchor="middle" dominant-baseline="central">Optional: switched off,</text>
 <text class="ts" x="490" y="1414" text-anchor="middle" dominant-baseline="central">every positive reply goes "No"</text>
+<path d="M620 1226 L632 1226 L632 1462 L340 1462 L340 1512" class="arr" marker-end="url(#arrow)"/>
+<g class="c-purple"><rect x="215" y="1514" width="250" height="56" rx="8"/><text class="th" x="340" y="1533" text-anchor="middle" dominant-baseline="central">Deal desk drafts</text><text class="ts" x="340" y="1552" text-anchor="middle" dominant-baseline="central">BANT from call notes, quote</text></g>
+<g class="c-coral"><rect x="215" y="1594" width="250" height="56" rx="8"/><text class="th" x="340" y="1613" text-anchor="middle" dominant-baseline="central">Rep or admin decides</text><text class="ts" x="340" y="1632" text-anchor="middle" dominant-baseline="central">Quote, contract, won or lost</text></g>
+<g><rect class="box" x="495" y="1594" width="135" height="56" rx="8"/><text class="th" x="562.5" y="1613" text-anchor="middle" dominant-baseline="central">Lost</text><text class="ts" x="562.5" y="1632" text-anchor="middle" dominant-baseline="central">One loss reason</text></g>
+<line x1="340" y1="1570" x2="340" y2="1592" class="arr" marker-end="url(#arrow)"/>
+<line x1="465" y1="1622" x2="493" y2="1622" class="arr" marker-end="url(#arrow)"/>
+<g><rect class="box" x="50" y="1726" width="135" height="56" rx="8"/><text class="th" x="117.5" y="1745" text-anchor="middle" dominant-baseline="central">Event log</text><text class="ts" x="117.5" y="1764" text-anchor="middle" dominant-baseline="central">Edits, replies</text></g>
+<g class="c-purple"><rect x="198" y="1726" width="135" height="56" rx="8"/><text class="th" x="265.5" y="1745" text-anchor="middle" dominant-baseline="central">Coach agent</text><text class="ts" x="265.5" y="1764" text-anchor="middle" dominant-baseline="central">1 change a week</text></g>
+<g class="c-coral"><rect x="346" y="1726" width="135" height="56" rx="8"/><text class="th" x="413.5" y="1745" text-anchor="middle" dominant-baseline="central">Person approves</text><text class="ts" x="413.5" y="1764" text-anchor="middle" dominant-baseline="central">Admin decides</text></g>
+<g class="c-purple"><rect x="494" y="1726" width="135" height="56" rx="8"/><text class="th" x="561.5" y="1745" text-anchor="middle" dominant-baseline="central">New rule</text><text class="ts" x="561.5" y="1764" text-anchor="middle" dominant-baseline="central">New SKILL.md</text></g>
+<line x1="185" y1="1754" x2="196" y2="1754" class="arr" marker-end="url(#arrow)"/>
+<line x1="333" y1="1754" x2="344" y2="1754" class="arr" marker-end="url(#arrow)"/>
+<line x1="481" y1="1754" x2="492" y2="1754" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="340" y="1802" text-anchor="middle" dominant-baseline="central">↻ next week: better search targets, better drafts</text>
 
-<g class="c-coral"><rect x="60" y="1514" width="125" height="56" rx="8"/><text class="th" x="122" y="1533" text-anchor="middle" dominant-baseline="central">What happened</text><text class="ts" x="122" y="1552" text-anchor="middle" dominant-baseline="central">Edits, replies</text></g>
-<g><rect class="box" x="207" y="1514" width="125" height="56" rx="8"/><text class="th" x="269" y="1533" text-anchor="middle" dominant-baseline="central">Event log</text><text class="ts" x="269" y="1552" text-anchor="middle" dominant-baseline="central">Google Sheet</text></g>
-<g class="c-purple"><rect x="354" y="1514" width="125" height="56" rx="8"/><text class="th" x="416" y="1533" text-anchor="middle" dominant-baseline="central">Weekly review</text><text class="ts" x="416" y="1552" text-anchor="middle" dominant-baseline="central">Finds patterns</text></g>
-<g class="c-purple"><rect x="501" y="1514" width="125" height="56" rx="8"/><text class="th" x="563" y="1533" text-anchor="middle" dominant-baseline="central">Agent rules</text><text class="ts" x="563" y="1552" text-anchor="middle" dominant-baseline="central">New SKILL.md</text></g>
-<line x1="185" y1="1542" x2="205" y2="1542" class="arr" marker-end="url(#arrow)"/>
-<line x1="332" y1="1542" x2="352" y2="1542" class="arr" marker-end="url(#arrow)"/>
-<line x1="479" y1="1542" x2="499" y2="1542" class="arr" marker-end="url(#arrow)"/>
-<text class="ts" x="340" y="1590" text-anchor="middle" dominant-baseline="central">↻ next week: better search targets, better drafts</text>
-
-<rect class="c-purple" x="40" y="1630" width="14" height="12" rx="3"/><text class="ts" x="62" y="1636" dominant-baseline="central">LLM agent</text>
-<rect class="c-teal" x="170" y="1630" width="14" height="12" rx="3"/><text class="ts" x="192" y="1636" dominant-baseline="central">d1 yes/no check</text>
-<rect class="c-coral" x="330" y="1630" width="14" height="12" rx="3"/><text class="ts" x="352" y="1636" dominant-baseline="central">Human</text>
-<rect class="box" x="440" y="1630" width="14" height="12" rx="3"/><text class="ts" x="462" y="1636" dominant-baseline="central">Exit or data</text>
+<rect class="c-purple" x="40" y="1842" width="14" height="12" rx="3"/><text class="ts" x="62" y="1848" dominant-baseline="central">LLM agent</text>
+<rect class="c-teal" x="170" y="1842" width="14" height="12" rx="3"/><text class="ts" x="192" y="1848" dominant-baseline="central">d1 yes/no check</text>
+<rect class="c-coral" x="330" y="1842" width="14" height="12" rx="3"/><text class="ts" x="352" y="1848" dominant-baseline="central">Human</text>
+<rect class="box" x="440" y="1842" width="14" height="12" rx="3"/><text class="ts" x="462" y="1848" dominant-baseline="central">Exit or data</text>
 </svg>

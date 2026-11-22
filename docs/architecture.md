@@ -1,6 +1,6 @@
 # Architecture
 
-![System overview: five phases from lead search to hand-off, plus the weekly learning loop](system-diagram.svg)
+![System overview: six stages from lead search to deal closing, plus the weekly learning loop](system-diagram.svg)
 
 The high-level picture for the pitch is [`system-diagram.svg`](system-diagram.svg); the sketch below maps it to the subagents.
 
