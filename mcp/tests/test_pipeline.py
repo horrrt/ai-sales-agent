@@ -496,3 +496,9 @@ def test_funnel_metrics_with_a_deal_that_never_set_auto_close():
     store.LEADS["L-001"]["deal"] = {"stage": "closed_won", "auto_close": None, "amount_eur": 7800}
     m = shared.get_funnel_metrics()
     assert m["closed_automatically"] == 0 and m["deals_won"] == 1
+
+
+def test_free_slots_follow_the_clock_and_reach_the_day_asked_for():
+    at("2026-11-24T10:00:00+01:00")  # Tuesday
+    assert handoff.find_free_slots("rep-1") == [f"2026-{d}T10:00:00+00:00" for d in ("11-26", "11-27", "11-30", "12-01")]
+    assert handoff.find_free_slots("rep-1", days_ahead=7)[-1] == "2026-12-03T10:00:00+00:00"

@@ -92,9 +92,12 @@ def get_wait_queue() -> list[dict]:
 
 @mcp.tool()
 def find_free_slots(rep_id: str, days_ahead: int = 5) -> list[str]:
-    """Free 30-minute slots for a rep, on working days, at least one working day out. STUB: 10:00 UTC each day."""
-    working_days, day = [], datetime.now(timezone.utc).replace(hour=10, minute=0, second=0, microsecond=0)
-    while len(working_days) < 4:
+    """Free 30-minute slots for a rep on the working days up to days_ahead working days out, skipping the next
+    working day so the rep gets a day's notice. Ask for more days_ahead to reach a day the prospect asked for.
+    STUB: 10:00 UTC each day."""
+    days_ahead = max(2, min(int(days_ahead), 30))
+    working_days, day = [], clock().replace(hour=10, minute=0, second=0, microsecond=0)
+    while len(working_days) < days_ahead:
         day += timedelta(days=1)
         if day.weekday() < 5:
             working_days.append(day.isoformat())
