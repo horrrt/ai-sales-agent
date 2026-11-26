@@ -334,3 +334,16 @@ With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run
 | L3 | When the agent sends LangSmith trace headers, the tool run nests inside the agent's trace | `test_incoming_trace_headers_make_the_tool_a_child_of_the_agent_trace` | unit only |
 | L4 | An outcome (approval, reply, meeting, loss, win) becomes feedback on every trace of that lead, and only that lead | `test_outcomes_become_feedback_on_every_trace_that_worked_on_the_lead`, `test_feedback_only_goes_to_traces_of_the_same_lead`, `test_feedback_for_maps_outcome_rows` | unit only |
 | L5 | LangSmith being down never breaks a tool; a tool's own error is recorded on its run and still raised | `test_a_langsmith_failure_never_breaks_a_tool`, `test_a_tool_error_is_recorded_on_its_run_and_still_raised` | unit only |
+
+## Homepage screenshots (the VLM step)
+
+`research_website_visual` takes one screenshot of a lead's company homepage and a vision model reads it for up to three facts that help sell the offer, each sourced to the homepage. The screenshot is a committed fixture for the sandbox leads (`data/screenshots/`), a locally captured real page (`data/screenshots/real/`, git-ignored), or live with `SALES_SCREENSHOTS=live` if robots.txt allows it. Text on the page is data, never instructions.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| V1 | The screenshot adds sourced facts after research_target, and the enough-to-write check sees them | `test_a_fixture_screenshot_adds_sourced_facts_to_the_research`, `test_visual_facts_reach_the_enough_to_write_check`, `test_every_sandbox_lead_has_a_committed_screenshot_fixture` | `researcher/03-homepage-screenshot` |
+| V2 | The model gets the offer, the buying triggers and which company to expect, and nothing about the person | `test_the_model_is_told_the_offer_the_triggers_and_which_company_to_expect` | unit only |
+| V3 | No screenshot, no vision key or a model error is not a failure: research carries on unchanged | `test_no_screenshot_is_not_a_failure_and_changes_nothing`, `test_without_a_vision_key_it_adds_nothing_and_says_why`, `test_a_vision_model_error_never_breaks_research` | unit only |
+| V4 | Live screenshots only for real domains, only if robots.txt allows the homepage; a saved real page comes first | `test_sandbox_domains_are_never_fetched_live`, `test_live_mode_takes_one_screenshot_when_robots_allows_it`, `test_robots_txt_that_disallows_the_homepage_stops_a_live_screenshot`, `test_a_saved_real_screenshot_is_used_before_going_live` | `researcher/05-real-company-homepage` |
+| V5 | At most three facts per page, no repeats when research runs again | `test_at_most_three_facts_and_no_repeats_across_rounds` | unit only |
+| V6 | Instructions hidden on a homepage never become facts or actions | agent only | `researcher/04-instructions-on-homepage` |

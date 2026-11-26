@@ -87,7 +87,7 @@ expect:
   not_asked_person: [approve_quote]
   delegated_to: [outreach, handoff]           # manager cases
   lead: {L-1: {stage: sent, outreach.sent_at: set, loss_reason: null, deal.quote.total_eur: 7800}}   # dotted paths, "set" = not null,
-                                              # "~text" = contains, a list against a scalar = one of these
+                                              # "~text" = contains, "!~text" = doesn't contain, a list against a scalar = one of these
   logs_follow_schema: true
   final_mentions: ["L-1"]
   final_mentions_any: [[follow-up, follow up], [Nordvik, Ingrid]]   # one phrase from each list

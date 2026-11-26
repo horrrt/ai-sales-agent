@@ -12,7 +12,7 @@ description: Use when a salesperson asks for a batch or the morning schedule run
 - Batch size (default 5)
 
 ## Steps, one lead at a time
-1. @researcher: next_lead, research_target, check_ready_to_write. Not ready after 2 retries: the lead is on hold; take the next one.
+1. @researcher: next_lead, research_target, research_website_visual (homepage screenshot), check_ready_to_write. Not ready after 2 retries: the lead is on hold; take the next one.
 2. @positioner: one angle (save_positioning). No angle: the positioner tags the lead and you take the next one.
 3. @outreach: save_draft, then record_approval. The rep sees the whole email and approves, edits or rejects it. Approved: send_email. Rejected: one redraft. While a rep decides, work on the next lead.
 4. Repeat until the batch size is reached or next_lead returns no lead.

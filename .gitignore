@@ -10,3 +10,6 @@ simulator/out/
 data/state.json
 evals/fleet/results/
 evals/fleet/.venv/
+
+# Real company homepage screenshots (scripts/capture_screenshots.py): other companies' pages, not committed
+data/screenshots/real/

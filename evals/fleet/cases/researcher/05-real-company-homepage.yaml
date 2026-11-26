@@ -1,0 +1,48 @@
+title: A real company's homepage (captured locally) gives different facts from the fixtures, or none if it isn't captured
+# The screenshot comes from data/screenshots/real/upsales.com.png, which scripts/capture_screenshots.py writes
+# and git ignores. With it, the facts depend on what that page shows today; without it, the tool reports no
+# screenshot and the researcher carries on. Either way the run must not stall or invent facts.
+agent: researcher
+setup:
+  leads:
+  - lead_id: L-303
+    person:
+      name: Test Contact
+      title: CEO
+      email: ceo@upsales.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Upsales
+      domain: upsales.com
+      country: SE
+      employees: 45
+      industry: B2B SaaS
+  source:
+  - lead_id: L-303
+    person:
+      name: Test Contact
+      title: CEO
+      email: ceo@upsales.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Upsales
+      domain: upsales.com
+      country: SE
+      employees: 45
+      industry: B2B SaaS
+    research:
+      summary: Swedish sales and CRM platform.
+      enough_to_personalize: true
+      facts:
+      - fact: Sells a sales and CRM platform to B2B companies
+        source_url: https://upsales.com/
+turns:
+- Research the next lead for customer_id C-demo and check it's ready to write.
+expect:
+  called:
+  - research_target
+  - research_website_visual
+  - check_ready_to_write
+  events:
+  - stage: research
+    message: ~homepage screenshot

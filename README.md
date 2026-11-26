@@ -68,6 +68,14 @@ cd mcp && uv run --env-file ../.env python -m sales_tools.server
 
 Traces: with `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` (start the server with `--env-file ../.env` as above), every tool call is a run in the LangSmith project `LANGSMITH_PROJECT`, grouped per lead in the Threads view. Every event-log row gets its `trace_id`, and outcomes (email approved, edited or rejected; reply label; meeting booked or held; lost and why; deal won) are posted as feedback on every trace of that lead. Without the variables nothing changes. See `mcp/sales_tools/tracing.py` and `docs/fleet-prompts-v2.md` §3.2.
 
+Homepage screenshots (the VLM step): `research_website_visual` reads one screenshot of the lead's company homepage with a vision model (`VISION_MODEL`, default Haiku, using `ANTHROPIC_API_KEY`) and adds up to three facts sourced to the homepage. The screenshot comes from, in order:
+
+- `data/screenshots/<domain>.png`: committed fixtures for the sandbox leads, all fictional companies. Re-render them with `cd mcp && uv run --extra screenshots python ../scripts/make_screenshot_fixtures.py`.
+- `data/screenshots/real/<domain>.png`: a few real public homepages, so results vary from the fixtures. Git-ignored, because the repo is public and the pages are other companies' work. Capture your own copy with `cd mcp && uv run --extra screenshots python ../scripts/capture_screenshots.py`. It respects robots.txt and leaves cookie banners as they are.
+- Live, with `SALES_SCREENSHOTS=live`: one screenshot of a real domain that has none saved yet, if robots.txt allows it. Never for `.example` or `.test` domains. The Docker image has no browser, so the deployed server uses saved screenshots only.
+
+First time, for either script or live mode: `cd mcp && uv sync --extra screenshots && uv run playwright install chromium`.
+
 The deployed server runs on the demo customer (`data/customer_brief.demo.json`) with an in-memory store, so data resets when the instance restarts.
 
 ## Import the agent into Fleet

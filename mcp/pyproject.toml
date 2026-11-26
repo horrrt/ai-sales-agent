@@ -8,6 +8,9 @@ dependencies = ["mcp[cli]>=1.9,<2", "anthropic>=0.80", "tzdata>=2024.1", "langsm
 [project.optional-dependencies]
 # Simulated prospects in get_replies (SALES_LEADS=personas). Not needed for the deployed stub server.
 sim = ["langsmith>=0.4"]
+# Live homepage screenshots for research_website_visual (SALES_SCREENSHOTS=live) and scripts/capture_screenshots.py.
+# Fixture screenshots in data/screenshots/ need none of this. After installing: uv run playwright install chromium
+screenshots = ["playwright>=1.40"]
 dev = ["pytest>=8"]
 
 [build-system]

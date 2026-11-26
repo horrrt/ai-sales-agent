@@ -1,0 +1,51 @@
+title: The homepage screenshot adds sourced facts after research_target, before the enough-to-write check
+agent: researcher
+setup:
+  leads:
+  - lead_id: L-301
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik-health.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+  source:
+  - lead_id: L-301
+    person:
+      name: Ingrid Solberg
+      title: CEO
+      email: ingrid@nordvik.sandbox.test
+      linkedin_url: ''
+    company:
+      name: Nordvik Health Data AS
+      domain: nordvik-health.example
+      country: 'NO'
+      employees: 22
+      industry: B2B SaaS
+    research:
+      summary: Health-data analytics platform for hospitals in Norway.
+      enough_to_personalize: true
+      facts:
+      - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
+        source_url: https://nordvik-health.example/news/hospital-pilot
+turns:
+- Research the next lead for customer_id C-demo and check it's ready to write.
+expect:
+  called:
+  - research_target
+  - research_website_visual
+  - check_ready_to_write
+  lead:
+    L-301:
+      stage: researched
+      status: active
+      research.facts: ~homepage_screenshot
+  logs_follow_schema: true
+  events:
+  - stage: research
+    message: ~from the homepage screenshot (fixture)

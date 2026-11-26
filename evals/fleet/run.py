@@ -390,8 +390,11 @@ def check(expect: dict, events: list, state: dict, enums: dict) -> list[dict]:
     for lid, lead, fields in targets:
         for path, want in fields.items():
             got = dig(lead, path)
-            # "set": not null. "!x": anything but x. A list against a scalar: one of these values. A list against a list: equal.
+            # "set": not null. "!x": anything but x. "!~text": doesn't contain text anywhere (case-insensitive).
+            # A list against a scalar: one of these values. A list against a list: equal.
             ok = ((got is not None) if want == "set"
+                  else (want[2:].lower() not in json.dumps(got, ensure_ascii=False).lower())
+                  if isinstance(want, str) and want.startswith("!~")
                   else (got != want[1:]) if isinstance(want, str) and want.startswith("!")
                   else (want[1:].lower() in json.dumps(got, ensure_ascii=False).lower() if got is not None else False)
                   if isinstance(want, str) and want.startswith("~")

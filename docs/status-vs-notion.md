@@ -24,7 +24,7 @@ The whole pipeline from the Notion page runs end to end in the sandbox: setup, f
 | A first-time customer sets it all up and starts | Done | `get_setup_status` checklist, team setup tools, the lead search waits until it's ready |
 | Collects targets from Clay | **Stub** | `get_targets_from_clay` and `find_leads` read sample leads or the simulated personas. No Clay API |
 | Finds the decision maker | Partly | The ICP gate checks the title. Nothing searches for people inside a company |
-| Research: LinkedIn, website, blogs (Instagram dropped) | **Stub** | `research_target` returns fixture or persona research. No real web or LinkedIn research. Screenshots of the site (the diagram's VLM step) are not built |
+| Research: LinkedIn, website, blogs (Instagram dropped) | **Stub** | `research_target` returns fixture or persona research. No real web or LinkedIn research. The VLM step is built: `research_website_visual` reads a homepage screenshot (committed fixtures for the sandbox leads, real pages captured locally, or live with `SALES_SCREENSHOTS=live`) with a vision model and adds up to three sourced facts |
 | Custom positioning per person | Done | Positioner on Sonnet, evidence must come from research facts, positioning eval and LLM judge in `evals/` |
 | Automates the first outreach, a few back-and-forths | Done, sandbox | Approve-before-send, threads, cc, business hours and public holidays per country, follow-ups in working days, a daily cap, handovers and assistants, replies read next to the email they answer |
 | Takes over from the first call with notes on person, company and positioning | Done | `save_call_brief`, with everyone in the thread |

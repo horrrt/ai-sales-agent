@@ -37,6 +37,12 @@
       "display_name": "Research target"
     },
     {
+      "name": "research_website_visual",
+      "mcp_server_url": "https://sales-tools.invalid/mcp",
+      "mcp_server_name": "sales_tools",
+      "display_name": "Research website screenshot (VLM)"
+    },
+    {
       "name": "check_ready_to_write",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
@@ -56,6 +62,7 @@
     "https://sales-tools.invalid/mcp::next_lead::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_targets_from_clay::sales_tools": false,
     "https://sales-tools.invalid/mcp::research_target::sales_tools": false,
+    "https://sales-tools.invalid/mcp::research_website_visual::sales_tools": false,
     "https://sales-tools.invalid/mcp::check_ready_to_write::sales_tools": false,
     "https://sales-tools.invalid/mcp::tag_loss_reason::sales_tools": false
   }
