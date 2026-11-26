@@ -325,7 +325,7 @@ A bare "hey" is the most common first message. The agent works out who is asking
 
 ## Traces and outcome feedback
 
-With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run, every event-log row stores the trace it came from, and outcomes are posted back as feedback on the lead's traces. That is the data the learning loop filters on (`mcp/sales_tools/tracing.py`, `docs/fleet-prompts-v2.md` §3.2). These are code paths no agent run would exercise differently, so they're unit only.
+With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run, every event-log row stores the trace it came from, and outcomes are posted back as feedback on the lead's traces. That is the data the learning loop filters on (`mcp/sales_tools/tracing.py`, `docs/fleet-prompts-v2.md` §3.2). `evals/traces_to_cases.py` reads it back into cases and `evals/hill_climb.py --trace-cases` climbs on them (§3.3). These are code paths no agent run would exercise differently, so they're unit only.
 
 | ID | Use case | Unit tests | Fleet cases |
 |---|---|---|---|
@@ -334,6 +334,10 @@ With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run
 | L3 | When the agent sends LangSmith trace headers, the tool run nests inside the agent's trace | `test_incoming_trace_headers_make_the_tool_a_child_of_the_agent_trace` | unit only |
 | L4 | An outcome (approval, reply, meeting, loss, win) becomes feedback on every trace of that lead, and only that lead | `test_outcomes_become_feedback_on_every_trace_that_worked_on_the_lead`, `test_feedback_only_goes_to_traces_of_the_same_lead`, `test_feedback_for_maps_outcome_rows` | unit only |
 | L5 | LangSmith being down never breaks a tool; a tool's own error is recorded on its run and still raised | `test_a_langsmith_failure_never_breaks_a_tool`, `test_a_tool_error_is_recorded_on_its_run_and_still_raised` | unit only |
+| L6 | A lead's traces become a case: what the positioner saw (research, homepage facts), the angle it saved, the email, the prompt version and what happened, without the address or internal fields | `test_a_lost_lead_becomes_a_bad_case_with_what_the_positioner_saw_and_did`, `test_without_get_lead_the_research_comes_from_research_target`, `test_a_lead_with_no_replayable_research_or_no_saved_angle_is_skipped` | unit only |
+| L7 | Outcomes judge the positioning: losses it could have prevented and bad replies are bad; meetings and positive replies are good; the latest feedback wins | `test_verdict_for_the_positioning_stage`, `test_the_latest_feedback_per_key_wins`, `test_trace_case_files_keep_the_latest_case_per_lead` | unit only |
+| L8 | Hill-climbing learns from production: trace-only leads train, the holdout stays the same personas, and the proposer sees production failures but never holdout outcomes or trace IDs | `test_the_holdout_stays_personas_only_and_matches_the_old_split`, `test_the_proposer_sees_production_failures_even_when_the_reviewer_liked_the_angle` | unit only |
+| L9 | The weekly review's proposal is measured offline with the same accept rule before an admin approves it | `test_a_coach_proposal_is_given_as_text_or_a_file_and_must_match_the_prompt_once` | unit only |
 
 ## Homepage screenshots (the VLM step)
 

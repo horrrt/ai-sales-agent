@@ -25,6 +25,17 @@ train score climbs and the holdout doesn't, the edit is fitting these personas (
 With 12 personas the numbers are noisy: treat an accepted step as a candidate for the A/B test
 (evals/ab_test.py), not as proof.
 
+Learning from traces (--trace-cases evals/datasets/trace_cases.jsonl, written by evals/traces_to_cases.py):
+  Each case is a lead from a real run: the lead as the positioner saw it, the angle it saved, and what happened
+  next (reply, loss reason, meeting, the rep's approval). Leads that aren't personas join the train set; the
+  holdout stays personas only, so production cases never leak into it. The proposer sees the production
+  outcomes of train leads next to the reviewer's grade, which is where the reviewer and real prospects disagree.
+
+Checking a proposal before an admin approves it (--edit-old/--edit-new, text or @file):
+  Skips the proposer and measures that one edit with the same accept rule, e.g. the exact old -> new prompt
+  lines the weekly review (@coach) saved with save_proposal:
+    uv run --project simulator python evals/hill_climb.py --edit-old @old.txt --edit-new @new.txt --trace-cases evals/datasets/trace_cases.jsonl
+
 Outputs in evals/results/:
   hill-climb-<stamp>.jsonl     one row per step: the edit, scores, per-lead results, accepted or why not
   hill-climb-<stamp>-best.md   the best AGENTS.md (prompt_version bumped per accepted step)
@@ -124,28 +135,93 @@ Rules for your edit:
 - old_text must be copied exactly from the prompt (same whitespace and punctuation) and occur exactly once. To add a rule, quote the line it goes after as old_text and repeat it at the start of new_text.
 - Fix the cause shared by several failures, not one lead. Never name a specific lead, company or person from the examples: the prompt has to work for leads it has never seen.
 - Keep every safety rule (sandbox only, no invented facts, no claims beyond the brief). Never weaken them to please the reviewer.
-- Don't repeat an edit that was already tried and rejected."""
+- Don't repeat an edit that was already tried and rejected.
+
+Some leads come from real runs and show what happened in production: the angle that was used, the prospect's reply, the loss reason, whether the rep approved the email. Weigh those: an angle the reviewer liked but the prospect rejected (or lost on has_competitor, price, wrong_company_fit) points at something the reviewer misses. Still fix the shared cause, never the single lead."""
 
 
-def proposer_input(raw_prompt: str, result: dict, train: set[str], leads_by_id: dict, history: list[dict], k: int) -> str:
+def production_view(case: dict) -> dict:
+    """What the proposer may see of a production case: the angle used and what happened, no trace IDs."""
+    return {"angle_used": (case.get("positioning_used") or {}).get("angle"), "status": case.get("status"),
+            "what_happened": case.get("reasons") or [], "outcomes": case.get("outcomes") or {},
+            "prompt_version": case.get("prompt_version")}
+
+
+def proposer_input(raw_prompt: str, result: dict, train: set[str], leads_by_id: dict, history: list[dict], k: int,
+                   observed: dict | None = None) -> str:
+    observed = {lid: c for lid, c in (observed or {}).items() if lid in train}  # never show holdout outcomes
     worst = sorted((r for r in result["rows"] if r["lead_id"] in train), key=lambda r: r["score"])[:k]
+    shown = {r["lead_id"] for r in worst}
+    # production failures go in even when the reviewer scores the current angle well: that disagreement is the signal
+    worst += [next(r for r in result["rows"] if r["lead_id"] == lid) for lid, c in sorted(observed.items())
+              if c.get("status") == "bad" and lid not in shown and any(r["lead_id"] == lid for r in result["rows"])]
     cases = []
     for r in worst:
         lead = leads_by_id[r["lead_id"]]
-        cases.append({
+        case = {
             "lead": common.public_lead(lead),
             "positioner_output": r["positioning"] and {k2: r["positioning"][k2] for k2 in ("no_fit", "loss_reason", "angle", "evidence", "confidence")},
             "save_positioning_problems": r["positioning"] and r["positioning"]["validation_problems"],
             "reviewer": r["judge"] and {"overall": r["judge"]["overall"], "critique": r["judge"]["critique"]},
             "error": r["error"],
             "score": r["score"],
-        })
+        }
+        if r["lead_id"] in observed:
+            case["in_production"] = production_view(observed[r["lead_id"]])
+        cases.append(case)
     tried = [{"old_text": h["edit"]["old_text"], "new_text": h["edit"]["new_text"], "accepted": h["accepted"], "why": h["decision"]}
              for h in history if h.get("edit")]
     return (f"<current_prompt>\n{raw_prompt}\n</current_prompt>\n\n"
             f"<lowest_scoring_outputs>\n{json.dumps(cases, indent=2, ensure_ascii=False)}\n</lowest_scoring_outputs>\n\n"
             f"<edits_already_tried>\n{json.dumps(tried, indent=2, ensure_ascii=False)}\n</edits_already_tried>\n\n"
             "Propose one edit.")
+
+
+# ---------- production cases from traces ----------
+
+def load_trace_cases(path: Path) -> list[dict]:
+    """Cases written by evals/traces_to_cases.py, latest per lead."""
+    latest: dict[str, dict] = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            c = json.loads(line)
+            if c.get("lead_id") and (c.get("lead") or {}).get("research"):
+                prev = latest.get(c["lead_id"])
+                if prev is None or str(c.get("positioned_at")) >= str(prev.get("positioned_at")):
+                    latest[c["lead_id"]] = c
+    return list(latest.values())
+
+
+def merge_trace_cases(leads: list[dict], cases: list[dict]) -> tuple[list[dict], dict, set[str]]:
+    """Add production cases to the lead set. Returns (leads, observed outcomes by lead_id, lead_ids only seen in traces).
+
+    A persona that also ran in production keeps its persona lead (same research) and gains the observed outcome.
+    A lead that is only in the traces is added as it was seen, and always goes to the train set.
+    """
+    known = {l["lead_id"] for l in leads}
+    merged, observed, trace_only = list(leads), {}, set()
+    for c in cases:
+        lid = c["lead_id"]
+        observed[lid] = c
+        if lid not in known:
+            merged.append({**c["lead"], "lead_id": lid})
+            trace_only.add(lid)
+            known.add(lid)
+    return merged, observed, trace_only
+
+
+def split(ids: list[str], trace_only: set[str], holdout_share: float, seed: int) -> tuple[set[str], set[str]]:
+    """(train, holdout). The holdout is drawn from the personas only, with the same seed as before."""
+    base = sorted(i for i in ids if i not in trace_only)
+    random.Random(seed).shuffle(base)
+    n_hold = int(len(base) * holdout_share) if len(base) > 2 else 0
+    holdout = set(base[:n_hold])
+    return set(ids) - holdout, holdout
+
+
+def read_arg_text(value: str) -> str:
+    """--edit-old/--edit-new: the text itself, or @path to read it from a file."""
+    return Path(value[1:]).read_text(encoding="utf-8") if value.startswith("@") else value
 
 
 def apply_edit(raw: str, edit: Edit) -> str:
@@ -214,47 +290,61 @@ def main() -> None:
     ap.add_argument("--leads", nargs="*", help="lead ids to use (default: all personas)")
     ap.add_argument("--offline", action="store_true", help="fake model calls, to check the plumbing")
     ap.add_argument("--apply", action="store_true", help="write the best prompt into fleet/subagents/positioner/AGENTS.md")
+    ap.add_argument("--trace-cases", type=Path, help="production cases from evals/traces_to_cases.py (JSONL)")
+    ap.add_argument("--edit-old", help="check this one edit instead of proposing: the exact passage to replace (text or @file)")
+    ap.add_argument("--edit-new", help="what replaces --edit-old (text or @file)")
     a = ap.parse_args()
     if not a.offline and not llm.has_key():
         sys.exit("ANTHROPIC_API_KEY is not set (env or .env). Use --offline for a plumbing check.")
+    if bool(a.edit_old) != bool(a.edit_new):
+        sys.exit("--edit-old and --edit-new go together")
 
     runner, proposer = (offline_runner, offline_proposer) if a.offline else (real_runner, real_proposer)
+    if a.edit_old:  # check a given proposal (e.g. the weekly review's) with the same accept rule, once
+        fixed = Edit(diagnosis="Proposed by the weekly review", old_text=read_arg_text(a.edit_old),
+                     new_text=read_arg_text(a.edit_new), rationale="checked offline before an admin decides")
+        proposer, a.steps = (lambda user: fixed), 1
     if not a.offline:
         llm.client()  # build the shared client before the worker threads do
 
     brief = common.load_brief()
     leads = [p["lead"] for p in common.simulate.all_personas() if not a.leads or p["lead"]["lead_id"] in a.leads]
+    cases = load_trace_cases(a.trace_cases) if a.trace_cases else []
+    leads, observed, trace_only = merge_trace_cases(leads, cases)
     if not leads:
         sys.exit("no leads matched")
     leads_by_id = {l["lead_id"]: l for l in leads}
-    ids = sorted(leads_by_id)
-    random.Random(a.seed).shuffle(ids)
-    n_hold = int(len(ids) * a.holdout) if len(ids) > 2 else 0
-    holdout, train = set(ids[:n_hold]), set(ids[n_hold:])
+    train, holdout = split(sorted(leads_by_id), trace_only, a.holdout, a.seed)
 
     stamp = common.stamp()
     log_path = common.RESULTS / f"hill-climb-{stamp}.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     meta = {"models": {"positioner": llm.POSITIONER_MODEL, "judge": llm.JUDGE_MODEL, "proposer": PROPOSER_MODEL},
             "offline": a.offline, "samples": a.samples, "train": sorted(train), "holdout": sorted(holdout),
-            "min_delta": a.min_delta, "max_guardrail_drop": a.max_guardrail_drop}
-    print(f"{len(leads)} leads ({len(train)} train, {len(holdout)} holdout), {a.samples} samples each")
+            "min_delta": a.min_delta, "max_guardrail_drop": a.max_guardrail_drop,
+            "mode": "check one proposal" if a.edit_old else "propose",
+            "trace_cases": {"file": str(a.trace_cases) if a.trace_cases else None, "n": len(cases),
+                            "bad": sorted(l for l, c in observed.items() if c.get("status") == "bad"),
+                            "good": sorted(l for l, c in observed.items() if c.get("status") == "good"),
+                            "only_in_traces": sorted(trace_only)}}
+    print(f"{len(leads)} leads ({len(train)} train, {len(holdout)} holdout), {a.samples} samples each"
+          + (f"; {len(cases)} production cases ({len(meta['trace_cases']['bad'])} bad)" if cases else ""))
 
-    current = common.POSITIONER_FILE.read_text()
+    current = common.POSITIONER_FILE.read_text(encoding="utf-8")
     base = evaluate(current, leads, brief, a.samples, a.workers, runner)
     cur_scores = split_scores(base, train, holdout)
     start_scores = cur_scores
     print(f"baseline  all {fmt(cur_scores['all'])}  holdout {fmt(cur_scores['holdout'])}")
 
     history: list[dict] = []
-    with log_path.open("w") as jf:
+    with log_path.open("w", encoding="utf-8") as jf:
         jf.write(json.dumps({"step": 0, "kind": "baseline", "meta": meta, "scores": cur_scores, "rows": base["rows"]},
                             ensure_ascii=False) + "\n")
         cur_result = base
         for step in range(1, a.steps + 1):
             entry: dict = {"step": step, "kind": "edit", "edit": None, "accepted": False}
             try:
-                user = proposer_input(current, cur_result, train, leads_by_id, history, a.worst)
+                user = proposer_input(current, cur_result, train, leads_by_id, history, a.worst, observed)
                 edit, candidate = propose(current, user, proposer)
             except Exception as e:  # noqa: BLE001
                 entry["decision"] = f"no edit: {type(e).__name__}: {e}"
@@ -286,15 +376,15 @@ def main() -> None:
             jf.flush()
 
     best_path = log_path.with_name(f"hill-climb-{stamp}-best.md")
-    best_path.write_text(current)
+    best_path.write_text(current, encoding="utf-8")
     report_path = log_path.with_suffix(".md")
-    report_path.write_text(report(meta, start_scores, cur_scores, history))
+    report_path.write_text(report(meta, start_scores, cur_scores, history), encoding="utf-8")
     accepted = sum(h["accepted"] for h in history)
     print(f"\n{accepted} of {len(history)} edits accepted. all {fmt(start_scores['all'])} -> {fmt(cur_scores['all'])}")
     print(f"wrote {log_path.relative_to(common.ROOT)}, {report_path.relative_to(common.ROOT)}, {best_path.relative_to(common.ROOT)}")
     if a.apply:
         if accepted and not a.offline:
-            common.POSITIONER_FILE.write_text(current)
+            common.POSITIONER_FILE.write_text(current, encoding="utf-8")
             print(f"applied to {common.POSITIONER_FILE.relative_to(common.ROOT)}: review the diff, then PR it")
         else:
             print("--apply: nothing written (no accepted edit, or an offline run)")
@@ -305,7 +395,12 @@ def report(meta: dict, start: dict, end: dict, history: list[dict]) -> str:
              f"Models: positioner `{meta['models']['positioner']}`, judge `{meta['models']['judge']}`, proposer `{meta['models']['proposer']}`."
              f"{' **Offline run: fake scores.**' if meta['offline'] else ''}",
              f"{meta['samples']} samples per lead. Train: {', '.join(meta['train'])}. Holdout: {', '.join(meta['holdout']) or 'none'}.",
-             f"Accept rule: score up by more than {meta['min_delta']}, valid-angle rate down by at most {meta['max_guardrail_drop']:.0%}.", "",
+             f"Accept rule: score up by more than {meta['min_delta']}, valid-angle rate down by at most {meta['max_guardrail_drop']:.0%}.",
+             f"Mode: {meta.get('mode', 'propose')}.",
+             *([f"Production cases from traces: {meta['trace_cases']['n']} "
+                f"(bad: {', '.join(meta['trace_cases']['bad']) or 'none'}; good: {', '.join(meta['trace_cases']['good']) or 'none'}; "
+                f"only in traces, train set: {', '.join(meta['trace_cases']['only_in_traces']) or 'none'})."]
+               if (meta.get('trace_cases') or {}).get('n') else []), "",
              f"**Start:** {fmt(start['all'])}, holdout {fmt(start['holdout'])}  ",
              f"**End:** {fmt(end['all'])}, holdout {fmt(end['holdout'])}", "",
              "| Step | Old | New | Score before → after | Holdout before → after | Decision |",

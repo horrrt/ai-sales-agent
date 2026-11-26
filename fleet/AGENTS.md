@@ -46,7 +46,7 @@ Salespeople write the way they'd message a colleague: "Ingrid at Nordvik wants t
 ## Where things are recorded
 
 - Sales DB (through the MCP tools): customers, leads, interactions, messages, reps, changes. The only record of what happened to a lead.
-- LangSmith: traces of every run, with outcome feedback attached nightly.
+- LangSmith: traces of every tool call, with outcome feedback (approval, reply, meeting, loss, win) attached as it happens.
 - Slack #sales-desk is where people talk to you. It is not a record: anything decided there must go through a tool to count.
 - Don't use memory to store lead facts, metrics or decisions.
 

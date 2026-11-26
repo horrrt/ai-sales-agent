@@ -140,6 +140,25 @@ Hill-climbing = change **one** thing, measure it against a fixed baseline, keep 
 
 Two-week budget: one full loop per week from week 2. Expect 2-3 accepted changes by 6 Dec; one clear before/after is enough for the pitch.
 
+**What's built (26 Nov), for the positioner:**
+
+| Step | Built as | Status |
+|---|---|---|
+| 1. Collect | The tool server traces every call and posts outcomes as feedback (`mcp/sales_tools/tracing.py`) | Built |
+| 2. Find the worst stage | @coach weekly review on the event log | Built |
+| 3. Failures into the dataset | `evals/traces_to_cases.py`: tool runs + feedback → one case per lead (what the positioner saw, the angle it saved, the outcome, good/bad/open), JSONL and optionally a LangSmith dataset | Built |
+| 4. Propose one change | `evals/hill_climb.py`: a proposer model, shown the worst-scored angles and the production failures next to the reviewer's grade. Or the coach's own proposal (`--edit-old/--edit-new`) | Built |
+| 5-6. Offline eval and accept rule | `hill_climb.py --trace-cases`: personas + production cases, holdout of personas only, LLM judge, accept rule as above | Built |
+| 7. End-to-end replay | Fleet cases in `evals/fleet/` cover the pipeline; no automatic before/after replay of the north star | Not built |
+| 8. Ship | `--apply` writes the prompt with a new `prompt_version`; a person PRs it | Built (manual PR) |
+
+Only the positioner prompt is climbed. Other stages get proposals from the coach but no offline check yet.
+
+```bash
+cd mcp && uv run --env-file ../.env python ../evals/traces_to_cases.py --days 30
+uv run --project simulator python evals/hill_climb.py --steps 3 --trace-cases evals/datasets/trace_cases.jsonl
+```
+
 ---
 
 ## 4. Shared rules block (paste into every subagent)
