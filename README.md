@@ -66,6 +66,8 @@ cd mcp && uv run --env-file ../.env python -m sales_tools.server
 
 `scripts/deploy_mcp.sh` doesn't pass these variables yet, so the deployed server stays in memory. See `mcp/sales_tools/openmail.py`.
 
+Traces: with `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` (start the server with `--env-file ../.env` as above), every tool call is a run in the LangSmith project `LANGSMITH_PROJECT`, grouped per lead in the Threads view. Every event-log row gets its `trace_id`, and outcomes (email approved, edited or rejected; reply label; meeting booked or held; lost and why; deal won) are posted as feedback on every trace of that lead. Without the variables nothing changes. See `mcp/sales_tools/tracing.py` and `docs/fleet-prompts-v2.md` §3.2.
+
 The deployed server runs on the demo customer (`data/customer_brief.demo.json`) with an in-memory store, so data resets when the instance restarts.
 
 ## Import the agent into Fleet

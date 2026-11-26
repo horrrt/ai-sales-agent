@@ -322,3 +322,15 @@ A bare "hey" is the most common first message. The agent works out who is asking
 | D6 | Asked directly, the agent picks even in neutral mode | agent only | `what-next/08-neutral-but-asked-directly` |
 | D7 | The team default is the brief's question_mode, admin only, and only "recommend" or "neutral" | `test_question_mode_is_a_team_default_an_admin_sets` | `what-next/10-admin-sets-team-neutral` |
 | D8 | Anyone sets their own question_mode, not a colleague's, and it doesn't open up the rest of their record | `test_anyone_sets_their_own_question_mode_but_not_a_colleagues` | `what-next/09-rep-switches-himself-to-neutral` |
+
+## Traces and outcome feedback
+
+With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run, every event-log row stores the trace it came from, and outcomes are posted back as feedback on the lead's traces. That is the data the learning loop filters on (`mcp/sales_tools/tracing.py`, `docs/fleet-prompts-v2.md` §3.2). These are code paths no agent run would exercise differently, so they're unit only.
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| L1 | Without LangSmith configured, tools run exactly as before and rows have no trace | `test_tracing_off_changes_nothing` | unit only |
+| L2 | Each tool call is a run, grouped per lead, and the rows it writes carry its trace_id; every registered tool is traced | `test_each_tool_call_is_a_run_and_its_rows_carry_the_trace_id`, `test_every_registered_tool_is_traced` | unit only |
+| L3 | When the agent sends LangSmith trace headers, the tool run nests inside the agent's trace | `test_incoming_trace_headers_make_the_tool_a_child_of_the_agent_trace` | unit only |
+| L4 | An outcome (approval, reply, meeting, loss, win) becomes feedback on every trace of that lead, and only that lead | `test_outcomes_become_feedback_on_every_trace_that_worked_on_the_lead`, `test_feedback_only_goes_to_traces_of_the_same_lead`, `test_feedback_for_maps_outcome_rows` | unit only |
+| L5 | LangSmith being down never breaks a tool; a tool's own error is recorded on its run and still raised | `test_a_langsmith_failure_never_breaks_a_tool`, `test_a_tool_error_is_recorded_on_its_run_and_still_raised` | unit only |

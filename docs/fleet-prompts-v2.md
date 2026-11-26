@@ -120,11 +120,12 @@ Hill-climbing = change **one** thing, measure it against a fixed baseline, keep 
 ### 3.2 Connecting traces to outcomes
 
 1. **Version tag on every run.** Each `AGENTS.md` starts with `prompt_version: vN` (the git tag). Agents pass it to `log_interaction`, and each skill posts it in the Slack summary. That's how metrics split into before/after.
-2. **Join key = `lead_id`.** Every tool call in a Fleet trace has `lead_id` in its inputs. A nightly script `evals/sync_feedback.py`:
-   - lists runs in LangSmith project `sales-agent` since the last sync,
-   - finds the root run for each `lead_id` + stage, writes its ID into `interactions.trace_id`,
-   - reads outcomes from the Sales DB and attaches them as **feedback on that root run**: `reply_label`, `meeting_booked` (0/1), `loss_reason`, `approved_first_time` (0/1), `prompt_version`.
-3. Now in LangSmith you can filter "positioning runs, prompt v3, loss_reason=wrong_company_fit" and open the exact reasoning that produced them.
+2. **Built: the tool server traces itself** (`mcp/sales_tools/tracing.py`, on with `LANGSMITH_TRACING=true` and a key). Instead of the nightly sync script first planned here, the outcome is posted the moment it happens:
+   - Every tool call is a LangSmith `tool` run in `LANGSMITH_PROJECT`, with its inputs, output and errors. If the request carries LangSmith's trace headers, the run nests inside the agent's trace. Otherwise each call is its own trace, with `thread_id=lead-<lead_id>`, so the Threads view shows one lead's whole journey.
+   - Every event-log row stores the `trace_id` of the call that wrote it.
+   - Rows that record an outcome become **feedback on every trace that worked on that lead**: `email_approval` (1 approved, 0.5 edited, 0 rejected), `reply` (the label), `meeting_booked`, `meeting_held`, `lost` (the loss reason), `deal_won`.
+   - Fleet doesn't send trace headers to custom MCP servers as far as we know, so expect separate tool traces grouped per lead. The Fleet agent's own LLM traces don't get the feedback.
+3. Now in LangSmith you can filter "save_positioning runs whose lead later got reply = negative" and open the exact inputs that produced them.
 
 ### 3.3 The loop (weekly, owned by Ayaan, run by the coach + script)
 

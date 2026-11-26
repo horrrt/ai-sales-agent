@@ -26,7 +26,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import sim
+from . import sim, tracing
 
 DATA = Path(__file__).resolve().parents[2] / "data"
 
@@ -148,13 +148,19 @@ def ask_person(lead: dict, reason: str) -> None:
 
 def log_event(lead_id: str, stage: str, outcome: str, message: str = "", channel: str = "internal",
               loss_reason: str | None = None, **extra) -> dict:
-    """Append one row to the event log. Tools call this for facts; agents call log_interaction for decisions."""
+    """Append one row to the event log. Tools call this for facts; agents call log_interaction for decisions.
+
+    trace_id is the LangSmith trace of the tool call that wrote the row (None when tracing is off). A row that
+    records an outcome is also posted as feedback on the lead's earlier traces (tracing.on_event).
+    """
     entry = {"timestamp": now(), "lead_id": lead_id, "stage": stage, "channel": channel, "message": message,
              "outcome": outcome, "loss_reason": loss_reason, "prompt_version": extra.pop("prompt_version", None),
-             "variant": extra.pop("variant", None), "trace_id": None, "by": extra.pop("by", "tool"), **extra}
+             "variant": extra.pop("variant", None), "trace_id": tracing.current_trace_id(),
+             "by": extra.pop("by", "tool"), **extra}
     INTERACTIONS.append(entry)
     if lead_id in LEADS:
         LEADS[lead_id]["updated_at"] = entry["timestamp"]
+    tracing.on_event(entry, INTERACTIONS)
     return entry
 
 
