@@ -103,7 +103,7 @@ Rules:
   useful for the offer, return no facts and say why in note."""
 
 SCHEMA = {"type": "object", "additionalProperties": False, "required": ["facts", "note"],
-          "properties": {"facts": {"type": "array", "maxItems": MAX_FACTS,
+          "properties": {"facts": {"type": "array",  # no maxItems: structured outputs reject it; describe() caps at MAX_FACTS
                                    "items": {"type": "object", "additionalProperties": False,
                                              "required": ["fact", "where"],
                                              "properties": {"fact": {"type": "string"}, "where": {"type": "string"}}}},
