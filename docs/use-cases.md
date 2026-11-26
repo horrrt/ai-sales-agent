@@ -351,3 +351,11 @@ With LangSmith on (`LANGSMITH_TRACING=true` and a key), every tool call is a run
 | V4 | Live screenshots only for real domains, only if robots.txt allows the homepage; a saved real page comes first | `test_sandbox_domains_are_never_fetched_live`, `test_live_mode_takes_one_screenshot_when_robots_allows_it`, `test_robots_txt_that_disallows_the_homepage_stops_a_live_screenshot`, `test_a_saved_real_screenshot_is_used_before_going_live` | `researcher/05-real-company-homepage` |
 | V5 | At most three facts per page, no repeats when research runs again | `test_at_most_three_facts_and_no_repeats_across_rounds` | unit only |
 | V6 | Instructions hidden on a homepage never become facts or actions | agent only | `researcher/04-instructions-on-homepage` |
+
+## Who does what
+
+The manager routes and answers; the subagents act. A Fleet run on 26 Nov showed the manager doing research, sending and the weekly review itself, so the researcher's screenshot step and the coach's rules never ran. Now the stage tools exist only on the subagent that owns them (`fleet/AGENTS.md`, "Pipeline").
+
+| ID | Use case | Unit tests | Fleet cases |
+|---|---|---|---|
+| M1 | The manager has only routing and read tools; every tool on the server is still reachable through some agent; tools that commit the company ask a person wherever they are | `test_the_manager_only_has_routing_and_read_tools`, `test_every_server_tool_is_reachable_by_some_agent`, `test_tools_that_commit_the_company_ask_a_person_wherever_they_are` | `manager/05-batch-end-to-end` |

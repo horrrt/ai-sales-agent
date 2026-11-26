@@ -10,7 +10,7 @@ setup:
       linkedin_url: ''
     company:
       name: Nordvik Health Data AS
-      domain: nordvik.example
+      domain: nordvik-health.example
       country: 'NO'
       employees: 22
       industry: B2B SaaS
@@ -19,9 +19,9 @@ setup:
       enough_to_personalize: true
       facts:
       - fact: Announced a pilot with a regional hospital trust in Oslo in September 2026
-        source_url: https://nordvik.example/news/hospital-pilot
+        source_url: https://nordvik-health.example/news/hospital-pilot
       - fact: Job post for an Information Security Officer, first hire in that role
-        source_url: https://nordvik.example/careers/security-officer
+        source_url: https://nordvik-health.example/careers/security-officer
 turns:
 - Find new leads, then run an outreach batch with batch size 1.
 expect:
@@ -30,6 +30,8 @@ expect:
   - researcher
   - positioner
   - outreach
+  called:
+  - research_website_visual
   asked_person:
   - record_approval
   lead:

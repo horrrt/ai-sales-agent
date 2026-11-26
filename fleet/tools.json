@@ -25,22 +25,10 @@
       "display_name": "Get lead"
     },
     {
-      "name": "update_lead",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Update lead"
-    },
-    {
       "name": "log_interaction",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Log interaction"
-    },
-    {
-      "name": "tag_loss_reason",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Tag loss reason"
     },
     {
       "name": "get_funnel_metrics",
@@ -49,112 +37,10 @@
       "display_name": "Get funnel metrics"
     },
     {
-      "name": "get_targets_from_clay",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Get targets from clay"
-    },
-    {
-      "name": "research_target",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Research target"
-    },
-    {
-      "name": "save_positioning",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Save positioning"
-    },
-    {
-      "name": "save_draft",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Save draft"
-    },
-    {
-      "name": "send_email",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Send email"
-    },
-    {
-      "name": "get_thread",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Get thread"
-    },
-    {
-      "name": "save_reply_label",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Save reply label"
-    },
-    {
       "name": "get_rep_capacity",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Get rep capacity"
-    },
-    {
-      "name": "set_rep_status",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Set rep status"
-    },
-    {
-      "name": "find_free_slots",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Find free slots"
-    },
-    {
-      "name": "book_meeting",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Book meeting"
-    },
-    {
-      "name": "save_call_brief",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Save call brief"
-    },
-    {
-      "name": "record_meeting_outcome",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record meeting outcome"
-    },
-    {
-      "name": "add_lead",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Add lead"
-    },
-    {
-      "name": "assign_rep",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Assign rep"
-    },
-    {
-      "name": "check_deal_done",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Check deal done"
-    },
-    {
-      "name": "check_ready_to_write",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Check ready to write"
-    },
-    {
-      "name": "check_small_deal",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Check small deal"
     },
     {
       "name": "decide_proposal",
@@ -169,106 +55,10 @@
       "display_name": "Due follow ups"
     },
     {
-      "name": "find_leads",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Find leads"
-    },
-    {
-      "name": "get_changes",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Get changes"
-    },
-    {
-      "name": "get_event_log",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Get event log"
-    },
-    {
       "name": "get_wait_queue",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Get wait queue"
-    },
-    {
-      "name": "next_lead",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Next lead"
-    },
-    {
-      "name": "record_approval",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record approval"
-    },
-    {
-      "name": "record_payment",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record payment"
-    },
-    {
-      "name": "release_queue",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Release queue"
-    },
-    {
-      "name": "save_proposal",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Save proposal"
-    },
-    {
-      "name": "send_offer",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Send offer"
-    },
-    {
-      "name": "record_call_notes",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record call notes"
-    },
-    {
-      "name": "qualify_deal",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Qualify deal"
-    },
-    {
-      "name": "draft_quote",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Draft quote"
-    },
-    {
-      "name": "approve_quote",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Approve quote"
-    },
-    {
-      "name": "send_quote",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Send quote"
-    },
-    {
-      "name": "record_contract",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record contract"
-    },
-    {
-      "name": "record_deal_outcome",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Record deal outcome"
     },
     {
       "name": "get_pipeline",
@@ -295,28 +85,10 @@
       "display_name": "slack_read_thread_messages"
     },
     {
-      "name": "reschedule_meeting",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Reschedule meeting"
-    },
-    {
-      "name": "cancel_meeting",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Cancel meeting"
-    },
-    {
       "name": "get_rep_calendar",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Get rep calendar"
-    },
-    {
-      "name": "send_offer_reminder",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Send offer reminder"
     },
     {
       "name": "check_brief",
@@ -325,34 +97,10 @@
       "display_name": "Check brief"
     },
     {
-      "name": "import_website",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Import website"
-    },
-    {
-      "name": "review_pricing",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Review pricing"
-    },
-    {
-      "name": "suggest_icp_from_deals",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Suggest icp from deals"
-    },
-    {
       "name": "update_brief",
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Update brief"
-    },
-    {
-      "name": "add_team_member",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Add team member"
     },
     {
       "name": "update_team_member",
@@ -365,82 +113,26 @@
       "mcp_server_url": "https://sales-tools.invalid/mcp",
       "mcp_server_name": "sales_tools",
       "display_name": "Get setup status"
-    },
-    {
-      "name": "suggest_price",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "Suggest price"
-    },
-    {
-      "name": "list_industries",
-      "mcp_server_url": "https://sales-tools.invalid/mcp",
-      "mcp_server_name": "sales_tools",
-      "display_name": "List industries"
     }
   ],
   "interrupt_config": {
     "https://sales-tools.invalid/mcp::get_customer_brief::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_lead::sales_tools": false,
-    "https://sales-tools.invalid/mcp::update_lead::sales_tools": false,
     "https://sales-tools.invalid/mcp::log_interaction::sales_tools": false,
-    "https://sales-tools.invalid/mcp::tag_loss_reason::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_funnel_metrics::sales_tools": false,
-    "https://sales-tools.invalid/mcp::get_targets_from_clay::sales_tools": false,
-    "https://sales-tools.invalid/mcp::research_target::sales_tools": false,
-    "https://sales-tools.invalid/mcp::save_positioning::sales_tools": false,
-    "https://sales-tools.invalid/mcp::save_draft::sales_tools": false,
-    "https://sales-tools.invalid/mcp::send_email::sales_tools": false,
-    "https://sales-tools.invalid/mcp::save_reply_label::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_rep_capacity::sales_tools": false,
-    "https://sales-tools.invalid/mcp::set_rep_status::sales_tools": false,
-    "https://sales-tools.invalid/mcp::find_free_slots::sales_tools": false,
-    "https://sales-tools.invalid/mcp::book_meeting::sales_tools": true,
-    "https://sales-tools.invalid/mcp::save_call_brief::sales_tools": false,
-    "https://sales-tools.invalid/mcp::add_lead::sales_tools": false,
-    "https://sales-tools.invalid/mcp::assign_rep::sales_tools": false,
-    "https://sales-tools.invalid/mcp::check_deal_done::sales_tools": false,
-    "https://sales-tools.invalid/mcp::check_ready_to_write::sales_tools": false,
-    "https://sales-tools.invalid/mcp::check_small_deal::sales_tools": false,
     "https://sales-tools.invalid/mcp::decide_proposal::sales_tools": true,
     "https://sales-tools.invalid/mcp::due_follow_ups::sales_tools": false,
-    "https://sales-tools.invalid/mcp::find_leads::sales_tools": false,
-    "https://sales-tools.invalid/mcp::get_changes::sales_tools": false,
-    "https://sales-tools.invalid/mcp::get_event_log::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_wait_queue::sales_tools": false,
-    "https://sales-tools.invalid/mcp::next_lead::sales_tools": false,
-    "https://sales-tools.invalid/mcp::record_approval::sales_tools": true,
-    "https://sales-tools.invalid/mcp::record_payment::sales_tools": true,
-    "https://sales-tools.invalid/mcp::release_queue::sales_tools": false,
-    "https://sales-tools.invalid/mcp::save_proposal::sales_tools": false,
-    "https://sales-tools.invalid/mcp::send_offer::sales_tools": false,
     "https://tools.langchain.com::slack_send_channel_message::Fleet": false,
     "https://tools.langchain.com::slack_reply_to_message::Fleet": false,
     "https://tools.langchain.com::slack_read_thread_messages::Fleet": false,
-    "https://sales-tools.invalid/mcp::record_meeting_outcome::sales_tools": true,
-    "https://sales-tools.invalid/mcp::record_call_notes::sales_tools": false,
-    "https://sales-tools.invalid/mcp::qualify_deal::sales_tools": false,
-    "https://sales-tools.invalid/mcp::draft_quote::sales_tools": false,
-    "https://sales-tools.invalid/mcp::approve_quote::sales_tools": true,
-    "https://sales-tools.invalid/mcp::send_quote::sales_tools": false,
-    "https://sales-tools.invalid/mcp::record_contract::sales_tools": true,
-    "https://sales-tools.invalid/mcp::record_deal_outcome::sales_tools": true,
     "https://sales-tools.invalid/mcp::get_pipeline::sales_tools": false,
-    "https://sales-tools.invalid/mcp::get_thread::sales_tools": false,
-    "https://sales-tools.invalid/mcp::reschedule_meeting::sales_tools": true,
-    "https://sales-tools.invalid/mcp::cancel_meeting::sales_tools": true,
     "https://sales-tools.invalid/mcp::get_rep_calendar::sales_tools": false,
-    "https://sales-tools.invalid/mcp::send_offer_reminder::sales_tools": false,
     "https://sales-tools.invalid/mcp::check_brief::sales_tools": false,
-    "https://sales-tools.invalid/mcp::import_website::sales_tools": false,
-    "https://sales-tools.invalid/mcp::review_pricing::sales_tools": false,
-    "https://sales-tools.invalid/mcp::suggest_icp_from_deals::sales_tools": false,
     "https://sales-tools.invalid/mcp::update_brief::sales_tools": true,
-    "https://sales-tools.invalid/mcp::add_team_member::sales_tools": true,
     "https://sales-tools.invalid/mcp::update_team_member::sales_tools": true,
     "https://sales-tools.invalid/mcp::get_setup_status::sales_tools": false,
-    "https://sales-tools.invalid/mcp::suggest_price::sales_tools": false,
-    "https://sales-tools.invalid/mcp::list_industries::sales_tools": false,
     "https://sales-tools.invalid/mcp::find_lead::sales_tools": false,
     "https://sales-tools.invalid/mcp::get_person::sales_tools": false
   }

@@ -33,7 +33,7 @@ import yaml
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 SERVER_TOOLS = sorted(set(re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)",
-                                     "".join(p.read_text() for p in (REPO / "mcp/sales_tools/tools").glob("*.py")))))
+                                     "".join(p.read_text(encoding="utf-8") for p in (REPO / "mcp/sales_tools/tools").glob("*.py")))))
 DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Judgement-heavy agents on Sonnet, tool-following ones on Haiku (see the PR #3 runs: on Haiku the manager
 # often skips its subagents).
@@ -101,24 +101,24 @@ async def build(agent_name: str, url: str, model: str, model_map: dict, events: 
 
     if agent_name != "manager":  # one subagent on its own, with its own prompt, tools and approvals
         d = fleet / "subagents" / agent_name
-        _, prompt = parse_frontmatter((d / "AGENTS.md").read_text())
-        cfg = json.loads((d / "tools.json").read_text())
+        _, prompt = parse_frontmatter((d / "AGENTS.md").read_text(encoding="utf-8"))
+        cfg = json.loads((d / "tools.json").read_text(encoding="utf-8"))
         return create_deep_agent(model=model_map.get(agent_name, model), tools=pick(our_tools(cfg), agent_name),
                                  system_prompt=prompt, interrupt_on=gated(cfg), checkpointer=InMemorySaver())
     subagents = []
     for d in sorted((fleet / "subagents").iterdir()):
         if not (d / "AGENTS.md").exists():
             continue
-        meta, prompt = parse_frontmatter((d / "AGENTS.md").read_text())
-        cfg = json.loads((d / "tools.json").read_text())
+        meta, prompt = parse_frontmatter((d / "AGENTS.md").read_text(encoding="utf-8"))
+        cfg = json.loads((d / "tools.json").read_text(encoding="utf-8"))
         spec = SubAgent(name=d.name, description=meta.get("description", ""), system_prompt=prompt,
                         tools=pick(our_tools(cfg), d.name), interrupt_on=gated(cfg))
         spec["model"] = model_map.get(d.name, model)
         subagents.append(spec)
-    root = json.loads((fleet / "tools.json").read_text())
+    root = json.loads((fleet / "tools.json").read_text(encoding="utf-8"))
     loader = StaticSkillsLoader([(fleet / "skills", "/skills")])
     return create_deep_agent(model=model_map.get("manager", model), tools=pick(our_tools(root), "manager") + [slack_reply(events)],
-                             system_prompt=(fleet / "AGENTS.md").read_text(), subagents=subagents,
+                             system_prompt=(fleet / "AGENTS.md").read_text(encoding="utf-8"), subagents=subagents,
                              skills=loader.skill_paths, middleware=[loader], interrupt_on=gated(root),
                              checkpointer=InMemorySaver())
 
@@ -172,7 +172,7 @@ def slack_message(text: str, slack_user_id: str | None) -> str:
 def turn_messages(case: dict) -> list[str]:
     """Each turn's text with its sender. People don't say who they are: a turn names its sender with `from`."""
     setup = case.get("setup") or {}
-    reps = setup.get("reps") or json.loads((REPO / "data/reps.demo.json").read_text())
+    reps = setup.get("reps") or json.loads((REPO / "data/reps.demo.json").read_text(encoding="utf-8"))
     out = []
     for t in case["turns"]:
         sender = DEFAULT_SENDER if isinstance(t, str) else t.get("from", DEFAULT_SENDER)
@@ -253,7 +253,7 @@ def initial_state(setup: dict) -> dict:
     # customer: blank starts from the empty example brief (a customer who has just signed up)
     base = (REPO / "data/customer_brief.example.json" if setup.get("customer") == "blank" else
             REPO / "data/customers" / f"{setup['customer']}.json" if setup.get("customer") else REPO / "data/customer_brief.demo.json")
-    brief = {k: v for k, v in json.loads(base.read_text()).items() if not k.startswith("_")}
+    brief = {k: v for k, v in json.loads(base.read_text(encoding="utf-8")).items() if not k.startswith("_")}
     if setup.get("customer") == "blank":
         brief["customer_id"] = "C-new"
     for k, v in (setup.get("brief") or {}).items():
@@ -318,7 +318,7 @@ def free_port() -> int:
 async def tool_server(state: dict, logdir: Path, name: str, no_decisions: bool = False):
     """Start this repo's tool server with SALES_STATE pointing at the case's snapshot. It saves after every tool call."""
     port, state_file = free_port(), logdir / f"{name}.state.json"
-    state_file.write_text(json.dumps(state, default=str))
+    state_file.write_text(json.dumps(state, default=str), encoding="utf-8")
     log = open(logdir / f"{name}.server.log", "w")
     env = {**os.environ, "SALES_STATE": str(state_file), "PORT": str(port), "HOST": "127.0.0.1"}
     if no_decisions:  # no d1 and no Claude: every gate returns no answer and must send the lead to a person
@@ -330,7 +330,7 @@ async def tool_server(state: dict, logdir: Path, name: str, no_decisions: bool =
     try:
         for _ in range(240):
             await asyncio.sleep(0.25)
-            text = (logdir / f"{name}.server.log").read_text()
+            text = (logdir / f"{name}.server.log").read_text(encoding="utf-8")
             if "Uvicorn running" in text:
                 break
             if proc.returncode is not None or "Traceback" in text:
@@ -515,7 +515,7 @@ def load_cases(k: str) -> list[tuple[str, Path, dict]]:
     for p in sorted((HERE / "cases").glob("*/*.yaml")):
         name = f"{p.parent.name}/{p.stem}"
         if k in name:
-            cases.append((name, p, yaml.safe_load(p.read_text())))
+            cases.append((name, p, yaml.safe_load(p.read_text(encoding="utf-8"))))
     return cases
 
 
@@ -537,7 +537,7 @@ def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     for key in ("title", "agent", "turns", "expect"):
         if key not in case:
             problems.append(f"missing {key}")
-    reps = (case.get("setup") or {}).get("reps") or json.loads((REPO / "data/reps.demo.json").read_text())
+    reps = (case.get("setup") or {}).get("reps") or json.loads((REPO / "data/reps.demo.json").read_text(encoding="utf-8"))
     for t in case.get("turns") or []:
         if isinstance(t, dict):
             if set(t) - {"from", "text"} or not isinstance(t.get("text"), str):
@@ -563,7 +563,7 @@ def validate(name: str, case: dict, server_tools: set[str]) -> list[str]:
     except Exception as e:  # noqa: BLE001
         problems.append(f"setup does not load: {type(e).__name__}: {e}")
     if case.get("agent", "manager") != "manager":
-        tools = {t["name"] for t in json.loads((REPO / "fleet/subagents" / case["agent"] / "tools.json").read_text())["tools"]}
+        tools = {t["name"] for t in json.loads((REPO / "fleet/subagents" / case["agent"] / "tools.json").read_text(encoding="utf-8"))["tools"]}
         need = set(case.get("expect", {}).get("called", [])) - {"task", "read_file", "write_todos"}
         if need - tools:
             problems.append(f"@{case['agent']} doesn't have {sorted(need - tools)} in its tools.json")
@@ -649,14 +649,14 @@ async def run_once(name: str, case: dict, args, enums: dict, logdir: Path, sem: 
                                    no_decisions=case.get("setup", {}).get("no_decisions", False)) as (url, state_file):
                 agent = await build(case["agent"], url, args.model, args.model_map, events)
                 await run_turns(agent, turn_messages(case), case.get("approvals", {}), events)
-            state = json.loads(state_file.read_text())
+            state = json.loads(state_file.read_text(encoding="utf-8"))
             expect = dict(case["expect"])
             if case["agent"] == "manager":  # people read the manager's answers: plain words unless the case says otherwise
                 expect.setdefault("plain_answer", True)
             checks, error = check(expect, events, state, enums), None
         except Exception as e:  # noqa: BLE001  one failing case doesn't stop the others
             checks, error = [], f"{type(e).__name__}: {e}"
-    (logdir / f"{safe}.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in events))
+    (logdir / f"{safe}.jsonl").write_text("".join(json.dumps(e, default=str) + "\n" for e in events), encoding="utf-8")
     usage = [e for e in events if e["event"] == "usage"]
     final = [e["text"] for e in events if e["event"] == "ai_message" and e["agent"] == "manager"]
     return {"case": name, "title": case["title"], "agent": case["agent"], "error": error,
@@ -688,13 +688,13 @@ def report(results: list, args) -> str:
 
 
 def schema_enums() -> dict:
-    props = json.loads((REPO / "schemas/interaction.schema.json").read_text())["properties"]
+    props = json.loads((REPO / "schemas/interaction.schema.json").read_text(encoding="utf-8"))["properties"]
     return {"stage": set(props["stage"]["enum"]), "outcome": set(props["outcome"]["enum"])}
 
 
 def server_tool_names() -> set[str]:
     import re
-    return set(re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)", "".join(p.read_text() for p in (REPO / "mcp/sales_tools/tools").glob("*.py"))))
+    return set(re.findall(r"@mcp\.tool\(\)\s*\ndef (\w+)", "".join(p.read_text(encoding="utf-8") for p in (REPO / "mcp/sales_tools/tools").glob("*.py"))))
 
 
 async def main():
@@ -744,8 +744,8 @@ async def main():
     sem = asyncio.Semaphore(args.parallel)
     print(f"\nRunning {len(cases)} case(s)...")
     results = await asyncio.gather(*(run_case(n, p, c, args, schema_enums(), logdir, sem) for n, p, c in cases))
-    (logdir / "results.json").write_text(json.dumps(results, indent=1, default=str))
-    (logdir / "report.md").write_text(report(results, args))
+    (logdir / "results.json").write_text(json.dumps(results, indent=1, default=str), encoding="utf-8")
+    (logdir / "report.md").write_text(report(results, args), encoding="utf-8")
     for r in results:
         failed = [c["check"] for c in r["checks"] if not c["ok"]]
         rate = f" [{r['pass_rate']}]" if "pass_rate" in r else ""
